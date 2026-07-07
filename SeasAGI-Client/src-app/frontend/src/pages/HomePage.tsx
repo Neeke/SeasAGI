@@ -1,0 +1,632 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAppStore } from "../stores/appStore";
+import { useTeamStore } from "../stores/teamStore";
+import * as cmd from "../utils/commands";
+import { useTranslation } from "../i18n";
+import type { RelayGateway } from "../utils/types";
+import { formatPlanTier, normalizePlanTier } from "../utils/plan";
+
+/* --- Team Cost Snapshot (local store) --- */
+function TeamCostSnapshot() {
+  const store = useTeamStore();
+  const costAttribution = store.getCostAttribution();
+  const members = store.members;
+  if (!costAttribution || costAttribution.members.length === 0) return null;
+  return (
+    <div className="section section-card">
+      <div className="section-heading">
+        <h2>团队成本概览</h2>
+        <p className="hint">{costAttribution.month} · 基于本地用量估算</p>
+      </div>
+      <div className="hero-metrics" style={{ marginTop: 8 }}>
+        <div className="hero-metric-card">
+          <span className="hero-metric-label">团队规模</span>
+          <strong className="hero-metric-value">{members.filter((m: { status: string }) => m.status === "active").length} 人</strong>
+        </div>
+        <div className="hero-metric-card">
+          <span className="hero-metric-label">本月估算成本</span>
+          <strong className="hero-metric-value">${(costAttribution.total_cost || 0).toFixed(2)}</strong>
+        </div>
+        <div className="hero-metric-card">
+          <span className="hero-metric-label">较上月</span>
+          <strong className="hero-metric-value" style={{ color: costAttribution.total_cost > costAttribution.previous_cost ? "var(--red)" : "var(--green)" }}>
+            {costAttribution.total_cost > costAttribution.previous_cost ? "↑" : "↓"} ${Math.abs(costAttribution.total_cost - costAttribution.previous_cost).toFixed(2)}
+          </strong>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TunnelStatus() {
+  const { t } = useTranslation();
+  const auth = useAppStore((s) => s.auth);
+  const cloudBilling = useAppStore((s) => s.cloudBilling);
+  const relayEnabled = useAppStore((s) => s.relayEnabled);
+  const setRelayEnabled = useAppStore((s) => s.setRelayEnabled);
+  const [relayGateways, setRelayGateways] = useState<RelayGateway[]>([]);
+  const [selectedRelay, setSelectedRelay] = useState("");
+  const [enabledRelay, setEnabledRelay] = useState("");
+  const [loadingRelay, setLoadingRelay] = useState(false);
+  const [testingRelay, setTestingRelay] = useState(false);
+  const [relayResult, setRelayResult] = useState<{ type: "ok" | "fail"; message: string } | null>(null);
+
+  const canUseRemoteRelay = cloudBilling?.relay_enabled === true;
+
+  useEffect(() => {
+    if (!canUseRemoteRelay) {
+      setRelayGateways([]);
+      setSelectedRelay("");
+      setEnabledRelay("");
+      setLoadingRelay(false);
+      setTestingRelay(false);
+      setRelayResult(null);
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      setLoadingRelay(true);
+      try {
+        const gws = cloudBilling?.relay_gateways || [];
+        const saved = await cmd.getSelectedRelayGateway();
+        if (cancelled) return;
+        setRelayGateways(gws);
+        const savedRelay = gws.some((gateway) => gateway.gateway_id === saved) ? saved : "";
+        setSelectedRelay(savedRelay);
+        setEnabledRelay(savedRelay);
+      } catch (e: any) {
+        if (cancelled) return;
+        setRelayGateways([]);
+        setRelayResult({
+          type: "fail",
+          message: e?.message || t("home.relayLoadFailed"),
+        });
+      } finally {
+        if (!cancelled) {
+          setLoadingRelay(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [canUseRemoteRelay, cloudBilling?.relay_gateways]);
+
+  const handleSelectRelay = (gatewayId: string) => {
+    setSelectedRelay(gatewayId);
+    setRelayResult(null);
+  };
+
+  const handleTestAndEnable = async () => {
+    if (!selectedRelay) {
+      setRelayResult({
+        type: "fail",
+        message: t("home.selectRelayFirst"),
+      });
+      return;
+    }
+
+    setTestingRelay(true);
+    setRelayResult(null);
+    try {
+      const result = await cmd.testRelayGateway(selectedRelay);
+      if (result?.success) {
+        setEnabledRelay(selectedRelay);
+        setRelayResult({
+          type: "ok",
+          message: result.message || t("home.relayEnabled"),
+        });
+      } else {
+        setRelayResult({
+          type: "fail",
+          message: result?.error || t("home.relayTestFailed"),
+        });
+      }
+    } catch (e: any) {
+      setRelayResult({
+        type: "fail",
+        message: e?.message || t("home.relayTestFailed"),
+      });
+    } finally {
+      setTestingRelay(false);
+    }
+  };
+
+  const handleDisableRelay = async () => {
+    setRelayEnabled(false);
+    await cmd.saveRelayGateway("");
+    setEnabledRelay("");
+    setRelayResult({
+      type: "ok",
+      message: "已关闭远程访问加速，客户端将直接访问远端模型 API",
+    });
+  };
+
+  const handleEnableRelay = async () => {
+    setRelayEnabled(true);
+    if (enabledRelay) {
+      setRelayResult(null);
+    }
+  };
+
+  const selectedGateway = relayGateways.find((gateway) => gateway.gateway_id === selectedRelay);
+  const enabledGateway = relayGateways.find((gateway) => gateway.gateway_id === enabledRelay);
+
+  return (
+    <div className="status-card">
+      <label>{t("home.remoteAcceleration")}</label>
+      {canUseRemoteRelay ? (
+        loadingRelay ? (
+          <div className="loading">{t("home.loading")}</div>
+        ) : (
+          <>
+            <div className="relay-mode-toggle">
+              <label className="relay-radio-label">
+                <input
+                  type="radio"
+                  name="relayMode"
+                  checked={!relayEnabled}
+                  onChange={handleDisableRelay}
+                />
+                <span>不启用</span>
+              </label>
+              <label className="relay-radio-label">
+                <input
+                  type="radio"
+                  name="relayMode"
+                  checked={relayEnabled}
+                  onChange={handleEnableRelay}
+                />
+                <span>启用中继加速</span>
+              </label>
+            </div>
+            {relayEnabled && relayGateways.length > 0 && (
+              <>
+                <select
+                  value={selectedRelay}
+                  onChange={(e) => handleSelectRelay(e.target.value)}
+                  disabled={testingRelay}
+                >
+                  <option value="">{t("home.notSet")}</option>
+                  {relayGateways.map((gw) => (
+                    <option key={gw.gateway_id} value={gw.gateway_id}>
+                      {gw.name} ({gw.region}) - {gw.host}:{gw.port}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleTestAndEnable}
+                  className="btn-primary"
+                  disabled={!selectedRelay || testingRelay}
+                >
+                  {testingRelay ? t("home.testingRelay") : t("home.testAndEnable")}
+                </button>
+                {selectedGateway && (
+                  <code className="mono-sm">
+                    {selectedGateway.host}:{selectedGateway.port}
+                  </code>
+                )}
+                {enabledGateway && (
+                  <div className="text-dim">
+                    {t("home.currentRelayEnabled", {
+                      name: enabledGateway.name,
+                      address: `${enabledGateway.host}:${enabledGateway.port}`,
+                    })}
+                  </div>
+                )}
+              </>
+            )}
+            {relayEnabled && relayGateways.length === 0 && (
+              <div className="text-dim">{t("home.noRelayAvailable")}</div>
+            )}
+          </>
+        )
+      ) : (
+        <div className="text-dim">
+          {auth.is_logged_in ? t("home.remoteAccelerationProOnly") : t("home.loginToUnlock")}
+        </div>
+      )}
+      {relayResult && (
+        <div className={`test-result ${relayResult.type === "ok" ? "test-ok" : "test-fail"}`}>
+          {relayResult.message}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function HomePage() {
+  const navigate = useNavigate();
+  const auth = useAppStore((s) => s.auth);
+  const runtime = useAppStore((s) => s.runtime);
+  const channels = useAppStore((s) => s.channels);
+  const combos = useAppStore((s) => s.combos);
+  const appConfig = useAppStore((s) => s.appConfig);
+  const cloudBilling = useAppStore((s) => s.cloudBilling);
+  const cloudUsage = useAppStore((s) => s.cloudUsage);
+  const defaultComboName = useAppStore((s) => s.defaultComboName);
+  const setRuntime = useAppStore((s) => s.setRuntime);
+  const setAppConfig = useAppStore((s) => s.setAppConfig);
+  const setCloudBilling = useAppStore((s) => s.setCloudBilling);
+  const setCloudUsage = useAppStore((s) => s.setCloudUsage);
+  const setDefaultComboName = useAppStore((s) => s.setDefaultComboName);
+  const { t } = useTranslation();
+
+  const [loadingCloud, setLoadingCloud] = useState(false);
+  const [cloudError, setCloudError] = useState("");
+  const baseUrl = `http://127.0.0.1:${runtime?.listen_port || 4318}/v1`;
+
+  const isRunning = runtime?.gateway_running ?? false;
+
+  useEffect(() => {
+    if (auth.is_logged_in) {
+      setLoadingCloud(true);
+      setCloudError("");
+      Promise.all([
+        cmd.getCloudUsage().catch(() => null),
+        cmd.getCloudBilling().catch(() => null),
+      ])
+        .then(([usage, billing]) => {
+          setCloudUsage(usage);
+          setCloudBilling(billing);
+        })
+        .catch(() => setCloudError("加载失败"))
+        .finally(() => setLoadingCloud(false));
+    } else {
+      setCloudUsage(null);
+      setCloudBilling(null);
+      setCloudError("");
+    }
+  }, [auth.is_logged_in, setCloudBilling]);
+
+  // Load persisted default combo name from config
+  useEffect(() => {
+    cmd.getDefaultComboName().then((name) => {
+      if (name) setDefaultComboName(name);
+    }).catch(() => {});
+  }, [setDefaultComboName]);
+
+  const handleToggleGateway = async () => {
+    try {
+      if (isRunning) {
+        await cmd.stopLocalGateway();
+        setRuntime({ ...runtime, gateway_running: false });
+      } else {
+        await cmd.startLocalGateway();
+        setRuntime({ ...runtime, gateway_running: true });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const allModels = [...new Set(channels.flatMap((ch) => ch.models || []))].sort();
+
+  const handleSetDefaultModel = async (modelName: string) => {
+    let channelId = appConfig?.default_channel_id || "";
+    if (modelName && modelName !== "__auto__") {
+      const candidate = channels.find(
+        (ch) => ch.enabled && (ch.models || []).includes(modelName),
+      );
+      if (candidate) {
+        channelId = candidate.channel_id;
+      }
+    }
+    try {
+      await cmd.updateDefaultModel(modelName, channelId);
+      if (appConfig) setAppConfig({ ...appConfig, default_model: modelName, default_channel_id: channelId });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSetDefaultChannel = async (channelId: string) => {
+    let modelName = appConfig?.default_model || "";
+    if (modelName && modelName !== "__auto__") {
+      const channel = channels.find((ch) => ch.channel_id === channelId);
+      if (channel && !(channel.models || []).includes(modelName)) {
+        modelName = "";
+      }
+    }
+    try {
+      await cmd.updateDefaultModel(modelName, channelId);
+      if (appConfig) setAppConfig({ ...appConfig, default_model: modelName, default_channel_id: channelId });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleCopyBaseUrl = async () => {
+    const token = await cmd.getLocalAccessToken();
+    await navigator.clipboard.writeText(`Base URL: ${baseUrl}\nAPI Key: ${token}`);
+  };
+
+  const platformChannels = channels.filter((ch) => ch.channel_type === "platform");
+  const customChannels = channels.filter((ch) => ch.channel_type !== "platform");
+  const planTier = normalizePlanTier(cloudBilling);
+  const planLabel = formatPlanTier(cloudBilling);
+
+  return (
+    <div className="page home-page">
+      {auth.is_logged_in && (
+        <div className="auth-section">
+          <div className="user-card">
+            <div className="user-card-avatar">{auth.email?.[0]?.toUpperCase() || "U"}</div>
+            <div className="user-card-info">
+              <div className="user-card-name">{auth.email || t("home.loggedInAs", { email: "" })}</div>
+              <div className="user-card-plan">
+                {cloudBilling
+                  ? t("home.planName", { plan: cloudBilling.plan_name })
+                  : t("home.noBillingData")}
+              </div>
+            </div>
+            {planTier && <div className={`plan-badge plan-badge-${planTier} user-card-badge`}>{planLabel}</div>}
+          </div>
+
+          <div className="usage-mini-grid">
+            {loadingCloud ? (
+              <div className="usage-mini-card">
+                <div className="usage-mini-label">{t("home.usageThisMonth")}</div>
+                <div className="usage-mini-loading">{t("home.noUsageData")}</div>
+              </div>
+            ) : cloudUsage ? (
+              <>
+                <div className="usage-mini-card">
+                  <div className="usage-mini-label">{t("home.requests")}</div>
+                  <div className="usage-mini-value blue">{cloudUsage.month_requests.toLocaleString()}</div>
+                </div>
+                <div className="usage-mini-card">
+                  <div className="usage-mini-label">{t("home.inputTokens")}</div>
+                  <div className="usage-mini-value">{cloudUsage.month_input_tokens.toLocaleString()}</div>
+                </div>
+                <div className="usage-mini-card">
+                  <div className="usage-mini-label">{t("home.outputTokens")}</div>
+                  <div className="usage-mini-value">{cloudUsage.month_output_tokens.toLocaleString()}</div>
+                </div>
+                <div className="usage-mini-card">
+                  <div className="usage-mini-label">{t("home.costUSD")}</div>
+                  <div className="usage-mini-value green">${cloudUsage.total_cost_usd.toFixed(2)}</div>
+                </div>
+              </>
+            ) : cloudError ? (
+              <div className="usage-mini-card">
+                <div className="usage-mini-label">{t("home.usageThisMonth")}</div>
+                <div className="usage-mini-error">{cloudError}</div>
+              </div>
+            ) : null}
+
+            {cloudBilling && (
+              <div className="usage-mini-card">
+                <div className="usage-mini-label">{t("usage.quotaUsed")}</div>
+                <div className="usage-mini-quota">
+                  <div className="quota-bar">
+                    <div
+                      className="quota-fill"
+                      style={{ width: `${Math.min(100, (cloudBilling.used_quota / cloudBilling.quota) * 100)}%` }}
+                    />
+                  </div>
+                  <span>{cloudBilling.used_quota} / {cloudBilling.quota}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {auth.is_logged_in && cloudBilling && (
+        <div className="section section-card snapshot-card">
+          <div className="section-heading">
+            <h2>权益快照</h2>
+            <p className="hint">当前套餐、配额与关键能力概览。</p>
+          </div>
+          <div className="snapshot-grid">
+            <div className="snapshot-item">
+              <span className="snapshot-label">当前套餐</span>
+              <span className="snapshot-value">
+                <span className={`plan-badge plan-badge-${planTier || "free"}`}>{planLabel || cloudBilling.plan_name}</span>
+                <span className="snapshot-price">{cloudBilling.price > 0 ? `$${cloudBilling.price}/mo` : "免费"}</span>
+              </span>
+            </div>
+            <div className="snapshot-item">
+              <span className="snapshot-label">配额消耗</span>
+              <span className="snapshot-value">
+                <span className="snapshot-quota-bar">
+                  <span className="snapshot-quota-fill" style={{ width: `${Math.min(100, (cloudBilling.used_quota / cloudBilling.quota) * 100)}%` }} />
+                </span>
+                <span className="snapshot-quota-text">{cloudBilling.used_quota.toLocaleString()} / {cloudBilling.quota.toLocaleString()}</span>
+              </span>
+            </div>
+            <div className="snapshot-item">
+              <span className="snapshot-label">中继通道</span>
+              <span className="snapshot-value">
+                <span className={`status-badge ${cloudBilling.relay_enabled ? "status-green" : "status-dim"}`}>
+                  {cloudBilling.relay_enabled ? "已启用" : "未启用"}
+                </span>
+              </span>
+            </div>
+            <div className="snapshot-item">
+              <span className="snapshot-label">本地网关</span>
+              <span className="snapshot-value">
+                <span className={`status-badge ${isRunning ? "status-green" : "status-dim"}`}>
+                  {isRunning ? "运行中" : "已停止"}
+                </span>
+              </span>
+            </div>
+            <div className="snapshot-item">
+              <span className="snapshot-label">可用通道</span>
+              <span className="snapshot-value">
+                <strong>{channels.length}</strong>
+                <span className="snapshot-sub">
+                  平台 {platformChannels.length} · 自定义 {customChannels.length}
+                </span>
+              </span>
+            </div>
+            <div className="snapshot-item">
+              <span className="snapshot-label">云端通道数</span>
+              <span className="snapshot-value">
+                <strong>{cloudBilling.relay_gateways?.length || 0}</strong>
+                <span className="snapshot-sub">中继网关节点</span>
+              </span>
+            </div>
+          </div>
+          <div className="snapshot-footer">
+            <button className="btn-primary btn-sm" onClick={() => navigate("/usage")}>查看用量详情</button>
+            <button className="btn-secondary btn-sm" onClick={() => navigate("/subscription")}>管理套餐</button>
+          </div>
+        </div>
+      )}
+
+      {auth.is_logged_in && (cloudBilling?.plan_id === "teams" || cloudBilling?.plan_id === "enterprise") && (
+        <TeamCostSnapshot />
+      )}
+
+      <div className="page-header">
+        <div>
+          <h1>{t("home.gatewayStatus")}</h1>
+          <p className="page-subtitle">管理本地网关、默认路由和远程加速入口，快速查看当前运行状态。</p>
+        </div>
+        <div className="hero-metrics">
+          <div className="hero-metric-card">
+            <span className="hero-metric-label">网关状态</span>
+            <strong className="hero-metric-value">{isRunning ? t("home.running") : t("home.stopped")}</strong>
+          </div>
+          <div className="hero-metric-card">
+            <span className="hero-metric-label">可用通道</span>
+            <strong className="hero-metric-value">{channels.length}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div className="home-status-grid">
+        <div className="status-card status-card-emphasis">
+          <div className="status-card-copy">
+            <label>{t("home.gatewayStatus")}</label>
+            <div className="status-card-title-row">
+              <span className={`status-dot ${isRunning ? "ok" : "off"}`}></span>
+              <strong className="status-card-title">{isRunning ? t("home.running") : t("home.stopped")}</strong>
+            </div>
+            <div className="text-dim">本地网关用于统一转发和调试请求，可随时启停。</div>
+          </div>
+          <button onClick={handleToggleGateway} className="btn-primary">
+            {isRunning ? t("home.stop") : t("home.start")}
+          </button>
+        </div>
+
+        {isRunning && (
+          <div className="status-card">
+            <div className="status-card-copy">
+              <label>{t("home.localAddress")}</label>
+              <code>{baseUrl}</code>
+            </div>
+            <button onClick={handleCopyBaseUrl} className="btn-secondary">
+              {t("home.copyBaseUrl")}
+            </button>
+          </div>
+        )}
+
+        <TunnelStatus />
+
+        <div className="status-card">
+          <div className="status-card-copy">
+            <label>{t("home.defaultModel")}</label>
+            <div className="text-dim">设置未显式指定模型时的默认路由目标。</div>
+          </div>
+          <select
+            value={appConfig?.default_model || ""}
+            onChange={(e) => handleSetDefaultModel(e.target.value)}
+          >
+            <option value="">{t("home.notSet")}</option>
+            <option value="__auto__">{t("home.autoSelect")}</option>
+            {allModels.map((model) => (
+              <option key={model} value={model}>
+                {model}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="status-card">
+          <div className="status-card-copy">
+            <label>{t("home.defaultChannel")}</label>
+            <div className="text-dim">设置默认承载请求的通道，可与默认模型联动。</div>
+          </div>
+          <select
+            value={appConfig?.default_channel_id || ""}
+            onChange={(e) => handleSetDefaultChannel(e.target.value)}
+          >
+            <option value="">{t("home.notSet")}</option>
+            <option value="__auto__">{t("home.autoSelect")}</option>
+            {channels.map((ch) => (
+              <option key={ch.channel_id} value={ch.channel_id}>
+                {ch.display_name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="section-card-inline">
+          <div>
+            <strong>{t("home.defaultCombo")}</strong>
+            <div className="text-dim">设置默认 Combo 组合方案，选择后自动覆盖默认模型和通道设置。</div>
+          </div>
+          <select
+            value={defaultComboName || ""}
+            onChange={(e) => {
+              const val = e.target.value;
+              setDefaultComboName(val);
+              cmd.setDefaultComboName(val).catch(() => {});
+              setAppConfig({ ...appConfig!, default_combo_name: val || undefined });
+            }}
+          >
+            <option value="">{t("home.notSet")}</option>
+            {combos.map((c) => (
+              <option key={c.name} value={c.name}>
+                {c.name} ({c.steps?.length || 0}步)
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="section-heading">
+        <h2>{t("home.availableChannels")}</h2>
+        <p className="hint">按平台通道与自定义通道分组查看当前可路由资源和健康状态。</p>
+      </div>
+
+      {platformChannels.length > 0 && (
+        <div className="channel-group">
+          <h3>{t("home.platform")}</h3>
+          <p className="hint">{t("channel.platformHint")}</p>
+          {platformChannels.map((ch) => (
+            <div key={ch.channel_id} className="channel-item">
+              <span className="channel-name">{ch.display_name}</span>
+              <span className="channel-models">{t("home.modelCount", { count: ch.models?.length || 0 })}</span>
+              <span className={`status-dot ${ch.health_status === "healthy" ? "ok" : "off"}`}></span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {customChannels.length > 0 && (
+        <div className="channel-group">
+          <h3>{t("home.custom")}</h3>
+          <p className="hint">{t("channel.customHint")}</p>
+          {customChannels.map((ch) => (
+            <div key={ch.channel_id} className="channel-item">
+              <span className="channel-name">{ch.display_name}</span>
+              <span className="channel-models">{t("home.modelCount", { count: ch.models?.length || 0 })}</span>
+              <span className={`status-dot ${ch.health_status === "healthy" ? "ok" : "off"}`}></span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {platformChannels.length === 0 && customChannels.length === 0 && (
+        <div className="empty-hint">{t("home.loginToUnlock")}</div>
+      )}
+    </div>
+  );
+}
