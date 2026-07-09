@@ -28,6 +28,12 @@ func NewExecutorRegistry() *ExecutorRegistry {
 	r.Register("deepseek", func() ProviderAdapter { return &DeepSeekExecutor{} })
 	r.Register("grok", func() ProviderAdapter { return &GrokExecutor{} })
 	r.Register("vertex", func() ProviderAdapter { return &VertexExecutor{} })
+	r.Register("openrouter", func() ProviderAdapter { return &OpenAIExecutor{} })
+	r.Register("bailian", func() ProviderAdapter { return &OpenAIExecutor{} })
+	r.Register("minimax", func() ProviderAdapter { return &OpenAIExecutor{} })
+	r.Register("moonshot", func() ProviderAdapter { return &OpenAIExecutor{} })
+	r.Register("zhipu", func() ProviderAdapter { return &OpenAIExecutor{} })
+	r.Register("xiaomi", func() ProviderAdapter { return &OpenAIExecutor{} })
 
 	return r
 }

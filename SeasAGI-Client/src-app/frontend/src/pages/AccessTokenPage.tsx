@@ -65,12 +65,12 @@ export function AccessTokenPage() {
         </div>
         <div className="hero-metrics">
           <div className="hero-metric-card">
-            <span className="hero-metric-label">网关地址</span>
+            <span className="hero-metric-label">{t("token.gatewayAddress")}</span>
             <strong className="hero-metric-value token-metric-value">{runtime?.listen_port || 4318}</strong>
           </div>
           <div className="hero-metric-card">
-            <span className="hero-metric-label">令牌状态</span>
-            <strong className="hero-metric-value">{token ? "已生成" : "未生成"}</strong>
+            <span className="hero-metric-label">{t("token.tokenStatus")}</span>
+            <strong className="hero-metric-value">{token ? t("token.generated") : t("token.notGenerated")}</strong>
           </div>
         </div>
       </div>

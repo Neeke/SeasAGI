@@ -9,6 +9,7 @@ import { formatPlanTier, normalizePlanTier } from "../utils/plan";
 
 /* --- Team Cost Snapshot (local store) --- */
 function TeamCostSnapshot() {
+  const { t } = useTranslation();
   const store = useTeamStore();
   const costAttribution = store.getCostAttribution();
   const members = store.members;
@@ -16,20 +17,20 @@ function TeamCostSnapshot() {
   return (
     <div className="section section-card">
       <div className="section-heading">
-        <h2>团队成本概览</h2>
-        <p className="hint">{costAttribution.month} · 基于本地用量估算</p>
+        <h2>{t("home.teamCostTitle")}</h2>
+        <p className="hint">{costAttribution.month} · {t("home.teamCostHint")}</p>
       </div>
       <div className="hero-metrics" style={{ marginTop: 8 }}>
         <div className="hero-metric-card">
-          <span className="hero-metric-label">团队规模</span>
-          <strong className="hero-metric-value">{members.filter((m: { status: string }) => m.status === "active").length} 人</strong>
+          <span className="hero-metric-label">{t("home.teamSize")}</span>
+          <strong className="hero-metric-value">{members.filter((m: { status: string }) => m.status === "active").length}{t("home.teamMembers")}</strong>
         </div>
         <div className="hero-metric-card">
-          <span className="hero-metric-label">本月估算成本</span>
+          <span className="hero-metric-label">{t("home.monthlyEstimatedCost")}</span>
           <strong className="hero-metric-value">${(costAttribution.total_cost || 0).toFixed(2)}</strong>
         </div>
         <div className="hero-metric-card">
-          <span className="hero-metric-label">较上月</span>
+          <span className="hero-metric-label">{t("home.costVsLastMonth")}</span>
           <strong className="hero-metric-value" style={{ color: costAttribution.total_cost > costAttribution.previous_cost ? "var(--red)" : "var(--green)" }}>
             {costAttribution.total_cost > costAttribution.previous_cost ? "↑" : "↓"} ${Math.abs(costAttribution.total_cost - costAttribution.previous_cost).toFixed(2)}
           </strong>

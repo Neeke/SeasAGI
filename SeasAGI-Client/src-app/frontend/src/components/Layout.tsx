@@ -146,8 +146,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           type="button"
           className="theme-toggle"
           onClick={() => setTheme((prev) => (prev === "dark" ? "light" : "dark"))}
-          aria-label={theme === "dark" ? "切换到浅色风格" : "切换到深色风格"}
-          title={theme === "dark" ? "切换到浅色风格" : "切换到深色风格"}
+          aria-label={theme === "dark" ? t("layout.themeSwitchToLight") : t("layout.themeSwitchToDark")}
+          title={theme === "dark" ? t("layout.themeSwitchToLight") : t("layout.themeSwitchToDark")}
         >
           <AppIcon name="sun" />
         </button>
@@ -209,7 +209,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div className="user-info">
                 <div className="user-avatar">{auth.email?.[0]?.toUpperCase() || "U"}</div>
                 <div className="user-details">
-                  <div className="user-name">{auth.email || "已登录"}</div>
+                  <div className="user-name">{auth.email || t("layout.loggedIn")}</div>
                   {planTier && <div className={`plan-badge plan-badge-${planTier}`}>{planLabel}</div>}
                 </div>
                 <span className="user-chevron">›</span>

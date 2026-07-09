@@ -15,22 +15,22 @@ interface PlanInfo {
   relay_enabled?: boolean;
 }
 
-const PLAN_AUDIENCES: Record<string, { zh: string; en: string }> = {
-  free: { zh: "适合尝鲜、BYOK 用户", en: "For trial & BYOK users" },
-  pro: { zh: "适合个人开发者", en: "For individual developers" },
-  teams: { zh: "适合小团队与工作室", en: "For small teams & studios" },
-  enterprise: { zh: "适合企业采购", en: "For enterprise procurement" },
+const PLAN_AUDIENCES: Record<string, string> = {
+  free: "subscription.freeAudience",
+  pro: "subscription.proAudience",
+  teams: "subscription.teamsAudience",
+  enterprise: "subscription.enterpriseAudience",
 };
 
-const PLAN_VALUES: Record<string, { zh: string; en: string }> = {
-  free: { zh: "本地优先 · 无限使用", en: "Local-first · Unlimited use" },
-  pro: { zh: "效率 · 分析 · 云增值", en: "Efficiency · Analytics · Cloud" },
-  teams: { zh: "协作 · 共享 · 集中管理", en: "Collaboration · Sharing · Control" },
-  enterprise: { zh: "治理 · 审计 · SLA", en: "Governance · Audit · SLA" },
+const PLAN_VALUES: Record<string, string> = {
+  free: "subscription.freeValue",
+  pro: "subscription.proValue",
+  teams: "subscription.teamsValue",
+  enterprise: "subscription.enterpriseValue",
 };
 
 export function SubscriptionPage() {
-  const { t, locale } = useTranslation();
+  const { t } = useTranslation();
   const auth = useAppStore((s) => s.auth);
   const cloudBilling = useAppStore((s) => s.cloudBilling);
   const [plans, setPlans] = useState<PlanInfo[]>([]);
@@ -39,8 +39,6 @@ export function SubscriptionPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<"success" | "error">("success");
   const [teamSeats, setTeamSeats] = useState<Record<string, number>>({});
-
-  const isZh = locale === "zh-CN";
 
   useEffect(() => {
     (async () => {
@@ -67,7 +65,7 @@ export function SubscriptionPage() {
   const handleSubscribe = async (planId: string, quantity?: number) => {
     if (!auth.is_logged_in) {
       setMessageType("error");
-      setMessage(isZh ? "请先登录" : "Please log in first");
+      setMessage(t("subscription.pleaseLogin"));
       return;
     }
     setSubscribing(planId);
@@ -77,21 +75,21 @@ export function SubscriptionPage() {
       const url = result?.checkout_url;
       if (url) {
         setMessageType("success");
-        setMessage(isZh ? "正在打开支付页面..." : "Opening payment page...");
+        setMessage(t("subscription.openingPayment"));
         await openInBrowser(url);
       } else {
         setMessageType("success");
-        setMessage(isZh ? `已切换到 ${planId} 套餐` : `Switched to ${planId} plan`);
+        setMessage(t("subscription.switchedTo", { plan: planId }));
         setTimeout(() => window.location.reload(), 1000);
       }
     } catch (e: any) {
       setMessageType("error");
-      setMessage(e.message || (isZh ? "操作失败" : "Operation failed"));
+      setMessage(e.message || t("subscription.operationFailed"));
     }
     setSubscribing(null);
   };
 
-  if (loading) return <div className="page"><div className="loading">{isZh ? "加载中..." : "Loading..."}</div></div>;
+  if (loading) return <div className="page"><div className="loading">{t("subscription.loading")}</div></div>;
 
   const currentPlan = cloudBilling?.plan_id || "free";
 
@@ -102,15 +100,15 @@ export function SubscriptionPage() {
       <div className="page-header">
         <div>
           <h1>{t("subscription.title")}</h1>
-          <p className="page-subtitle">{isZh ? "选择适合你的套餐，开始高效管理 AI 调用。" : "Choose the right plan for your needs."}</p>
+          <p className="page-subtitle">{t("subscription.pageSubtitle")}</p>
         </div>
         <div className="hero-metrics">
           <div className="hero-metric-card">
-            <span className="hero-metric-label">{isZh ? "当前套餐" : "Current Plan"}</span>
+            <span className="hero-metric-label">{t("subscription.currentPlanLabel")}</span>
             <strong className="hero-metric-value">{currentPlan}</strong>
           </div>
           <div className="hero-metric-card">
-            <span className="hero-metric-label">{isZh ? "可选套餐" : "Available Plans"}</span>
+            <span className="hero-metric-label">{t("subscription.availablePlansLabel")}</span>
             <strong className="hero-metric-value">{plans.length}</strong>
           </div>
         </div>
@@ -124,14 +122,14 @@ export function SubscriptionPage() {
 
       <div className="section section-card">
         <div className="section-heading">
-          <h2>{isZh ? "套餐列表" : "Plans"}</h2>
-          <p className="hint">{isZh ? "根据团队规模和需求选择最适合的方案。" : "Pick the plan that fits your needs."}</p>
+          <h2>{t("subscription.planListTitle")}</h2>
+          <p className="hint">{t("subscription.planListHint")}</p>
         </div>
         <div className="plan-cards">
         {sorted.map((plan) => {
           const isCurrent = currentPlan === plan.plan_id;
-          const audience = PLAN_AUDIENCES[plan.plan_id] || { zh: "", en: "" };
-          const value = PLAN_VALUES[plan.plan_id] || { zh: "", en: "" };
+          const audienceKey = PLAN_AUDIENCES[plan.plan_id] || "";
+          const valueKey = PLAN_VALUES[plan.plan_id] || "";
           const isEnterprise = plan.plan_id === "enterprise";
           const isFree = plan.plan_id === "free";
           const isTeams = plan.plan_id === "teams";
@@ -142,32 +140,32 @@ export function SubscriptionPage() {
             <div key={plan.plan_id} className={`plan-card ${isCurrent ? "plan-current" : ""} ${isEnterprise ? "plan-enterprise" : ""}`}>
               <div className="plan-card-header">
                 <h2 className="plan-name">{plan.name}</h2>
-                {isCurrent && <span className="badge badge-green">{isZh ? "当前套餐" : "Current"}</span>}
+                {isCurrent && <span className="badge badge-green">{t("subscription.currentBadge")}</span>}
               </div>
               {isEnterprise ? (
                 <div className="plan-price">
-                  <span className="plan-amount">{isZh ? "联系销售" : "Contact Sales"}</span>
+                  <span className="plan-amount">{t("subscription.contactSales")}</span>
                 </div>
               ) : isTeams ? (
                 <div className="plan-price">
                   <span className="plan-amount">${plan?.price || 0}</span>
-                  <span className="plan-period">/seat/mo</span>
+                  <span className="plan-period">{t("subscription.perSeatMonth")}</span>
                 </div>
               ) : (
                 <div className="plan-price">
                   <span className="plan-amount">${plan?.price || 0}</span>
-                  <span className="plan-period">{isFree ? "" : "/mo"}</span>
+                  <span className="plan-period">{isFree ? "" : t("subscription.perMonth")}</span>
                 </div>
               )}
-              <div className="plan-audience">{isZh ? audience.zh : audience.en}</div>
-              <div className="plan-value-tag">{isZh ? value.zh : value.en}</div>
-              <p className="plan-desc">{isZh ? plan.description : plan.description}</p>
+              <div className="plan-audience">{audienceKey ? t(audienceKey) : ""}</div>
+              <div className="plan-value-tag">{valueKey ? t(valueKey) : ""}</div>
+              <p className="plan-desc">{plan.description}</p>
               <ul className="plan-features">
-                <li><strong>{plan?.monthly_quota ? (plan.monthly_quota >= 1000000 ? `${(plan.monthly_quota / 1000000).toFixed(0)}M` : plan.monthly_quota.toLocaleString()) : (isEnterprise ? (isZh ? "自定义配额" : "Custom quota") : (isZh ? "无限" : "Unlimited"))}</strong> {isZh ? "月请求配额" : "monthly requests"}</li>
-                <li>{isZh ? "最大" : "Max"} RPM: <strong>{plan?.max_rpm || 0}</strong></li>
-                <li>{isZh ? "最大" : "Max"} TPM: <strong>{plan?.max_tpm?.toLocaleString() || 0}</strong></li>
-                {plan.relay_enabled && <li className="feature-yes">{isZh ? "✓ 云端中继通道" : "✓ Cloud relay channels"}</li>}
-                {!plan.relay_enabled && !isFree && <li className="feature-no">{isZh ? "✗ 云端中继" : "✗ Cloud relay"}</li>}
+                <li><strong>{plan?.monthly_quota ? (plan.monthly_quota >= 1000000 ? `${(plan.monthly_quota / 1000000).toFixed(0)}M` : plan.monthly_quota.toLocaleString()) : (isEnterprise ? t("subscription.customQuota") : t("subscription.unlimited"))}</strong> {t("subscription.monthlyRequests")}</li>
+                <li>{t("subscription.maxRPM")}: <strong>{plan?.max_rpm || 0}</strong></li>
+                <li>{t("subscription.maxTPM")}: <strong>{plan?.max_tpm?.toLocaleString() || 0}</strong></li>
+                {plan.relay_enabled && <li className="feature-yes">{t("subscription.cloudRelay")}</li>}
+                {!plan.relay_enabled && !isFree && <li className="feature-no">{t("subscription.noCloudRelay")}</li>}
               </ul>
               {isEnterprise ? (
                 <button
@@ -175,7 +173,7 @@ export function SubscriptionPage() {
                   onClick={() => openInBrowser("https://github.com/neeke/seasagi/issues")}
                   style={{ width: "100%" }}
                 >
-                  {isZh ? "📞 联系销售" : "📞 Contact Sales"}
+                  {t("subscription.contactSalesBtn")}
                 </button>
               ) : isFree ? (
                 <a
@@ -183,7 +181,7 @@ export function SubscriptionPage() {
                   className="btn-outline"
                   style={{ width: "100%", justifyContent: "center", display: "flex", textDecoration: "none" }}
                 >
-                  {isZh ? "💻 免费使用" : "💻 Get Started Free"}
+                  {t("subscription.freeUsage")}
                 </a>
               ) : isTeams ? (
                 <div style={{ width: "100%" }}>
@@ -193,23 +191,23 @@ export function SubscriptionPage() {
                       onClick={() => setTeamSeats(prev => ({ ...prev, [plan.plan_id]: Math.max(1, (prev[plan.plan_id] || 3) - 1) }))}
                       disabled={seats <= 1}
                     >−</button>
-                    <span className="seat-count">{seats} {isZh ? "席位" : "seats"}</span>
+                    <span className="seat-count">{seats} {t("subscription.seats")}</span>
                     <button
                       className="seat-btn"
                       onClick={() => setTeamSeats(prev => ({ ...prev, [plan.plan_id]: Math.min(50, (prev[plan.plan_id] || 3) + 1) }))}
                       disabled={seats >= 50}
                     >+</button>
                   </div>
-                  <div className="seat-total">${totalPrice.toFixed(2)}/mo {isZh ? "总计" : "total"}</div>
+                  <div className="seat-total">${totalPrice.toFixed(2)}/mo {t("subscription.total")}</div>
                   <button
                     className={isCurrent ? "btn-secondary" : "btn-primary"}
                     onClick={() => handleSubscribe(plan.plan_id, seats)}
                     disabled={subscribing === plan.plan_id || isCurrent}
                     style={{ width: "100%", marginTop: 8 }}
                   >
-                    {subscribing === plan.plan_id ? (isZh ? "处理中..." : "Processing...") :
-                     isCurrent ? (isZh ? "当前套餐" : "Current Plan") :
-                     `${isZh ? "订阅" : "Subscribe"} $${totalPrice.toFixed(2)}/mo`}
+                    {subscribing === plan.plan_id ? t("subscription.processing") :
+                     isCurrent ? t("subscription.currentBadge") :
+                     `${t("subscription.subscribe")} $${totalPrice.toFixed(2)}/mo`}
                   </button>
                 </div>
               ) : (
@@ -219,9 +217,9 @@ export function SubscriptionPage() {
                   disabled={subscribing === plan.plan_id || isCurrent}
                   style={{ width: "100%" }}
                 >
-                  {subscribing === plan.plan_id ? (isZh ? "处理中..." : "Processing...") :
-                   isCurrent ? (isZh ? "当前套餐" : "Current Plan") :
-                   `Subscribe $${plan.price}/mo`}
+                  {subscribing === plan.plan_id ? t("subscription.processing") :
+                   isCurrent ? t("subscription.currentBadge") :
+                   `${t("subscription.subscribe")} $${plan.price}/mo`}
                 </button>
               )}
             </div>

@@ -85,7 +85,7 @@ export function RegisterPage() {
               <div className="auth-brand-mark">S</div>
               <div>
                 <div className="auth-brand-title">SeasAGI</div>
-                <div className="auth-brand-subtitle">云端同步 · 智能路由 · 用量分析</div>
+                <div className="auth-brand-subtitle">{t("auth.brandSubtitle")}</div>
               </div>
             </div>
 
@@ -94,20 +94,20 @@ export function RegisterPage() {
                 className={`auth-tab ${mode === "register" ? "active" : ""}`}
                 onClick={() => mode !== "register" && switchMode()}
               >
-                注册
+                {t("auth.register")}
               </button>
               <button
                 className={`auth-tab ${mode === "login" ? "active" : ""}`}
                 onClick={() => mode !== "login" && switchMode()}
               >
-                登录
+                {t("auth.login")}
               </button>
             </div>
 
             {mode === "register" ? (
-              <p className="auth-desc">注册云端账户，解锁用量分析、模型推荐与多端同步能力</p>
+              <p className="auth-desc">{t("auth.registerDesc")}</p>
             ) : (
-              <p className="auth-desc">登录已有账户，同步云端配置和用量数据</p>
+              <p className="auth-desc">{t("auth.loginDesc")}</p>
             )}
 
             {error && <div className="error-msg">{error}</div>}
@@ -117,7 +117,7 @@ export function RegisterPage() {
                 <div className="form-group">
                   <input
                     type="text"
-                    placeholder="显示名称（可选）"
+                    placeholder={t("auth.displayNamePlaceholder")}
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                   />
@@ -126,7 +126,7 @@ export function RegisterPage() {
               <div className="form-group">
                 <input
                   type="email"
-                  placeholder="邮箱"
+                  placeholder={t("settings.emailPlaceholder")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -135,7 +135,7 @@ export function RegisterPage() {
               <div className="form-group">
                 <input
                   type="password"
-                  placeholder="密码（至少6位）"
+                  placeholder={t("auth.passwordPlaceholder")}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   minLength={6}
@@ -144,16 +144,16 @@ export function RegisterPage() {
               </div>
               <button type="submit" className="btn-primary btn-full" disabled={loading}>
                 {loading
-                  ? (mode === "register" ? "注册中..." : "登录中...")
-                  : (mode === "register" ? "注册" : "登录")}
+                  ? (mode === "register" ? t("auth.registering") : t("auth.loggingIn"))
+                  : (mode === "register" ? t("auth.register") : t("auth.login"))}
               </button>
             </form>
 
             <div className="auth-switch">
               {mode === "register" ? (
-                <>已有账户？<button type="button" className="link-btn" onClick={switchMode}>去登录</button></>
+                <>{t("auth.hasAccount")}<button type="button" className="link-btn" onClick={switchMode}>{t("auth.goLogin")}</button></>
               ) : (
-                <>没有账户？<button type="button" className="link-btn" onClick={switchMode}>去注册</button></>
+                <>{t("auth.noAccount")}<button type="button" className="link-btn" onClick={switchMode}>{t("auth.goRegister")}</button></>
               )}
             </div>
 
@@ -169,8 +169,8 @@ export function RegisterPage() {
 
         <div className="auth-benefits-panel">
           <div className="auth-benefits-header">
-            <h2>注册后可获得的云端权益</h2>
-            <p>无论选择哪个套餐，你都拥有本地无限使用权。云端账户额外解锁以下能力。</p>
+            <h2>{t("auth.cloudBenefitsTitle")}</h2>
+            <p>{t("auth.cloudBenefitsDesc")}</p>
           </div>
           <div className="auth-benefits-grid">
             {PLAN_BENEFITS.map((plan) => (

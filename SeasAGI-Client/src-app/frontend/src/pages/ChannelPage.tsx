@@ -286,7 +286,14 @@ export function ChannelPage() {
                 <option value="openai">OpenAI</option>
                 <option value="azure_openai">Azure OpenAI</option>
                 <option value="anthropic">Anthropic</option>
+                <option value="gemini">Google Gemini</option>
+                <option value="openrouter">OpenRouter</option>
                 <option value="deepseek">DeepSeek</option>
+                <option value="bailian">Bailian (百炼)</option>
+                <option value="minimax">MiniMax</option>
+                <option value="moonshot">Moonshot AI (Kimi)</option>
+                <option value="zhipu">Zhipu AI (GLM)</option>
+                <option value="xiaomi">Xiaomi MiMo</option>
                 <option value="custom">Custom</option>
               </select>
             </div>
