@@ -2,10 +2,10 @@ cask "seasagi" do
   version "0.1.0"
   sha256 "TBD"
 
-  url "https://github.com/neeke/seasagi/releases/download/v#{version}/SeasAGI.dmg"
+  url "https://github.com/SeasX/SeasAGI/releases/download/v#{version}/SeasAGI.dmg"
   name "SeasAGI"
   desc "Local LLM API switching client for macOS"
-  homepage "https://github.com/neeke/seasagi"
+  homepage "https://github.com/SeasX/SeasAGI"
 
   livecheck do
     url :url
