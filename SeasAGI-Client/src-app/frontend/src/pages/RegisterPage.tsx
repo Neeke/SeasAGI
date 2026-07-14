@@ -3,36 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../stores/appStore";
 import * as cmd from "../utils/commands";
 import { useTranslation } from "../i18n";
+import { validateForm, loginFormSchema, registerFormSchema } from "../utils/validation";
 
 type AuthMode = "login" | "register";
-
-const PLAN_BENEFITS = [
-  {
-    tier: "Free",
-    price: "免费",
-    audience: "适合尝鲜",
-    features: ["本地无限使用", "BYOK 支持", "基础路由", "用量统计"],
-  },
-  {
-    tier: "Pro",
-    price: "$9.9/月",
-    audience: "适合个人开发者",
-    features: ["1 千万 Token 配额", "云端中继通道", "模型优化建议", "用量分析面板"],
-    accent: true,
-  },
-  {
-    tier: "Teams",
-    price: "$24.9/席位/月",
-    audience: "适合小团队",
-    features: ["5 千万共享配额", "团队协作空间", "共享策略模板", "集中管理与看板"],
-  },
-  {
-    tier: "Enterprise",
-    price: "联系销售",
-    audience: "适合企业采购",
-    features: ["审计日志与合规", "自定义策略", "SLA 保障", "私有化部署"],
-  },
-];
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -45,10 +18,72 @@ export function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const planBenefits = [
+    {
+      tier: t("auth.planFreeTier"),
+      price: t("auth.planFreePrice"),
+      audience: t("auth.planFreeAudience"),
+      features: [
+        t("auth.planFreeFeature1"),
+        t("auth.planFreeFeature2"),
+        t("auth.planFreeFeature3"),
+        t("auth.planFreeFeature4"),
+      ],
+    },
+    {
+      tier: t("auth.planProTier"),
+      price: t("auth.planProPrice"),
+      audience: t("auth.planProAudience"),
+      features: [
+        t("auth.planProFeature1"),
+        t("auth.planProFeature2"),
+        t("auth.planProFeature3"),
+        t("auth.planProFeature4"),
+      ],
+      accent: true,
+    },
+    {
+      tier: t("auth.planTeamsTier"),
+      price: t("auth.planTeamsPrice"),
+      audience: t("auth.planTeamsAudience"),
+      features: [
+        t("auth.planTeamsFeature1"),
+        t("auth.planTeamsFeature2"),
+        t("auth.planTeamsFeature3"),
+        t("auth.planTeamsFeature4"),
+      ],
+    },
+    {
+      tier: t("auth.planEnterpriseTier"),
+      price: t("auth.planEnterprisePrice"),
+      audience: t("auth.planEnterpriseAudience"),
+      features: [
+        t("auth.planEnterpriseFeature1"),
+        t("auth.planEnterpriseFeature2"),
+        t("auth.planEnterpriseFeature3"),
+        t("auth.planEnterpriseFeature4"),
+      ],
+    },
+  ];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
+
+    // Zod validation
+    const schema = mode === "register" ? registerFormSchema : loginFormSchema;
+    const data = mode === "register"
+      ? { email, password, displayName }
+      : { email, password };
+    const result = validateForm(schema, data);
+    if (!result.success) {
+      const firstError = Object.values(result.errors)[0];
+      setError(firstError || t("auth.validationFailed"));
+      setLoading(false);
+      return;
+    }
+
     try {
       if (mode === "register") {
         await cmd.register(email, password, displayName || email.split("@")[0]);
@@ -64,7 +99,7 @@ export function RegisterPage() {
         typeof err === "string" ? err :
         err && typeof err === "object" && "message" in err ? String((err as {message: string}).message) :
         err && typeof err === "object" && "error" in err ? String((err as {error: string}).error) :
-        "操作失败，请重试";
+        t("auth.operationFailed");
       setError(message);
     } finally {
       setLoading(false);
@@ -173,7 +208,7 @@ export function RegisterPage() {
             <p>{t("auth.cloudBenefitsDesc")}</p>
           </div>
           <div className="auth-benefits-grid">
-            {PLAN_BENEFITS.map((plan) => (
+            {planBenefits.map((plan) => (
               <div key={plan.tier} className={`auth-benefit-card ${plan.accent ? "auth-benefit-accent" : ""}`}>
                 <div className="auth-benefit-head">
                   <span className="auth-benefit-tier">{plan.tier}</span>

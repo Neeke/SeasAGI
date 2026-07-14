@@ -378,6 +378,7 @@ export namespace config {
 	    channels?: string[];
 	    selection_policy?: string;
 	    allow_provider_fallback?: boolean;
+	    allow_cross_provider_fallback?: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new ModelComboStep(source);
@@ -392,6 +393,7 @@ export namespace config {
 	        this.channels = source["channels"];
 	        this.selection_policy = source["selection_policy"];
 	        this.allow_provider_fallback = source["allow_provider_fallback"];
+	        this.allow_cross_provider_fallback = source["allow_cross_provider_fallback"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

@@ -110,15 +110,15 @@ export function SettingsPage() {
       <div className="page-header">
         <div>
           <h1>{t("settings.title")}</h1>
-          <p className="page-subtitle">管理账户、语言、OAuth 连接、本地代理与默认路由策略。</p>
+          <p className="page-subtitle">{t("settings.subtitle")}</p>
         </div>
         <div className="hero-metrics">
           <div className="hero-metric-card">
-            <span className="hero-metric-label">登录状态</span>
-            <strong className="hero-metric-value">{auth.is_logged_in ? "已登录" : "未登录"}</strong>
+            <span className="hero-metric-label">{t("settings.metricLoginStatus")}</span>
+            <strong className="hero-metric-value">{auth.is_logged_in ? t("settings.loggedIn") : t("settings.notLoggedIn")}</strong>
           </div>
           <div className="hero-metric-card">
-            <span className="hero-metric-label">OAuth 提供方</span>
+            <span className="hero-metric-label">{t("settings.metricOauthProviders")}</span>
             <strong className="hero-metric-value">{oauthProviders.length}</strong>
           </div>
         </div>
@@ -133,8 +133,8 @@ export function SettingsPage() {
         <div className="settings-stack">
           <div className="tab-content section-card">
             <div className="section-heading">
-              <h2>基础偏好</h2>
-              <p className="hint">设置界面语言和本地扩展能力，控制客户端行为偏好。</p>
+              <h2>{t("settings.sectionBasic")}</h2>
+              <p className="hint">{t("settings.sectionBasicHint")}</p>
             </div>
             <div className="form-group">
               <label>{t("settings.language")}</label>
@@ -155,7 +155,7 @@ export function SettingsPage() {
             >
               <div>
                 <div className="settings-toggle-title">{t("settings.rtkEnabled")}</div>
-                <div className="hint">启用 RTK 能力增强本地运行时支持。</div>
+                <div className="hint">{t("settings.rtkHint")}</div>
               </div>
               <div className="form-checkbox" style={{ marginBottom: 0 }}>
                 <input
@@ -167,7 +167,7 @@ export function SettingsPage() {
                     if (appConfig) setAppConfig({ ...appConfig, rtk_enabled: e.target.checked });
                   }}
                 />
-                <label htmlFor="rtkEnabled" onClick={(event) => event.stopPropagation()}>启用</label>
+                <label htmlFor="rtkEnabled" onClick={(event) => event.stopPropagation()}>{t("settings.enable")}</label>
               </div>
             </div>
 
@@ -181,7 +181,7 @@ export function SettingsPage() {
             >
               <div>
                 <div className="settings-toggle-title">{t("settings.cavemanEnabled")}</div>
-                <div className="hint">启用后可选择更精简的输出风格。</div>
+                <div className="hint">{t("settings.cavemanHint")}</div>
               </div>
               <div className="form-row">
                 <div className="form-checkbox" style={{ marginBottom: 0 }}>
@@ -194,7 +194,7 @@ export function SettingsPage() {
                       if (appConfig) setAppConfig({ ...appConfig, caveman_enabled: e.target.checked });
                     }}
                   />
-                  <label htmlFor="cavemanEnabled" onClick={(event) => event.stopPropagation()}>启用</label>
+                  <label htmlFor="cavemanEnabled" onClick={(event) => event.stopPropagation()}>{t("settings.enable")}</label>
                 </div>
                 {cavemanEnabled && (
                   <div className="form-group settings-inline-select" style={{ marginBottom: 0 }}>
@@ -205,10 +205,10 @@ export function SettingsPage() {
                         if (appConfig) setAppConfig({ ...appConfig, caveman_style: e.target.value });
                       }}
                     >
-                      <option value="concise">Concise</option>
-                      <option value="brief">Brief</option>
-                      <option value="minimal">Minimal</option>
-                      <option value="terse">Terse</option>
+                      <option value="concise">{t("settings.cavemanStyleConcise")}</option>
+                      <option value="brief">{t("settings.cavemanStyleBrief")}</option>
+                      <option value="minimal">{t("settings.cavemanStyleMinimal")}</option>
+                      <option value="terse">{t("settings.cavemanStyleTerse")}</option>
                     </select>
                   </div>
                 )}
@@ -238,7 +238,7 @@ export function SettingsPage() {
                       setAppConfig({ ...appConfig, platform_api_base_url: platformApiURL });
                     }
                   } catch (e) {
-                    setPlatformApiError(getErrorMessage(e, "保存失败"));
+                    setPlatformApiError(getErrorMessage(e, t("settings.saveFailed")));
                   }
                 }}
                 className="btn-primary"
@@ -351,17 +351,17 @@ export function SettingsPage() {
 
           <div className="tab-content section-card">
             <div className="section-heading">
-              <h2>账户状态</h2>
-              <p className="hint">查看当前登录身份，或跳转到登录 / 注册页面。</p>
+              <h2>{t("settings.accountStatus")}</h2>
+              <p className="hint">{t("settings.accountStatusHint")}</p>
             </div>
             {auth.is_logged_in ? (
               <div className="settings-inline-actions">
-                <span className="auth-email-label" style={{ marginBottom: 0 }}>已登录：{auth.email}</span>
+                <span className="auth-email-label" style={{ marginBottom: 0 }}>{t("settings.loggedInAs", { email: auth.email || "" })}</span>
                 <button onClick={handleLogout} className="btn-secondary btn-sm">{t("settings.logout")}</button>
               </div>
             ) : (
               <p className="auth-email-label" style={{ marginBottom: 0 }}>
-                未登录 — <NavLink to="/auth" className="link-btn">去登录 / 注册</NavLink>
+                {t("settings.notLoggedInDash")} <NavLink to="/auth" className="link-btn">{t("settings.goLoginRegister")}</NavLink>
               </p>
             )}
           </div>
@@ -373,7 +373,7 @@ export function SettingsPage() {
           <div className="tab-content section-card">
             <div className="section-heading">
               <h2>{t("settings.routingStrategy")}</h2>
-              <p className="hint">设置默认路由策略和 Sticky 次数，控制请求在通道间的分配方式。</p>
+              <p className="hint">{t("settings.routingHint")}</p>
             </div>
             <div className="routing-form-grid">
               <div className="form-group">
@@ -395,20 +395,20 @@ export function SettingsPage() {
 
           <div className="tab-content section-card">
             <div className="section-heading">
-              <h2>BYOK 优先策略</h2>
-              <p className="hint">BYOK（Bring Your Own Key）让你使用自有 API Key 直接调用模型，不消耗平台配额，避免超额费用。</p>
+              <h2>{t("settings.byokTitle")}</h2>
+              <p className="hint">{t("settings.byokHint")}</p>
             </div>
             <div className="byok-status-card">
-              <div className="byok-title">💡 BYOK 优先级说明</div>
+              <div className="byok-title">{t("settings.byokInfoTitle")}</div>
               <div className="byok-desc">
-                <p><strong>使用场景：</strong>当你配置了自定义通道（使用自己的 API Key）时，建议启用 BYOK 优先策略。路由引擎会优先匹配本地 Key 通道，仅当本地 Key 不可用时才使用平台云端通道。</p>
-                <p><strong>成本优势：</strong>BYOK 请求不消耗 $9.9 Pro 套餐的 1000 万 Token 配额，适合高用量场景。</p>
-                <p><strong>超额保护：</strong>免费版用户配额用完后可通过 BYOK 继续使用，无需升级套餐。</p>
-                <p><strong>在用量页中：</strong>本地用量和云端用量已分开统计。你可以在用量页查看配额消耗，并结合路由策略建议优化调用方式。</p>
+                <p><strong>{t("settings.byokScenarioLabel")}</strong>{t("settings.byokScenarioText")}</p>
+                <p><strong>{t("settings.byokCostLabel")}</strong>{t("settings.byokCostText")}</p>
+                <p><strong>{t("settings.byokProtectionLabel")}</strong>{t("settings.byokProtectionText")}</p>
+                <p><strong>{t("settings.byokUsageLabel")}</strong>{t("settings.byokUsageText")}</p>
               </div>
             </div>
             <label className="toggle-row settings-toggle-block">
-              <span>优先使用 BYOK（本地 Key）</span>
+              <span>{t("settings.byokToggle")}</span>
               <input type="checkbox" checked={true} onChange={() => {}} />
             </label>
           </div>
@@ -416,7 +416,7 @@ export function SettingsPage() {
           <div className="tab-content section-card">
             <div className="section-heading">
               <h2>{t("settings.autoLaunch")}</h2>
-              <p className="hint">控制应用随系统启动的行为，便于长期驻留本地网关。</p>
+              <p className="hint">{t("settings.autoLaunchHint")}</p>
             </div>
             <div className="settings-inline-actions">
               <button onClick={() => cmd.setAutoLaunch(true)} className="btn-secondary">{t("settings.turnOn")}</button>

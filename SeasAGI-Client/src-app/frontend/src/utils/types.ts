@@ -71,7 +71,7 @@ export interface RequestConstraints {
   max_price?: number;
   max_latency_ms?: number;
   min_throughput?: number;
-  data_policy?: "allow" | "deny";
+  data_policy?: "local_only" | "cloud_only" | "any";
   zdr_required?: boolean;
   allow_cross_provider_fallback?: boolean;
   allow_cross_step_fallback?: boolean;
@@ -85,6 +85,7 @@ export interface ModelComboStep {
   channels?: string[];
   selection_policy?: "stability" | "cost" | "latency" | "throughput";
   allow_provider_fallback?: boolean;
+  allow_cross_provider_fallback?: boolean;
 }
 
 export interface ModelCombo {

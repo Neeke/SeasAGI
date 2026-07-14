@@ -170,7 +170,7 @@ interface TeamStore {
 }
 
 const defaultProfile: TeamProfile = {
-  name: "我的团队",
+  name: "",
   slug: "my-team",
   status: "active",
   billing_email: "",

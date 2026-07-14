@@ -257,6 +257,10 @@ func (s *Service) handleChatCompletions(w http.ResponseWriter, r *http.Request) 
 
 	cfg := s.configSvc.GetConfig()
 
+	if cfg.DefaultComboName != "" && req.Model == cfg.DefaultModel {
+		req.Model = cfg.DefaultComboName
+	}
+
 	if rawBody != nil {
 		rawBody = protocol.DedupToolsInRequest(rawBody)
 		if toolsRaw, ok := rawBody["tools"]; ok {
@@ -291,12 +295,31 @@ func (s *Service) handleChatCompletions(w http.ResponseWriter, r *http.Request) 
 	}
 	req.Extra["_task_type"] = taskType
 
+	// Extract request-level constraints from the request body
+	appliedConstraints := make(map[string]any)
+	if rawBody != nil {
+		if v, ok := rawBody["max_price"]; ok {
+			appliedConstraints["max_price"] = v
+		}
+		if v, ok := rawBody["max_latency_ms"]; ok {
+			appliedConstraints["max_latency_ms"] = v
+		}
+		if v, ok := rawBody["data_policy"]; ok {
+			appliedConstraints["data_policy"] = v
+		}
+	}
+
 	normalizedModel, plan, err := s.resolver.ResolveChatPlan(req.Model, taskType)
 	if err != nil {
 		writeJSONError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	req.Model = normalizedModel
+
+	// Apply request-level constraints to filter candidates
+	if len(appliedConstraints) > 0 {
+		plan = s.resolver.FilterCandidatesByConstraints(plan, appliedConstraints)
+	}
 
 	if len(plan) > 0 {
 		providerType := plan[0].Channel.ProviderType
@@ -329,19 +352,7 @@ func (s *Service) handleChatCompletions(w http.ResponseWriter, r *http.Request) 
 	var routeSteps []logs.RouteStep
 	routeTrace := summarizeRoutePlan(plan)
 
-	// Extract request-level constraints from the request body
-	appliedConstraints := make(map[string]any)
-	if rawBody != nil {
-		if v, ok := rawBody["max_price"]; ok {
-			appliedConstraints["max_price"] = v
-		}
-		if v, ok := rawBody["max_latency_ms"]; ok {
-			appliedConstraints["max_latency_ms"] = v
-		}
-		if v, ok := rawBody["data_policy"]; ok {
-			appliedConstraints["data_policy"] = v
-		}
-	}
+	// Serialize constraints for logging
 	constraintsJSON := ""
 	if len(appliedConstraints) > 0 {
 		if b, err := json.Marshal(appliedConstraints); err == nil {
@@ -403,6 +414,10 @@ func (s *Service) handleChatCompletions(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(resp.StatusCode)
 
 	if req.Stream {
+		if needsReasoning {
+			_ = protocol.ProcessReasoningSSEStream(resp.Body, w)
+			return
+		}
 		if s.rtkPipeline != nil && s.rtkPipeline.Enabled {
 			_ = rtk.ProcessSSEStream(resp.Body, w, s.rtkPipeline)
 			return

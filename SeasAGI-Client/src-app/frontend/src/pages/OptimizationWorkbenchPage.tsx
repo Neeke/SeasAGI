@@ -5,38 +5,39 @@ import { OptimizationPage } from "./OptimizationPage";
 import { ExecAnalysisPage } from "./ExecAnalysisPage";
 import { useAppStore } from "../stores/appStore";
 import * as cmd from "../utils/commands";
+import { useTranslation } from "../i18n";
 
 type WorkbenchTab = "combos" | "optimization" | "templates" | "analysis";
 
-const TAB_LABELS: Record<WorkbenchTab, string> = {
-  combos: "我的方案",
-  optimization: "优化建议",
-  templates: "模板中心",
-  analysis: "执行分析",
+const TAB_LABEL_KEYS: Record<WorkbenchTab, string> = {
+  combos: "workbench.tab.combos",
+  optimization: "workbench.tab.optimization",
+  templates: "workbench.tab.templates",
+  analysis: "workbench.tab.analysis",
 };
 
-// 任务类型定义
 type TaskType = "general_chat" | "tool_calling" | "structured_output" | "long_context" | "vision";
 
-const TASK_TYPE_LABELS: Record<TaskType, string> = {
-  general_chat: "通用对话",
-  tool_calling: "工具调用",
-  structured_output: "结构化输出",
-  long_context: "长上下文",
-  vision: "视觉理解",
+const TASK_TYPE_LABEL_KEYS: Record<TaskType, string> = {
+  general_chat: "workbench.task.general_chat",
+  tool_calling: "workbench.task.tool_calling",
+  structured_output: "workbench.task.structured_output",
+  long_context: "workbench.task.long_context",
+  vision: "workbench.task.vision",
 };
 
-const TASK_TYPE_DESCS: Record<TaskType, string> = {
-  general_chat: "日常对话、问答、创意写作等通用场景",
-  tool_calling: "需要调用外部工具、API或函数的场景",
-  structured_output: "需要JSON、XML等结构化输出的场景",
-  long_context: "需要处理长文档、多轮对话等长上下文场景",
-  vision: "图像识别、视觉问答等视觉理解场景",
+const TASK_TYPE_DESC_KEYS: Record<TaskType, string> = {
+  general_chat: "workbench.taskDesc.general_chat",
+  tool_calling: "workbench.taskDesc.tool_calling",
+  structured_output: "workbench.taskDesc.structured_output",
+  long_context: "workbench.taskDesc.long_context",
+  vision: "workbench.taskDesc.vision",
 };
 
 export function OptimizationWorkbenchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const setTaskProfiles = useAppStore((s) => s.setTaskProfiles);
+  const { t } = useTranslation();
   const initialTab = (searchParams.get("tab") as WorkbenchTab) || "combos";
   const [activeTab, setActiveTab] = useState<WorkbenchTab>(
     ["combos", "optimization", "templates", "analysis"].includes(initialTab) ? initialTab : "combos"
@@ -67,9 +68,9 @@ export function OptimizationWorkbenchPage() {
     <div className="page workbench-page">
       <div className="page-header">
         <div>
-          <h1>组合优化</h1>
+          <h1>{t("workbench.title")}</h1>
           <p className="page-subtitle">
-            管理模型调用方案、查看优化建议与执行效果
+            {t("workbench.subtitle")}
           </p>
         </div>
       </div>
@@ -81,24 +82,23 @@ export function OptimizationWorkbenchPage() {
             className={activeTab === tab ? "active" : ""}
             onClick={() => switchTab(tab)}
           >
-            {TAB_LABELS[tab]}
+            {t(TAB_LABEL_KEYS[tab])}
           </button>
         ))}
       </div>
 
-      {/* 任务类型切换标签 - 仅在优化建议页面显示 */}
       {activeTab === "optimization" && (
         <div className="task-type-toolbar">
-          <div className="task-type-label">任务类型:</div>
+          <div className="task-type-label">{t("workbench.taskTypeLabel")}</div>
           <div className="task-type-buttons">
-            {(Object.keys(TASK_TYPE_LABELS) as TaskType[]).map((taskType) => (
+            {(Object.keys(TASK_TYPE_LABEL_KEYS) as TaskType[]).map((taskType) => (
               <button
                 key={taskType}
                 className={`task-type-btn ${activeTaskType === taskType ? "active" : ""}`}
                 onClick={() => switchTaskType(taskType)}
-                title={TASK_TYPE_DESCS[taskType]}
+                title={t(TASK_TYPE_DESC_KEYS[taskType])}
               >
-                {TASK_TYPE_LABELS[taskType]}
+                {t(TASK_TYPE_LABEL_KEYS[taskType])}
               </button>
             ))}
           </div>

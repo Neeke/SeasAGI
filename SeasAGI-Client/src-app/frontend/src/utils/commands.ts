@@ -15,7 +15,7 @@ type WailsAppApi = {
   GetOptimizationConfig(): Promise<OptimizationConfig>;
   SetOptimizationConfig(cfg: Record<string, any>): Promise<void>;
   ApplyRecommendation(toModel: string, preset: string): Promise<void>;
-  PreviewComboOptimization(mode: string): Promise<any>;
+  PreviewComboOptimization(mode: string, taskType: string): Promise<any>;
   ApplyComboOptimization(toModel: string, preset: string, updateExisting: boolean): Promise<void>;
   GetComboRouteMetrics(): Promise<any[]>;
   GetDefaultComboName(): Promise<string>;
@@ -428,8 +428,8 @@ export async function applyRecommendation(toModel: string, preset: string): Prom
   return getAppApi().ApplyRecommendation(toModel, preset);
 }
 
-export async function previewComboOptimization(mode: string): Promise<any> {
-  return getAppApi().PreviewComboOptimization(mode);
+export async function previewComboOptimization(mode: string, taskType: string): Promise<any> {
+  return getAppApi().PreviewComboOptimization(mode, taskType);
 }
 
 export async function applyComboOptimization(toModel: string, preset: string, updateExisting: boolean): Promise<void> {

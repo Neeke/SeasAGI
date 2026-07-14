@@ -13,7 +13,7 @@ type ToolSet struct {
 var builtinToolEquivalents = map[string][]string{
 	"read_file":      {"filesystem_read", "fs_read", "file_read", "readFile"},
 	"write_file":     {"filesystem_write", "fs_write", "file_write", "writeFile"},
-	"list_directory": {"filesystem_list", "fs_ls", "dir_list", "listDir", "list_directory"},
+	"list_directory": {"filesystem_list", "fs_ls", "dir_list", "listDir"},
 	"search_files":   {"filesystem_search", "fs_search", "file_search", "searchFiles"},
 	"create_file":    {"filesystem_create", "fs_create", "file_create", "createFile"},
 	"delete_file":    {"filesystem_delete", "fs_delete", "file_delete", "deleteFile"},

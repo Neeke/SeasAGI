@@ -1,45 +1,46 @@
 import { useState, useEffect, useMemo } from "react";
-import { getOptimizationPlan, getOptimizationConfig, setOptimizationConfig, applyRecommendation, syncOptimizationConfigToCloud, syncOptimizationConfigFromCloud, getCloudBilling } from "../utils/commands";
+import { getOptimizationPlan, getOptimizationConfig, setOptimizationConfig, applyRecommendation, syncOptimizationConfigToCloud, syncOptimizationConfigFromCloud, getCloudBilling, saveModelCombo, setDefaultComboName, previewComboOptimization, applyComboOptimization } from "../utils/commands";
 import type { OptimizationPlan, OptimizationConfig, CloudBilling, ModelCombo, TaskProfile } from "../utils/types";
 import { useAppStore } from "../stores/appStore";
+import { useTranslation } from "../i18n";
 
-const MODE_LABELS: Record<string, string> = {
-  quality_first: "质量优先",
-  value_first: "性价比优先",
-  auto_strategy: "自动策略",
+const MODE_LABEL_KEYS: Record<string, string> = {
+  quality_first: "optimization.mode.quality_first",
+  value_first: "optimization.mode.value_first",
+  auto_strategy: "optimization.mode.auto_strategy",
 };
 
-const MODE_DESCS: Record<string, string> = {
-  quality_first: "优先推荐质量更高的模型，适合对输出质量有严格要求的场景",
-  value_first: "优先推荐性价比最优的模型，在保证质量的前提下最大限度降低成本",
-  auto_strategy: "智能分析用量数据，自动选择最适合当前使用模式的优化策略",
+const MODE_DESC_KEYS: Record<string, string> = {
+  quality_first: "optimization.modeDesc.quality_first",
+  value_first: "optimization.modeDesc.value_first",
+  auto_strategy: "optimization.modeDesc.auto_strategy",
 };
 
-const TASK_TYPE_META: Record<string, { title: string; subtitle: string; hint: string }> = {
+const TASK_TYPE_META_KEYS: Record<string, { title: string; subtitle: string; hint: string }> = {
   general_chat: {
-    title: "通用建议",
-    subtitle: "适合问答、写作、总结等日常对话场景",
-    hint: "优先平衡质量、成本和稳定性。",
+    title: "optimization.task.general_chat.title",
+    subtitle: "optimization.task.general_chat.subtitle",
+    hint: "optimization.task.general_chat.hint",
   },
   tool_calling: {
-    title: "工具调用建议",
-    subtitle: "适合函数调用、外部 API 编排和 Agent 执行场景",
-    hint: "优先考虑工具调用成功率、参数兼容性和多轮稳定性。",
+    title: "optimization.task.tool_calling.title",
+    subtitle: "optimization.task.tool_calling.subtitle",
+    hint: "optimization.task.tool_calling.hint",
   },
   structured_output: {
-    title: "结构化输出建议",
-    subtitle: "适合 JSON、表单填充和机器可读输出场景",
-    hint: "优先考虑格式稳定性和结构化约束遵循能力。",
+    title: "optimization.task.structured_output.title",
+    subtitle: "optimization.task.structured_output.subtitle",
+    hint: "optimization.task.structured_output.hint",
   },
   long_context: {
-    title: "长上下文建议",
-    subtitle: "适合长文档、多轮会话和知识库整合场景",
-    hint: "优先考虑上下文容量、长文本稳定性和连续推理表现。",
+    title: "optimization.task.long_context.title",
+    subtitle: "optimization.task.long_context.subtitle",
+    hint: "optimization.task.long_context.hint",
   },
   vision: {
-    title: "视觉理解建议",
-    subtitle: "适合图像理解、视觉问答和多模态分析场景",
-    hint: "优先考虑图文混合理解与多模态兼容能力。",
+    title: "optimization.task.vision.title",
+    subtitle: "optimization.task.vision.subtitle",
+    hint: "optimization.task.vision.hint",
   },
 };
 
@@ -77,6 +78,7 @@ function ModeIcon({ mode }: { mode: string }) {
 }
 
 export function OptimizationPage({ embedded, taskType = "general_chat" }: { embedded?: boolean; taskType?: TaskProfile["task_type"] }) {
+  const { t } = useTranslation();
   const [plan, setPlan] = useState<OptimizationPlan | null>(null);
   const [config, setConfig] = useState<OptimizationConfig | null>(null);
   const [billing, setBilling] = useState<CloudBilling | null>(null);
@@ -87,15 +89,29 @@ export function OptimizationPage({ embedded, taskType = "general_chat" }: { embe
   const [applying, setApplying] = useState<string | null>(null);
   const [syncMsg, setSyncMsg] = useState<string | null>(null);
   const [appliedRecs, setAppliedRecs] = useState<Set<string>>(new Set());
-  const currentTaskMeta = TASK_TYPE_META[taskType] || TASK_TYPE_META.general_chat;
+  const [previewData, setPreviewData] = useState<any>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [applyingPreview, setApplyingPreview] = useState<string | null>(null);
+  const currentTaskMetaKeys = TASK_TYPE_META_KEYS[taskType] || TASK_TYPE_META_KEYS.general_chat;
+  const currentTaskMeta = useMemo(
+    () => ({
+      title: t(currentTaskMetaKeys.title),
+      subtitle: t(currentTaskMetaKeys.subtitle),
+      hint: t(currentTaskMetaKeys.hint),
+    }),
+    [t, currentTaskMetaKeys],
+  );
   const taskSections = useMemo(
     () =>
-      Object.entries(TASK_TYPE_META).map(([key, meta]) => ({
+      Object.entries(TASK_TYPE_META_KEYS).map(([key, meta]) => ({
         key,
-        ...meta,
+        title: t(meta.title),
+        subtitle: t(meta.subtitle),
+        hint: t(meta.hint),
         active: key === taskType,
       })),
-    [taskType],
+    [t, taskType],
   );
 
   useEffect(() => {
@@ -160,18 +176,18 @@ export function OptimizationPage({ embedded, taskType = "general_chat" }: { embe
   };
 
   const handleSyncToCloud = async () => {
-    setSyncMsg("正在同步到云端...");
+    setSyncMsg(t("optimization.syncToCloudLoading"));
     try {
       await syncOptimizationConfigToCloud();
-      setSyncMsg("✓ 已同步到云端");
+      setSyncMsg(t("optimization.syncToCloudSuccess"));
     } catch {
-      setSyncMsg("✗ 同步失败，请确认已登录");
+      setSyncMsg(t("optimization.syncToCloudFailedLogin"));
     }
     setTimeout(() => setSyncMsg(null), 3000);
   };
 
   const handleSyncFromCloud = async () => {
-    setSyncMsg("正在从云端同步...");
+    setSyncMsg(t("optimization.syncFromCloudLoading"));
     try {
       const result = await syncOptimizationConfigFromCloud();
       if (result) {
@@ -179,27 +195,27 @@ export function OptimizationPage({ embedded, taskType = "general_chat" }: { embe
         setActiveMode(result.mode || "value_first");
         const p = await getOptimizationPlan(result.mode || "value_first", taskType);
         setPlan(p);
-        setSyncMsg("✓ 已从云端同步");
+        setSyncMsg(t("optimization.syncFromCloudSuccess"));
       } else {
-        setSyncMsg("✗ 云端无配置或同步失败");
+        setSyncMsg(t("optimization.syncFromCloudNoConfig"));
       }
     } catch {
-      setSyncMsg("✗ 同步失败，请确认已登录");
+      setSyncMsg(t("optimization.syncFromCloudFailedLogin"));
     }
     setTimeout(() => setSyncMsg(null), 3000);
   };
 
-  if (loading && !plan) return <div className="page"><div className="loading">正在分析用量数据...</div></div>;
+  if (loading && !plan) return <div className="page"><div className="loading">{t("optimization.loadingAnalyzing")}</div></div>;
 
   const currentPlanID = billing?.plan_id || "free";
   const isFree = currentPlanID === "free";
   const isPro = currentPlanID === "pro";
 
   const planLabel: Record<string, string> = {
-    free: "Free",
-    pro: "Pro",
-    teams: "Teams",
-    enterprise: "Enterprise",
+    free: t("plan.free"),
+    pro: t("plan.pro"),
+    teams: t("plan.teams"),
+    enterprise: t("plan.enterprise"),
   };
 
   const content = (
@@ -207,18 +223,18 @@ export function OptimizationPage({ embedded, taskType = "general_chat" }: { embe
       <div className="plan-context-banner">
         <span className="plan-context-icon">💡</span>
         <span className="plan-context-text">
-          当前场景：{currentTaskMeta.title}。{currentTaskMeta.hint}
+          {t("optimization.currentScenario", { title: currentTaskMeta.title, hint: currentTaskMeta.hint })}
           <br />
-          {isFree && "当前为 Free 套餐，推荐以 BYOK 优先使用本地 Key 调用。云端通道超额后将被限制，建议升级到 Pro 获取云端通道和更高配额。"}
-          {isPro && "当前为 Pro 套餐。推荐使用 BYOK + 云端通道均衡模式。高成本模型（GPT-4、Claude Sonnet 等）超额后需使用 BYOK 或升级 Teams。"}
-          {!isFree && !isPro && `当前为 ${planLabel[currentPlanID]} 套餐，可自由使用云端通道与高级模型，不受超额限制。`}
+          {isFree && t("optimization.planAdvice.free")}
+          {isPro && t("optimization.planAdvice.pro")}
+          {!isFree && !isPro && t("optimization.planAdvice.other", { plan: planLabel[currentPlanID] })}
         </span>
       </div>
 
       <div className="section section-card">
         <div className="section-heading-row">
-          <h2 className="section-title">任务类型分区</h2>
-          <div className="section-meta-text">当前高亮场景会驱动推荐排序与建议文案</div>
+          <h2 className="section-title">{t("optimization.taskSectionTitle")}</h2>
+          <div className="section-meta-text">{t("optimization.taskSectionHint")}</div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
           {taskSections.map((section) => (
@@ -239,7 +255,7 @@ export function OptimizationPage({ embedded, taskType = "general_chat" }: { embe
       </div>
 
       <div className="section section-card">
-        <h2 className="section-title">优化模式</h2>
+        <h2 className="section-title">{t("optimization.modeTitle")}</h2>
         <div className="mode-picker">
           {["quality_first", "value_first", "auto_strategy"].map((mode) => (
             <button
@@ -249,8 +265,8 @@ export function OptimizationPage({ embedded, taskType = "general_chat" }: { embe
               disabled={loading}
             >
               <span className="mode-icon"><ModeIcon mode={mode} /></span>
-              <span className="mode-label">{MODE_LABELS[mode]}</span>
-              <span className="mode-desc">{MODE_DESCS[mode]}</span>
+              <span className="mode-label">{t(MODE_LABEL_KEYS[mode] || mode)}</span>
+              <span className="mode-desc">{t(MODE_DESC_KEYS[mode] || mode)}</span>
             </button>
           ))}
         </div>
@@ -261,7 +277,14 @@ export function OptimizationPage({ embedded, taskType = "general_chat" }: { embe
           <div className="section-heading-row">
             <h2 className="section-title">{currentTaskMeta.title}</h2>
             <div className="strategy-badge">
-              策略：{plan.strategy === "cost_optimized" ? "成本优先" : plan.strategy === "balanced" ? "均衡推荐" : `${MODE_LABELS[plan.mode] || plan.mode}`}
+              {t("optimization.strategyLabel", {
+                strategy:
+                  plan.strategy === "cost_optimized"
+                    ? t("optimization.strategy.cost_optimized")
+                    : plan.strategy === "balanced"
+                      ? t("optimization.strategy.balanced")
+                      : (MODE_LABEL_KEYS[plan.mode] ? t(MODE_LABEL_KEYS[plan.mode]) : plan.mode),
+              })}
             </div>
             <div className="section-meta-text">{currentTaskMeta.subtitle}</div>
           </div>
@@ -279,27 +302,35 @@ export function OptimizationPage({ embedded, taskType = "general_chat" }: { embe
                         <span className="rec-from">{rec.from_model}</span>
                         <span className="rec-arrow">→</span>
                         <span className="rec-to">{rec.to_model}</span>
-                        {rec.model_tag === "open" && <span className="tag tag-open">开源</span>}
-                        {rec.model_tag !== "open" && <span className="tag tag-closed">闭源</span>}
-                        {recIsHighCost && <span className="tag tag-highcost">高成本</span>}
-                        {useBYOK && <span className="tag tag-byok">建议 BYOK</span>}
+                        {rec.model_tag === "open" && <span className="tag tag-open">{t("optimization.tagOpenSource")}</span>}
+                        {rec.model_tag !== "open" && <span className="tag tag-closed">{t("optimization.tagClosedSource")}</span>}
+                        {recIsHighCost && <span className="tag tag-highcost">{t("optimization.tagHighCost")}</span>}
+                        {useBYOK && <span className="tag tag-byok">{t("optimization.tagByokSuggested")}</span>}
                         {needsUpgrade && (
                           <span className="tag tag-premium">
-                            {isFree ? "升级 Pro+" : "升级 Teams+"}
+                            {isFree ? t("optimization.upgradeProPlus") : t("optimization.upgradeTeamsPlus")}
                           </span>
                         )}
                       </div>
                       <div className="rec-info">
-                        <span className="rec-channel">通道：{rec.channel_name || "未指定"}</span>
+                        <span className="rec-channel">
+                          {t("optimization.channelLabel", { name: rec.channel_name || t("optimization.unspecified") })}
+                        </span>
                         <span className="rec-sep">·</span>
                         <span className="rec-quality">
-                          质量：{rec.quality_diff === "equivalent_or_better" ? "同等或更好" : rec.quality_diff === "better" ? "更好" : "可接受"}
+                          {t("optimization.qualityLabel")}{
+                            rec.quality_diff === "equivalent_or_better"
+                              ? t("optimization.qualityEquivalentOrBetter")
+                              : rec.quality_diff === "better"
+                                ? t("optimization.qualityBetter")
+                                : t("optimization.qualityAcceptable")
+                          }
                         </span>
                         {rec.avg_latency_ms > 0 && (
                           <>
                             <span className="rec-sep">·</span>
                             <span className="rec-latency">
-                              延迟：{rec.avg_latency_ms < 1000 ? `${Math.round(rec.avg_latency_ms)}ms` : `${(rec.avg_latency_ms / 1000).toFixed(1)}s`}
+                              {t("optimization.latencyLabel")}{rec.avg_latency_ms < 1000 ? `${Math.round(rec.avg_latency_ms)}ms` : `${(rec.avg_latency_ms / 1000).toFixed(1)}s`}
                             </span>
                           </>
                         )}
@@ -307,7 +338,7 @@ export function OptimizationPage({ embedded, taskType = "general_chat" }: { embe
                           <>
                             <span className="rec-sep">·</span>
                             <span className="rec-error">
-                              错误率：{(rec.error_rate * 100).toFixed(1)}%
+                              {t("optimization.errorRateLabel")}{(rec.error_rate * 100).toFixed(1)}%
                             </span>
                           </>
                         )}
@@ -315,28 +346,43 @@ export function OptimizationPage({ embedded, taskType = "general_chat" }: { embe
                       <div className="rec-reason">{rec.reason}</div>
                       {needsUpgrade && (
                         <div className="rec-plan-hint">
-                          ⚠ 该模型在当前套餐超额后不可用。建议{isFree ? "升级到 Pro 或使用 BYOK 调用" : "升级到 Teams 或使用 BYOK 调用"}
+                          {isFree ? t("optimization.unavailableHintFree") : t("optimization.unavailableHintPro")}
                         </div>
                       )}
                       {useBYOK && (
                         <div className="rec-plan-hint rec-plan-hint-byok">
-                          💡 BYOK 推荐：使用自有 API Key 调用该模型，可避免消耗平台配额和超额费用
+                          {t("optimization.byokHint")}
                         </div>
                       )}
                     </div>
                     <div className="rec-side">
                       {rec.savings_usd > 0 ? (
-                        <span className="rec-save green">省 ${rec.savings_usd.toFixed(2)}/月</span>
+                        <span className="rec-save green">{t("optimization.savingsMonthly", { amount: rec.savings_usd.toFixed(2) })}</span>
                       ) : (
-                        <span className="rec-save blue">升级 +${(-rec.savings_usd).toFixed(2)}/月</span>
+                        <span className="rec-save blue">{t("optimization.upgradeMonthly", { amount: (-rec.savings_usd).toFixed(2) })}</span>
                       )}
                       <div className="rec-actions">
+                        <button
+                          className="btn-rec-preview"
+                          onClick={async () => {
+                            setPreviewLoading(true);
+                            try {
+                              const data = await previewComboOptimization(activeMode, taskType);
+                              setPreviewData(data);
+                              setShowPreview(true);
+                            } catch {}
+                            setPreviewLoading(false);
+                          }}
+                          disabled={previewLoading}
+                        >
+                          {previewLoading ? t("optimization.loading") : t("optimization.previewDiff")}
+                        </button>
                         <button
                           className={`btn-rec-apply ${appliedRecs.has(rec.to_model) ? "applied" : ""}`}
                           onClick={() => handleApply(rec.to_model)}
                           disabled={applying === rec.to_model}
                         >
-                          {applying === rec.to_model ? "应用中..." : appliedRecs.has(rec.to_model) ? "✓ 已应用" : "应用推荐"}
+                          {applying === rec.to_model ? t("optimization.applying") : appliedRecs.has(rec.to_model) ? t("optimization.applied") : t("optimization.applyRecommendation")}
                         </button>
                       </div>
                     </div>
@@ -348,15 +394,14 @@ export function OptimizationPage({ embedded, taskType = "general_chat" }: { embe
         </div>
       )}
 
-      {/* 多步回退 Combo 建议 */}
       {plan && plan.recommendations.length >= 2 && (
         <div className="section section-card">
           <div className="section-heading-row">
-            <h2 className="section-title">多步回退 Combo 建议</h2>
-            <span className="badge badge-new">新功能</span>
+            <h2 className="section-title">{t("optimization.comboSuggestionTitle")}</h2>
+            <span className="badge badge-new">{t("optimization.newFeature")}</span>
           </div>
           <p className="hint" style={{ marginBottom: 12 }}>
-            基于优化分析生成的完整回退方案，优先级排序：主模型 → 备用模型 → 保底模型
+            {t("optimization.comboSuggestionHint")}
           </p>
 
           {(() => {
@@ -368,9 +413,19 @@ export function OptimizationPage({ embedded, taskType = "general_chat" }: { embe
               quality: r.quality_diff,
               reason: r.reason,
             }));
-            const stepLabels: Record<string, string> = { primary: "主模型", backup: "备用模型", last_resort: "保底模型" };
-            const comboName = `智能推荐 ${currentTaskMeta.title} ${activeMode === "quality_first" ? "质量优先" : activeMode === "value_first" ? "性价比" : "自动"}方案`;
-            const isApplied = appliedRecs.size > 0 && appliedRecs.has(comboName);
+            const stepLabels: Record<string, string> = {
+              primary: t("combo.stepRolePrimary"),
+              backup: t("combo.stepRoleBackup"),
+              last_resort: t("combo.stepRoleLastResort"),
+            };
+            const comboName = t("optimization.comboSuggestionName", {
+              task: currentTaskMeta.title,
+              mode: MODE_LABEL_KEYS[activeMode] ? t(MODE_LABEL_KEYS[activeMode]) : activeMode,
+            });
+            // Check if combo exists in backend store, not just local appliedRecs
+            const combos = useAppStore.getState().combos;
+            const comboExists = combos && combos.some((c: ModelCombo) => c.name === comboName);
+            const isApplied = comboExists || appliedRecs.has(comboName);
 
             return (
               <div className="combo-suggestion-card">
@@ -379,9 +434,9 @@ export function OptimizationPage({ embedded, taskType = "general_chat" }: { embe
                     <div key={si} className={`combo-suggestion-step ${s.role}`}>
                       <div className="combo-suggestion-step-role">{stepLabels[s.role]}</div>
                       <div className="combo-suggestion-step-model">{s.model}</div>
-                      {s.channelName && <div className="combo-suggestion-step-channel">通道：{s.channelName}</div>}
+                      {s.channelName && <div className="combo-suggestion-step-channel">{t("optimization.channelLabel", { name: s.channelName })}</div>}
                       <div className="combo-suggestion-step-reason">{s.reason}</div>
-                      {si < steps.length - 1 && <div className="combo-suggestion-arrow">↓ 回退 ↓</div>}
+                      {si < steps.length - 1 && <div className="combo-suggestion-arrow">{t("optimization.fallbackArrow")}</div>}
                     </div>
                   ))}
                 </div>
@@ -392,8 +447,6 @@ export function OptimizationPage({ embedded, taskType = "general_chat" }: { embe
                     onClick={async () => {
                       setLoading(true);
                       try {
-                        const setCombos = useAppStore.getState().setCombos;
-                        const existing = useAppStore.getState().combos;
                         const newCombo: ModelCombo = {
                           name: comboName,
                           models: steps.map(s => s.model),
@@ -402,17 +455,16 @@ export function OptimizationPage({ embedded, taskType = "general_chat" }: { embe
                           sticky_uses: 1,
                           task_profile: { task_type: taskType, priority_providers: [], fallback_order: [] },
                         };
-                        const updated = [...existing, newCombo];
-                        setCombos(updated);
-                        appliedRecs.add(comboName);
-                        setAppliedRecs(new Set(Array.from(appliedRecs)));
+                        await saveModelCombo(newCombo);
+                        await setDefaultComboName(newCombo.name);
+                        setAppliedRecs(prev => new Set(prev).add(comboName));
                       } catch {}
                       setLoading(false);
                     }}
                   >
-                    {isApplied ? "✓ 已应用" : "应用为 Combo"}
+                    {isApplied ? t("optimization.applied") : t("optimization.applyAsCombo")}
                   </button>
-                  <span className="hint" style={{ marginLeft: 8 }}>共 {steps.length} 步回退方案</span>
+                  <span className="hint" style={{ marginLeft: 8 }}>{t("optimization.fallbackStepsCount", { count: steps.length })}</span>
                 </div>
               </div>
             );
@@ -423,22 +475,100 @@ export function OptimizationPage({ embedded, taskType = "general_chat" }: { embe
       {plan && plan.recommendations.length === 0 && (
         <div className="empty-state">
           <div className="empty-icon empty-icon-check">OK</div>
-          <p>{currentTaskMeta.title}下当前模型组合已处于较优状态，暂无优化建议。</p>
+          <p>{t("optimization.noRecommendations", { task: currentTaskMeta.title })}</p>
+        </div>
+      )}
+
+      {showPreview && previewData && (
+        <div className="preview-modal-overlay" onClick={() => setShowPreview(false)}>
+          <div className="preview-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="preview-modal-header">
+              <h3>{t("optimization.previewTitle")}</h3>
+              <button className="preview-modal-close" onClick={() => setShowPreview(false)}>✕</button>
+            </div>
+            <div className="preview-modal-body">
+              {previewData.recommendations?.map((rec: any, idx: number) => (
+                <div key={idx} className="preview-rec-card">
+                  <div className="preview-rec-title">
+                    <span className="preview-rec-from">{rec.from_model}</span>
+                    <span className="preview-rec-arrow">→</span>
+                    <span className="preview-rec-to">{rec.to_model}</span>
+                  </div>
+                  {rec.savings_usd != null && (
+                    <div className="preview-rec-impact">
+                      <span className={rec.savings_usd >= 0 ? "green" : "blue"}>
+                        {t("optimization.previewMonthlyImpact", { action: rec.savings_usd >= 0 ? t("optimization.saving") : t("optimization.increase"), amount: Math.abs(rec.savings_usd).toFixed(2) })}
+                      </span>
+                      {rec.quality_diff && (
+                        <span className="preview-rec-quality">
+                          {t("optimization.previewQuality", {
+                            value:
+                              rec.quality_diff === "equivalent_or_better"
+                                ? t("optimization.qualityEquivalentOrBetter")
+                                : rec.quality_diff === "better"
+                                  ? t("optimization.qualityBetter")
+                                  : t("optimization.qualityAcceptable"),
+                          })}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {rec.reason && <div className="preview-rec-reason">{rec.reason}</div>}
+                  <div className="preview-steps-compare">
+                    <div className="preview-steps-column">
+                      <div className="preview-steps-column-title">{t("optimization.currentSteps")}</div>
+                      {rec.current_steps?.length > 0 ? rec.current_steps.map((s: any, si: number) => (
+                        <div key={si} className="preview-step-item">{s.model}</div>
+                      )) : <div className="preview-step-item preview-step-empty">{t("optimization.noExistingCombo")}</div>}
+                    </div>
+                    <div className="preview-steps-arrow">→</div>
+                    <div className="preview-steps-column">
+                      <div className="preview-steps-column-title">{t("optimization.proposedSteps")}</div>
+                      {rec.proposed_steps?.map((s: any, si: number) => (
+                        <div key={si} className="preview-step-item preview-step-proposed">{s.model}</div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="preview-modal-footer">
+              <button className="btn-outline" onClick={() => setShowPreview(false)}>{t("optimization.close")}</button>
+              <button
+                className="btn-primary"
+                disabled={applyingPreview !== null}
+                onClick={async () => {
+                  const recs = previewData.recommendations || [];
+                  const toModel = recs[0]?.to_model;
+                  if (!toModel) return;
+                  setApplyingPreview(toModel);
+                  try {
+                    await applyComboOptimization(toModel, activeMode, true);
+                    setAppliedRecs(prev => new Set(prev).add(toModel));
+                    setShowPreview(false);
+                  } catch {}
+                  setApplyingPreview(null);
+                }}
+              >
+                {applyingPreview ? t("optimization.applying") : t("optimization.applyRecommendation")}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
       <div className="section section-card">
         <div className="section-heading-row">
-          <h2 className="section-title">策略配置</h2>
+          <h2 className="section-title">{t("optimization.configTitle")}</h2>
           <div className="config-toolbar">
             <button className="btn-outline" onClick={() => setShowConfig(!showConfig)}>
-              {showConfig ? "收起" : "展开"}策略配置
+              {showConfig ? t("optimization.collapseConfig") : t("optimization.expandConfig")}
             </button>
             <button className="btn-outline" onClick={handleSyncToCloud}>
-              同步到云端
+              {t("optimization.syncToCloud")}
             </button>
             <button className="btn-outline" onClick={handleSyncFromCloud}>
-              从云端恢复
+              {t("optimization.restoreFromCloud")}
             </button>
             {syncMsg && <span className="sync-msg">{syncMsg}</span>}
           </div>
@@ -446,74 +576,74 @@ export function OptimizationPage({ embedded, taskType = "general_chat" }: { embe
         {showConfig && config && (
           <div className="opt-config-panel">
             <div className="config-group">
-              <h4>动态 429 惩罚降级</h4>
+              <h4>{t("optimization.configPenaltyTitle")}</h4>
               <label className="toggle-row">
-                <span>启用惩罚降级</span>
+                <span>{t("optimization.configPenaltyEnabled")}</span>
                 <input type="checkbox" checked={config.penalty_enabled} onChange={(e) => updateConfig({ penalty_enabled: e.target.checked })} />
               </label>
               <label className="input-row">
-                <span>衰减间隔（秒）</span>
+                <span>{t("optimization.configPenaltyDecay")}</span>
                 <input type="number" value={config.penalty_decay_sec} min={30} max={600} onChange={(e) => updateConfig({ penalty_decay_sec: parseInt(e.target.value) || 120 })} disabled={!config.penalty_enabled} />
               </label>
             </div>
 
             <div className="config-group">
-              <h4>Key 健康检查</h4>
+              <h4>{t("optimization.configHealthTitle")}</h4>
               <label className="toggle-row">
-                <span>启用健康检查</span>
+                <span>{t("optimization.configHealthEnabled")}</span>
                 <input type="checkbox" checked={config.health_check_enabled} onChange={(e) => updateConfig({ health_check_enabled: e.target.checked })} />
               </label>
               <label className="input-row">
-                <span>探活间隔（秒）</span>
+                <span>{t("optimization.configHealthInterval")}</span>
                 <input type="number" value={config.health_check_sec} min={60} max={3600} onChange={(e) => updateConfig({ health_check_sec: parseInt(e.target.value) || 300 })} disabled={!config.health_check_enabled} />
               </label>
               <label className="input-row">
-                <span>最大连续失败</span>
+                <span>{t("optimization.configHealthMaxFailures")}</span>
                 <input type="number" value={config.health_max_failures} min={1} max={20} onChange={(e) => updateConfig({ health_max_failures: parseInt(e.target.value) || 3 })} disabled={!config.health_check_enabled} />
               </label>
             </div>
 
             <div className="config-group">
-              <h4>Key 级冷却</h4>
+              <h4>{t("optimization.configCooldownTitle")}</h4>
               <label className="toggle-row">
-                <span>启用冷却机制</span>
+                <span>{t("optimization.configCooldownEnabled")}</span>
                 <input type="checkbox" checked={config.cooldown_enabled} onChange={(e) => updateConfig({ cooldown_enabled: e.target.checked })} />
               </label>
               <label className="input-row">
-                <span>冷却时长（秒）</span>
+                <span>{t("optimization.configCooldownDuration")}</span>
                 <input type="number" value={config.cooldown_sec} min={10} max={600} onChange={(e) => updateConfig({ cooldown_sec: parseInt(e.target.value) || 120 })} disabled={!config.cooldown_enabled} />
               </label>
             </div>
 
             <div className="config-group">
-              <h4>会话粘滞路由</h4>
+              <h4>{t("optimization.configStickyTitle")}</h4>
               <label className="toggle-row">
-                <span>启用会话粘滞</span>
+                <span>{t("optimization.configStickyEnabled")}</span>
                 <input type="checkbox" checked={config.sticky_enabled} onChange={(e) => updateConfig({ sticky_enabled: e.target.checked })} />
               </label>
               <label className="input-row">
-                <span>粘滞 TTL（秒）</span>
+                <span>{t("optimization.configStickyTtl")}</span>
                 <input type="number" value={config.sticky_ttl_sec} min={60} max={86400} onChange={(e) => updateConfig({ sticky_ttl_sec: parseInt(e.target.value) || 1800 })} disabled={!config.sticky_enabled} />
               </label>
             </div>
 
             <div className="config-group">
-              <h4>Fallback 排序预设</h4>
+              <h4>{t("optimization.configPresetTitle")}</h4>
               <label className="toggle-row">
-                <span>启用排序预设</span>
+                <span>{t("optimization.configPresetEnabled")}</span>
                 <input type="checkbox" checked={config.preset_enabled} onChange={(e) => updateConfig({ preset_enabled: e.target.checked })} />
               </label>
               <label className="input-row">
-                <span>默认预设</span>
+                <span>{t("optimization.configPresetDefault")}</span>
                 <select value={config.default_preset} onChange={(e) => updateConfig({ default_preset: e.target.value })} disabled={!config.preset_enabled}>
-                  <option value="intelligence">智能优先</option>
-                  <option value="budget">成本优先</option>
-                  <option value="speed">速度优先</option>
+                  <option value="intelligence">{t("combo.sortPresetIntelligence")}</option>
+                  <option value="budget">{t("combo.sortPresetBudget")}</option>
+                  <option value="speed">{t("combo.sortPresetSpeed")}</option>
                 </select>
               </label>
             </div>
 
-            {saving && <div className="saving-hint">保存中...</div>}
+            {saving && <div className="saving-hint">{t("optimization.savingConfig")}</div>}
           </div>
         )}
       </div>

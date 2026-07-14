@@ -1,18 +1,22 @@
 package protocol
 
 import (
+	"bufio"
+	"bytes"
+	"encoding/json"
+	"io"
 	"strings"
 )
 
 type ReasoningInjector struct{}
 
 var reasoningProviders = map[string]bool{
-	"deepseek":   true,
+	"deepseek":    true,
 	"deepseek-r1": true,
-	"kimi":       true,
-	"moonshot":   true,
-	"qwen-qwq":   true,
-	"qwq":        true,
+	"kimi":        true,
+	"moonshot":    true,
+	"qwen-qwq":    true,
+	"qwq":         true,
 }
 
 func NeedsReasoningContent(providerType string, modelName string) bool {
@@ -159,4 +163,87 @@ func MergeReasoningIntoContent(body map[string]any, reasoning string) map[string
 	result["choices"] = newChoices
 
 	return result
+}
+func ProcessReasoningSSEStream(src io.Reader, dst io.Writer) error {
+	scanner := bufio.NewScanner(src)
+	var reasoningBuffer strings.Builder
+	var eventBuf bytes.Buffer
+	reasoningMerged := false
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		eventBuf.WriteString(line)
+		eventBuf.WriteByte('\n')
+
+		if line == "" {
+			eventStr := eventBuf.String()
+			eventBuf.Reset()
+
+			if !strings.HasPrefix(eventStr, "data: ") {
+				dst.Write([]byte(eventStr))
+				continue
+			}
+
+			dataEnd := strings.Index(eventStr, "\n")
+			if dataEnd < 0 {
+				dst.Write([]byte(eventStr))
+				continue
+			}
+			data := eventStr[len("data: "):dataEnd]
+
+			if data == "[DONE]" {
+				dst.Write([]byte(eventStr))
+				continue
+			}
+
+			var chunk map[string]any
+			if err := json.Unmarshal([]byte(data), &chunk); err != nil {
+				dst.Write([]byte(eventStr))
+				continue
+			}
+
+			processed := processReasoningChunk(chunk, &reasoningBuffer, &reasoningMerged)
+			if processed == nil {
+				continue
+			}
+
+			modifiedData, _ := json.Marshal(processed)
+			dst.Write([]byte("data: " + string(modifiedData) + "\n\n"))
+		}
+	}
+
+	return scanner.Err()
+}
+func processReasoningChunk(chunk map[string]any, reasoningBuffer *strings.Builder, reasoningMerged *bool) map[string]any {
+	choices, ok := chunk["choices"].([]any)
+	if !ok || len(choices) == 0 {
+		return chunk
+	}
+	choice, ok := choices[0].(map[string]any)
+	if !ok {
+		return chunk
+	}
+	delta, ok := choice["delta"].(map[string]any)
+	if !ok {
+		return chunk
+	}
+	if rc, ok := delta["reasoning_content"].(string); ok && rc != "" {
+		reasoningBuffer.WriteString(rc)
+		delete(delta, "reasoning_content")
+
+		if _, hasContent := delta["content"]; !hasContent {
+			if len(delta) == 0 || (len(delta) == 1 && delta["role"] == "assistant") {
+				return nil
+			}
+		}
+	}
+	if reasoningBuffer.Len() > 0 && !*reasoningMerged {
+		if content, ok := delta["content"].(string); ok {
+			delta["content"] = "<think>\n" + reasoningBuffer.String() + "\n</think>\n" + content
+			reasoningBuffer.Reset()
+			*reasoningMerged = true
+		}
+	}
+
+	return chunk
 }

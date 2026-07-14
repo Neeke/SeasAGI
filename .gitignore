@@ -3,8 +3,17 @@
 # 根目录构建输出（DMG 安装包、Go 编译产物）
 /build/
 
+# 社区版服务器编译产物
+/SeasAGI-Server/build/
+
 # 企业版服务器编译产物
 /SeasAGI-Server-Enterprise/build/
+
+# 客户端编译产物
+/SeasAGI-Client/build/
+
+# Wails 客户端构建输出
+/SeasAGI-Client/src-app/build/
 
 # 前端构建输出
 SeasAGI-Server/src-admin/dist/

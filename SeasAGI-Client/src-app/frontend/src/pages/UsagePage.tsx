@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../stores/appStore";
 import { getCloudUsage, getCloudBilling, getUsageSummary, getPlatformAPIBaseURL, getPlatformToken } from "../utils/commands";
 import type { CloudUsage, CloudBilling, UsageSummary, OverageRecord } from "../utils/types";
+import { useTranslation } from "../i18n";
 
 export function UsagePage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const setCloudBilling = useAppStore((s) => s.setCloudBilling);
   const setCloudUsageStore = useAppStore((s) => s.setCloudUsage);
@@ -67,9 +69,9 @@ export function UsagePage() {
         list.push({
           id: "free-pro-quota",
           type: "quota",
-          title: "配额即将用尽，升级 Pro 获取更多额度",
-          desc: `当前已使用 ${pct.toFixed(0)}% 的免费配额。Pro 套餐仅 $9.9/月，享 1 千万 Token 云端配额、中继通道与用量分析。`,
-          action: "查看 Pro 套餐",
+          title: t("usage.suggestion.freeProQuota.title"),
+          desc: t("usage.suggestion.freeProQuota.desc", { pct: pct.toFixed(0) }),
+          action: t("usage.suggestion.freeProQuota.action"),
           severity: pct > 85 ? "danger" : "warning",
         });
       }
@@ -77,9 +79,9 @@ export function UsagePage() {
         list.push({
           id: "free-collab",
           type: "collab",
-          title: "团队协作？升级 Teams",
-          desc: "如需与团队成员共享通道与配置，Teams 套餐 $24.9/席位/月，享 5 千万 Token 共享配额与集中管理。",
-          action: "了解 Teams",
+          title: t("usage.suggestion.freeCollab.title"),
+          desc: t("usage.suggestion.freeCollab.desc"),
+          action: t("usage.suggestion.freeCollab.action"),
           severity: "info",
         });
       }
@@ -88,9 +90,9 @@ export function UsagePage() {
         list.push({
           id: "pro-teams-quota",
           type: "quota",
-          title: "配额消耗较高，升级 Teams 获取更大空间",
-          desc: `当前已使用 ${pct.toFixed(0)}% 的 Pro 配额。Teams 套餐 $24.9/席位/月，享 5 千万 Token 共享配额。`,
-          action: "查看 Teams 套餐",
+          title: t("usage.suggestion.proTeamsQuota.title"),
+          desc: t("usage.suggestion.proTeamsQuota.desc", { pct: pct.toFixed(0) }),
+          action: t("usage.suggestion.proTeamsQuota.action"),
           severity: pct > 85 ? "danger" : "warning",
         });
       }
@@ -98,9 +100,9 @@ export function UsagePage() {
         list.push({
           id: "pro-teams-collab",
           type: "collab",
-          title: "与团队共享？Teams 更合适",
-          desc: "Pro 为个人使用设计。如需多人共享通道、策略模板与用量看板，升级 Teams 可享统一管理与协作能力。",
-          action: "了解 Teams 协作",
+          title: t("usage.suggestion.proTeamsCollab.title"),
+          desc: t("usage.suggestion.proTeamsCollab.desc"),
+          action: t("usage.suggestion.proTeamsCollab.action"),
           severity: "info",
         });
       }
@@ -109,9 +111,9 @@ export function UsagePage() {
         list.push({
           id: "teams-enterprise-govern",
           type: "govern",
-          title: "企业治理需求？联系 Enterprise 方案",
-          desc: `当前共享配额已使用 ${pct.toFixed(0)}%。Enterprise 提供审计日志、自定义策略、SLA 保障与私有化部署。`,
-          action: "联系销售",
+          title: t("usage.suggestion.teamsEnterprise.title"),
+          desc: t("usage.suggestion.teamsEnterprise.desc", { pct: pct.toFixed(0) }),
+          action: t("usage.suggestion.teamsEnterprise.action"),
           severity: pct > 90 ? "danger" : "warning",
         });
       }
@@ -124,28 +126,28 @@ export function UsagePage() {
     setDismissedSuggestions((prev) => [...prev, id]);
   };
 
-  if (loading) return <div className="loading">加载中...</div>;
+  if (loading) return <div className="loading">{t("usage.loading")}</div>;
 
   return (
     <div className="page usage-page">
       <div className="page-header">
         <div>
-          <h1>用量 & 账单</h1>
-          <p className="page-subtitle">查看本月调用统计、云端用量、配额消耗和费用归因。</p>
+          <h1>{t("usage.title")}</h1>
+          <p className="page-subtitle">{t("usage.subtitle")}</p>
         </div>
         <div className="hero-metrics">
           <div className="hero-metric-card">
-            <span className="hero-metric-label">本地请求</span>
+            <span className="hero-metric-label">{t("usage.localRequests")}</span>
             <strong className="hero-metric-value">{(localSummary?.month_requests ?? 0).toLocaleString()}</strong>
           </div>
           <div className="hero-metric-card">
-            <span className="hero-metric-label">云端费用</span>
+            <span className="hero-metric-label">{t("usage.cloudCost")}</span>
             <strong className="hero-metric-value">{cloudUsage ? `$${cloudUsage.total_cost_usd.toFixed(2)}` : "--"}</strong>
           </div>
           {billing && (
             <div className="hero-metric-card">
               <span className="hero-metric-label">{billing.plan_name}</span>
-              <strong className="hero-metric-value">{billing.price > 0 ? `$${billing.price}/mo` : "Free"}</strong>
+              <strong className="hero-metric-value">{billing.price > 0 ? `$${billing.price}/mo` : t("subscription.free")}</strong>
             </div>
           )}
         </div>
@@ -154,14 +156,14 @@ export function UsagePage() {
       {billing && (
         <div className="section section-card">
           <div className="section-heading">
-            <h2>订阅配额</h2>
-            <p className="hint">当前套餐 {billing.plan_name} 的配额消耗情况。</p>
+            <h2>{t("usage.subscriptionQuota")}</h2>
+            <p className="hint">{t("usage.subscriptionQuotaHint", { plan: billing.plan_name })}</p>
           </div>
           <div className="usage-quota-card">
             <div className="usage-quota-header">
               <span className="usage-quota-label">
-                已使用 {quotaUsed.toLocaleString()} / {quotaTotal.toLocaleString()}
-                {billing.relay_enabled && <span className="badge badge-blue" style={{ marginLeft: 8 }}>中继可用</span>}
+                {t("usage.quotaUsed", { used: quotaUsed.toLocaleString(), total: quotaTotal.toLocaleString() })}
+                {billing.relay_enabled && <span className="badge badge-blue" style={{ marginLeft: 8 }}>{t("usage.relayAvailable")}</span>}
               </span>
               <span className="usage-quota-pct">{quotaPercent.toFixed(0)}%</span>
             </div>
@@ -182,19 +184,18 @@ export function UsagePage() {
             </div>
             {hasOverage && (
               <div className="usage-overage-hint">
-                超额请求: <strong>{(localOverage || overage?.overage_requests || 0).toLocaleString()}</strong>
+                {t("usage.overageRequests")}: <strong>{(localOverage || overage?.overage_requests || 0).toLocaleString()}</strong>
                 {overageCost > 0 && (
                   <span style={{ marginLeft: 12 }}>
-                    预估超额费用: <strong>${overageCost.toFixed(4)}</strong>
+                    {t("usage.estimatedOverageCost")}: <strong>${overageCost.toFixed(4)}</strong>
                   </span>
                 )}
                 <button className="link-btn" onClick={() => setShowOverageInfo(!showOverageInfo)} style={{ marginLeft: 8 }}>
-                  {showOverageInfo ? "收起" : "了解超额策略"}
+                  {showOverageInfo ? t("usage.collapse") : t("usage.learnOverage")}
                 </button>
                 {showOverageInfo && (
                   <div className="usage-overage-detail" style={{ marginTop: 8, fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-                    超额部分按按需计费（约 $0.002/请求）。建议使用 BYOK（自备 Key）或升级到 Teams 方案获取更多配额以及高级模型访问权限。
-                    在"路由设置"中可切换"BYOK 优先"策略以控制云端成本。
+                    {t("usage.overageDetail")}
                   </div>
                 )}
               </div>
@@ -206,8 +207,8 @@ export function UsagePage() {
       {billing && billing.relay_enabled && billing.relay_gateways && billing.relay_gateways.length > 0 && (
         <div className="section section-card">
           <div className="section-heading">
-            <h2>中继通道</h2>
-            <p className="hint">当前套餐可用的云端中继网关。</p>
+            <h2>{t("usage.relayChannels")}</h2>
+            <p className="hint">{t("usage.relayChannelsHint")}</p>
           </div>
           <div className="relay-gw-list">
             {billing.relay_gateways.map((gw) => (
@@ -224,35 +225,35 @@ export function UsagePage() {
       {localSummary && (
         <div className="section section-card">
           <div className="section-heading">
-            <h2>本地用量</h2>
-            <p className="hint">按当前客户端本地记录的请求量、Token 与费用估算展示。这些请求通过你的自有 API Key 发出，不消耗平台额度。</p>
+            <h2>{t("usage.localUsage")}</h2>
+            <p className="hint">{t("usage.localUsageHint")}</p>
           </div>
           <div className="stats-grid">
             <div className="stat-card">
-              <div className="stat-label">月请求量</div>
+              <div className="stat-label">{t("usage.monthlyRequests")}</div>
               <div className="stat-value blue">{localSummary.month_requests.toLocaleString()}</div>
             </div>
             <div className="stat-card">
-              <div className="stat-label">Input Tokens</div>
+              <div className="stat-label">{t("usage.inputTokens")}</div>
               <div className="stat-value">{localSummary.month_input_tokens.toLocaleString()}</div>
             </div>
             <div className="stat-card">
-              <div className="stat-label">Output Tokens</div>
+              <div className="stat-label">{t("usage.outputTokens")}</div>
               <div className="stat-value">{localSummary.month_output_tokens.toLocaleString()}</div>
             </div>
             <div className="stat-card">
-              <div className="stat-label">本月费用</div>
+              <div className="stat-label">{t("usage.monthlyCost")}</div>
               <div className="stat-value green">${localSummary.month_cost_usd.toFixed(2)}</div>
             </div>
           </div>
           <div className="usage-cost-hint">
-            费用为基于模型定价估算的本地 API 调用成本，非 SeasAGI 平台收费。
+            {t("usage.localCostHint")}
           </div>
           <div className="attribution-hint">
-            <strong>请求归因：</strong>
-            <span style={{ color: "var(--green)" }}>■ 本地/BYOK</span> — 使用自有 API Key，不消耗套餐配额 &nbsp;
-            <span style={{ color: "var(--accent)" }}>■ 平台</span> — 使用平台通道，消耗月度配额 &nbsp;
-            <span style={{ color: "var(--orange)" }}>■ 中继</span> — 使用云端中继转发，消耗月度配额
+            <strong>{t("usage.requestAttribution")}:</strong>
+            <span style={{ color: "var(--green)" }}>■ {t("usage.localByok")}</span> — {t("usage.localByokDesc")} &nbsp;
+            <span style={{ color: "var(--accent)" }}>■ {t("usage.platform")}</span> — {t("usage.platformDesc")} &nbsp;
+            <span style={{ color: "var(--orange)" }}>■ {t("usage.relay")}</span> — {t("usage.relayDesc")}
           </div>
         </div>
       )}
@@ -260,30 +261,30 @@ export function UsagePage() {
       {cloudUsage && (
         <div className="section section-card">
           <div className="section-heading">
-            <h2>云端用量</h2>
-            <p className="hint">展示当前登录用户在平台侧累计的月度调用与费用。包含中继通道与平台通道使用量。</p>
+            <h2>{t("usage.cloudUsage")}</h2>
+            <p className="hint">{t("usage.cloudUsageHint")}</p>
           </div>
           <div className="stats-grid">
             <div className="stat-card">
-              <div className="stat-label">月请求量</div>
+              <div className="stat-label">{t("usage.monthlyRequests")}</div>
               <div className="stat-value blue">{cloudUsage.month_requests.toLocaleString()}</div>
             </div>
             <div className="stat-card">
-              <div className="stat-label">Input Tokens</div>
-              <div className="stat-value">{cloudUsage.month_input_tokens?.toLocaleString() || "N/A"}</div>
+              <div className="stat-label">{t("usage.inputTokens")}</div>
+              <div className="stat-value">{cloudUsage.month_input_tokens?.toLocaleString() || t("usage.na")}</div>
             </div>
             <div className="stat-card">
-              <div className="stat-label">Output Tokens</div>
-              <div className="stat-value">{cloudUsage.month_output_tokens?.toLocaleString() || "N/A"}</div>
+              <div className="stat-label">{t("usage.outputTokens")}</div>
+              <div className="stat-value">{cloudUsage.month_output_tokens?.toLocaleString() || t("usage.na")}</div>
             </div>
             <div className="stat-card">
-              <div className="stat-label">总费用 (USD)</div>
+              <div className="stat-label">{t("usage.totalCost")}</div>
               <div className="stat-value green">${cloudUsage.total_cost_usd.toFixed(2)}</div>
             </div>
           </div>
           {overage && overage.overage_requests > 0 && (
             <div className="usage-cost-hint" style={{ marginTop: 12, borderTop: "1px solid var(--border)", paddingTop: 12 }}>
-              其中超额请求: <strong>{overage.overage_requests.toLocaleString()}</strong>，超额费用: <strong>${overage.overage_cost.toFixed(4)}</strong>
+              {t("usage.overageSummary", { requests: overage.overage_requests.toLocaleString(), cost: overage.overage_cost.toFixed(4) })}
             </div>
           )}
         </div>
@@ -292,8 +293,8 @@ export function UsagePage() {
       {suggestions.length > 0 && (
         <div className="section">
           <div className="section-heading">
-            <h2>升级建议</h2>
-            <p className="hint">根据当前套餐与使用情况推荐的升级方案。</p>
+            <h2>{t("usage.upgradeSuggestions")}</h2>
+            <p className="hint">{t("usage.upgradeSuggestionsHint")}</p>
           </div>
           <div className="upgrade-suggestions">
             {suggestions.map((s) => (
@@ -313,7 +314,7 @@ export function UsagePage() {
                       {s.action}
                     </button>
                     <button className="btn-ghost btn-sm" onClick={() => dismissSuggestion(s.id)}>
-                      忽略
+                      {t("usage.dismiss")}
                     </button>
                   </div>
                 </div>
@@ -326,30 +327,30 @@ export function UsagePage() {
       {billing && (
         <div className="section section-card">
           <div className="section-heading">
-            <h2>路由策略建议</h2>
-            <p className="hint">根据当前套餐和使用情况推荐的配置。</p>
+            <h2>{t("usage.routingStrategy")}</h2>
+            <p className="hint">{t("usage.routingStrategyHint")}</p>
           </div>
           <div className="billing-card">
             <div className="billing-row">
-              <span className="billing-label">推荐策略</span>
-              <span className="billing-value">{billing.price > 0 ? "均衡模式（BYOK + 云端通道）" : "BYOK 优先（本地 Key）"}</span>
+              <span className="billing-label">{t("usage.recommendedStrategy")}</span>
+              <span className="billing-value">{billing.price > 0 ? t("usage.balancedMode") : t("usage.byokPriority")}</span>
             </div>
             <div className="billing-row">
-              <span className="billing-label">高成本模型</span>
+              <span className="billing-label">{t("usage.highCostModel")}</span>
               <span className="billing-value">
                 {billing.plan_id === "free" || billing.plan_id === "pro"
-                  ? "超额后需使用 BYOK 或升级 Teams"
-                  : "套餐内已包含"}
+                  ? t("usage.overageSuggestion")
+                  : t("usage.includedInPlan")}
               </span>
             </div>
             <div className="billing-row">
-              <span className="billing-label">升级建议</span>
+              <span className="billing-label">{t("usage.upgradeSuggestion")}</span>
               <span className="billing-value">
                 {billing.plan_id === "free"
-                  ? "Pro $9.9/月起，享云端通道与 1 千万 Token 配额"
+                  ? t("usage.freeUpgradeSuggestion")
                   : billing.plan_id === "pro"
-                  ? "Teams $24.9/席位，享团队协作与 5 千万 Token 配额"
-                  : "Enterprise 联系销售获取定制方案"}
+                  ? t("usage.proUpgradeSuggestion")
+                  : t("usage.enterpriseUpgradeSuggestion")}
               </span>
             </div>
           </div>
@@ -357,7 +358,7 @@ export function UsagePage() {
       )}
 
       {!cloudUsage && !localSummary && (
-        <div className="empty-state">暂无用量数据，开始使用后数据将自动统计。</div>
+        <div className="empty-state">{t("usage.noData")}</div>
       )}
     </div>
   );

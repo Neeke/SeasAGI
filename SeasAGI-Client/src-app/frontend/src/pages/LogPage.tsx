@@ -49,18 +49,23 @@ export function LogPage() {
   const channelOptions = [...new Set(logs.map((l) => l.channel_id).filter(Boolean))];
   const channelTypes = ["local", "platform", "relay", "unknown"] as const;
 
-  const channelTypeLabels: Record<string, { zh: string; en: string }> = {
-    local: { zh: "本地", en: "Local" },
-    platform: { zh: "平台", en: "Platform" },
-    relay: { zh: "中继", en: "Relay" },
-    unknown: { zh: "未知", en: "Unknown" },
-  };
-
   const channelTypeColors: Record<string, string> = {
     local: "var(--green)",
     platform: "var(--accent)",
     relay: "var(--orange)",
     unknown: "var(--text-dim)",
+  };
+
+  const getChannelTypeLabel = (channelType: string) => {
+    switch (channelType) {
+      case "local":
+      case "platform":
+      case "relay":
+      case "unknown":
+        return t(`log.channelType.${channelType}`);
+      default:
+        return channelType;
+    }
   };
 
   const getChannelType = (log: RequestLog): string => {
@@ -170,7 +175,7 @@ export function LogPage() {
       <div className="tab-content log-panel section-card">
         <div className="section-heading">
           <h2>{t("log.filterSection")}</h2>
-          <p className="hint">按关键词、状态、通道和时间顺序筛选请求记录，并支持保存常用筛选预设。</p>
+          <p className="hint">{t("log.filterHint")}</p>
         </div>
         <div className="form-row log-filter-grid">
           <div className="form-group log-search-group">
@@ -250,7 +255,7 @@ export function LogPage() {
         <div className="tab-content log-panel section-card">
           <div className="section-heading">
             <h2>{t("log.presetSection")}</h2>
-            <p className="hint">保存并复用筛选组合，便于快速切换到常见排查视角。</p>
+            <p className="hint">{t("log.presetHint")}</p>
           </div>
           <div className="form-row log-preset-save">
             <div className="form-group">
@@ -294,7 +299,7 @@ export function LogPage() {
       <div className="section section-card">
         <div className="section-heading">
           <h2>{t("log.overview")}</h2>
-          <p className="hint">快速查看当前筛选结果下的成功率、失败量和平均耗时。</p>
+          <p className="hint">{t("log.overviewHint")}</p>
         </div>
         <div className="stats-grid">
           <div className="stat-card">
@@ -338,7 +343,7 @@ export function LogPage() {
                       <div className="log-card-subtitle">
                         <span>{formatDateTime(log.created_at)}</span>
                         <span className="log-channel-badge" style={{ color: channelTypeColors[getChannelType(log)], borderColor: channelTypeColors[getChannelType(log)] }}>
-                          {channelTypeLabels[getChannelType(log)]?.zh || getChannelType(log)}
+                          {getChannelTypeLabel(getChannelType(log))}
                         </span>
                         <span>{log.channel_id || "-"}</span>
                         <span>{log.upstream_model || "-"}</span>

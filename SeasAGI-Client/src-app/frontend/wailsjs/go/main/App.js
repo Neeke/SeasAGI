@@ -338,8 +338,8 @@ export function PerformUpdate() {
   return window['go']['main']['App']['PerformUpdate']();
 }
 
-export function PreviewComboOptimization(arg1) {
-  return window['go']['main']['App']['PreviewComboOptimization'](arg1);
+export function PreviewComboOptimization(arg1, arg2) {
+  return window['go']['main']['App']['PreviewComboOptimization'](arg1, arg2);
 }
 
 export function PushCloudCombo(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {

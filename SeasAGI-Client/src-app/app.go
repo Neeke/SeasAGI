@@ -761,11 +761,14 @@ func (a *App) ApplyRecommendation(toModel string, preset string) error {
 
 // PreviewComboOptimization returns a detailed preview of an optimization recommendation
 // without applying it. Returns the recommendation details, estimated impact, and current vs new step comparison.
-func (a *App) PreviewComboOptimization(mode string) map[string]any {
+func (a *App) PreviewComboOptimization(mode string, taskType string) map[string]any {
 	if mode == "" {
 		mode = "value_first"
 	}
-	plan := a.optimizerSvc.GetOptimizationPlan(mode, optimizer.TaskGeneralChat)
+	if taskType == "" {
+		taskType = optimizer.TaskGeneralChat
+	}
+	plan := a.optimizerSvc.GetOptimizationPlan(mode, taskType)
 	if plan == nil || len(plan.Recommendations) == 0 {
 		return map[string]any{
 			"has_recommendations": false,

@@ -1,17 +1,19 @@
 import { useAppStore } from "../stores/appStore";
+import { useTranslation } from "../i18n";
 
 export function ConfigSyncIndicator() {
   const syncState = useAppStore((s) => s.syncState);
   const cloudBilling = useAppStore((s) => s.cloudBilling);
+  const { t } = useTranslation();
 
   const isTeamsOrAbove = cloudBilling?.plan_id === "teams" || cloudBilling?.plan_id === "enterprise";
   if (!isTeamsOrAbove) return null;
 
   const statusMap = {
     idle: { label: "", color: "transparent", bg: "transparent" },
-    syncing: { label: "同步中...", color: "var(--accent)", bg: "rgba(59,130,246,0.08)" },
-    synced: { label: `v${syncState.config_version} 已同步`, color: "var(--green)", bg: "rgba(34,197,94,0.08)" },
-    error: { label: "同步失败", color: "var(--red)", bg: "rgba(239,68,68,0.08)" },
+    syncing: { label: t("layout.syncing"), color: "var(--accent)", bg: "rgba(59,130,246,0.08)" },
+    synced: { label: t("layout.syncedVersion", { version: syncState.config_version }), color: "var(--green)", bg: "rgba(34,197,94,0.08)" },
+    error: { label: t("layout.syncFailed"), color: "var(--red)", bg: "rgba(239,68,68,0.08)" },
   };
 
   const info = statusMap[syncState.status];
@@ -39,8 +41,8 @@ export function ConfigSyncIndicator() {
           ⚠️ {syncState.policy_conflicts.length}
         </span>
       )}
-      {syncState.enterprise_locked && <span title="策略已锁定">🔒</span>}
-      {syncState.force_applied && <span title="已应用强制策略">📋</span>}
+      {syncState.enterprise_locked && <span title={t("layout.policyLocked")}>🔒</span>}
+      {syncState.force_applied && <span title={t("layout.forceApplied")}>📋</span>}
     </div>
   );
 }

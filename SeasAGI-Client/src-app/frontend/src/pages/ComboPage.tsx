@@ -298,6 +298,7 @@ export function ComboPage({ embedded, showTemplatesTab }: { embedded?: boolean; 
       description: editing.description?.trim() || "",
       tags: tagsInput.split(",").map((tag) => tag.trim()).filter(Boolean),
       steps: editing.steps.map((step) => ({
+        ...step,
         channel_id: step.channel_id?.trim() || "",
         model: step.model.trim(),
       })).filter((step) => step.model),
@@ -789,10 +790,10 @@ function SortableStepCard({ id, step, index, channels, onUpdate, onRemove, onUpd
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const roleLabels = ["主模型", "备用模型", "保底模型"];
-  const roleHints = ["优先质量", "优先可用", "优先成本"];
+  const roleLabels = [t("combo.stepRolePrimary"), t("combo.stepRoleBackup"), t("combo.stepRoleLastResort")];
+  const roleHints = [t("combo.stepHintPrimary"), t("combo.stepHintBackup"), t("combo.stepHintLastResort")];
   const roleColors = ["role-primary", "role-backup", "role-last-resort"];
-  const roleLabel = index < roleLabels.length ? roleLabels[index] : `步骤 ${index + 1}`;
+  const roleLabel = index < roleLabels.length ? roleLabels[index] : t("combo.stepRoleStep", { n: index + 1 });
   const roleHint = index < roleHints.length ? roleHints[index] : "";
   const roleColor = index < roleColors.length ? roleColors[index] : "";
 
@@ -805,7 +806,7 @@ function SortableStepCard({ id, step, index, channels, onUpdate, onRemove, onUpd
 
   const handleAddProvider = () => {
     if (!newProviderChannel) {
-      setNewProviderError("请选择通道");
+      setNewProviderError(t("combo.selectChannelFirst"));
       return;
     }
     onAddProvider(index, {
@@ -857,18 +858,26 @@ function SortableStepCard({ id, step, index, channels, onUpdate, onRemove, onUpd
               checked={!!step.allow_provider_fallback}
               onChange={(e) => onUpdateMeta(index, "allow_provider_fallback", e.target.checked)}
             />
-            <span>允许步骤内回退</span>
+            <span>{t("combo.allowProviderFallback")}</span>
+          </label>
+          <label className="checkbox-label" style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12 }}>
+            <input
+              type="checkbox"
+              checked={!!step.allow_cross_provider_fallback}
+              onChange={(e) => onUpdateMeta(index, "allow_cross_provider_fallback", e.target.checked)}
+            />
+            <span>{t("combo.allowCrossProviderFallback")}</span>
           </label>
           <select
             value={step.selection_policy || ""}
             onChange={(e) => onUpdateMeta(index, "selection_policy", e.target.value)}
             style={{ width: "auto", marginLeft: 8, fontSize: 12, padding: "2px 4px" }}
           >
-            <option value="">默认排序</option>
-            <option value="stability">稳定优先</option>
-            <option value="cost">成本优先</option>
-            <option value="latency">速度优先</option>
-            <option value="throughput">吞吐优先</option>
+            <option value="">{t("combo.selectionDefault")}</option>
+            <option value="stability">{t("combo.selectionStability")}</option>
+            <option value="cost">{t("combo.selectionCost")}</option>
+            <option value="latency">{t("combo.selectionLatency")}</option>
+            <option value="throughput">{t("combo.selectionThroughput")}</option>
           </select>
         </div>
 
@@ -877,13 +886,13 @@ function SortableStepCard({ id, step, index, channels, onUpdate, onRemove, onUpd
             className="btn-outline btn-xs"
             onClick={() => { setShowProviders(!showProviders); setShowChannels(false); }}
           >
-            {showProviders ? "收起候选通道" : `候选通道 (${providers.length})`}
+            {showProviders ? t("combo.providersCollapse") : t("combo.providersExpand", { count: providers.length })}
           </button>
           <button
             className="btn-outline btn-xs"
             onClick={() => { setShowChannels(!showChannels); setShowProviders(false); }}
           >
-            {showChannels ? "收起通道列表" : `通道列表 (${stepChannels.length})`}
+            {showChannels ? t("combo.channelsCollapse") : t("combo.channelsExpand", { count: stepChannels.length })}
           </button>
         </div>
 
@@ -896,7 +905,7 @@ function SortableStepCard({ id, step, index, channels, onUpdate, onRemove, onUpd
                 onChange={(e) => setNewProviderChannel(e.target.value)}
                 style={{ flex: 1, minWidth: 120, fontSize: 12 }}
               >
-                <option value="">选择通道</option>
+                <option value="">{t("combo.selectChannel")}</option>
                 {channels
                   .filter((ch) => !(providers as Array<{channel_id: string; model: string; priority: number}>).some((p) => p.channel_id === ch.channel_id))
                   .map((ch) => (
@@ -909,14 +918,14 @@ function SortableStepCard({ id, step, index, channels, onUpdate, onRemove, onUpd
                 type="text"
                 value={newProviderModel}
                 onChange={(e) => setNewProviderModel(e.target.value)}
-                placeholder="模型名（可选）"
+                placeholder={t("combo.providerModelOptional")}
                 style={{ flex: 1, minWidth: 100, fontSize: 12 }}
               />
               <input
                 type="number"
                 value={newProviderPriority}
                 onChange={(e) => setNewProviderPriority(Number(e.target.value))}
-                placeholder="优先级"
+                placeholder={t("combo.providerPriority")}
                 style={{ width: 72, fontSize: 12 }}
               />
               <button className="btn-primary btn-xs" onClick={handleAddProvider}>+</button>

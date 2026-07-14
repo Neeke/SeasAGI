@@ -222,15 +222,15 @@ export function ChannelPage() {
       <div className="page-header-row">
         <div>
           <h1>{t("channel.title")}</h1>
-          <p className="page-subtitle">统一管理平台通道和自定义通道，查看健康状态并快速测试连接。</p>
+          <p className="page-subtitle">{t("channel.pageSubtitle")}</p>
         </div>
         <div className="hero-metrics">
           <div className="hero-metric-card">
-            <span className="hero-metric-label">平台通道</span>
+            <span className="hero-metric-label">{t("channel.platformChannels")}</span>
             <strong className="hero-metric-value">{platformChannels.length}</strong>
           </div>
           <div className="hero-metric-card">
-            <span className="hero-metric-label">自定义通道</span>
+            <span className="hero-metric-label">{t("channel.customChannels")}</span>
             <strong className="hero-metric-value">{customChannels.length}</strong>
           </div>
           {auth.is_logged_in && (
@@ -240,7 +240,7 @@ export function ChannelPage() {
           )}
           {auth.is_logged_in && (
             <button onClick={handleSyncCustomToCloud} disabled={syncingCustom} className="btn-secondary">
-              {syncingCustom ? "同步中..." : "同步自定义通道到云端"}
+              {syncingCustom ? t("channel.syncing") : t("channel.syncCustomToCloud")}
             </button>
           )}
         </div>
@@ -289,7 +289,7 @@ export function ChannelPage() {
                 <option value="gemini">Google Gemini</option>
                 <option value="openrouter">OpenRouter</option>
                 <option value="deepseek">DeepSeek</option>
-                <option value="bailian">Bailian (百炼)</option>
+                <option value="bailian">{t("channel.providerBailian")}</option>
                 <option value="minimax">MiniMax</option>
                 <option value="moonshot">Moonshot AI (Kimi)</option>
                 <option value="zhipu">Zhipu AI (GLM)</option>
@@ -307,7 +307,7 @@ export function ChannelPage() {
               <label>{t("channel.apiKey")}</label>
               <div className="api-key-row">
                 <input type={showAPIKey ? "text" : "password"} value={editing.api_key || ""} onChange={(e) => setEditing({ ...editing, api_key: e.target.value })} placeholder={t("channel.apiKeyPlaceholder")} />
-                <button type="button" className="btn-text" onClick={() => setShowAPIKey(!showAPIKey)} style={{ fontSize: 13, padding: "6px 10px", whiteSpace: "nowrap" }}>{showAPIKey ? "隐藏" : "显示"}</button>
+                <button type="button" className="btn-text" onClick={() => setShowAPIKey(!showAPIKey)} style={{ fontSize: 13, padding: "6px 10px", whiteSpace: "nowrap" }}>{showAPIKey ? t("channel.hide") : t("channel.show")}</button>
               </div>
             </div>
 
@@ -321,22 +321,21 @@ export function ChannelPage() {
               />
             </div>
 
-            {/* --- Models section --- */}
             <div className="form-group">
-              <label>{t("channel.models") || "模型列表"}</label>
+              <label>{t("channel.models")}</label>
               <textarea
                 value={(editing.models || []).join("\n")}
                 onChange={(e) => setEditing({ ...editing, models: e.target.value.split("\n").map(s => s.trim()).filter(Boolean) })}
-                placeholder={"gpt-4o\ngpt-4o-mini\ngpt-3.5-turbo\n每行一个模型名称"}
+                placeholder={t("channel.modelsPlaceholder")}
                 rows={5}
               />
               <p className="hint" style={{ marginTop: 4, fontSize: 12 }}>
-                每行一个模型名称。留空则后续可通过下方 API 自动获取。
+                {t("channel.modelsHint")}
               </p>
             </div>
 
             <div className="form-group">
-              <label>模型列表 API</label>
+              <label>{t("channel.modelsApi")}</label>
               <div className="api-key-row">
                 <input
                   value={editing.provider_specific_config?.models_api_url || ""}
@@ -365,7 +364,7 @@ export function ChannelPage() {
                   }}
                   style={{ whiteSpace: "nowrap" }}
                 >
-                  获取模型
+                  {t("channel.fetchModels")}
                 </button>
               </div>
             </div>

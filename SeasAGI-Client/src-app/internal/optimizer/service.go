@@ -12,6 +12,7 @@ import (
 )
 
 type Recommendation struct {
+	Type         string  `json:"type"`
 	FromModel    string  `json:"from_model"`
 	ToModel      string  `json:"to_model"`
 	ModelTag     string  `json:"model_tag"`
@@ -41,6 +42,7 @@ const (
 	TaskStructured   = "structured_output"
 	TaskLongContext  = "long_context"
 	TaskVision       = "vision"
+	TaskBatchLowCost = "batch_low_cost"
 )
 
 type candidate struct {
@@ -171,6 +173,7 @@ func (s *Service) GetOptimizationPlan(mode string, taskType string) *Optimizatio
 	modelStats := s.aggregateModelUsage(usageRecords)
 
 	recommendations := make([]Recommendation, 0)
+	recommendations = append(recommendations, s.findRuntimeParameterOptimizations(taskType)...)
 
 	for modelName, stats := range modelStats {
 		currentPrice, hasCurrent := s.pricing[modelName]
@@ -183,6 +186,10 @@ func (s *Service) GetOptimizationPlan(mode string, taskType string) *Optimizatio
 			recommendations = append(recommendations, *recommendation)
 		}
 	}
+
+	// Generate fallback chain enhancement recommendations
+	fallbackRecs := s.findFallbackChainEnhancements(channels, taskType)
+	recommendations = append(recommendations, fallbackRecs...)
 
 	switch mode {
 	case ModeQualityFirst:
@@ -438,6 +445,7 @@ func (s *Service) findQualityAlternative(modelName string, currentPrice ModelPri
 	}
 
 	rec := &Recommendation{
+		Type:        "model_replacement",
 		FromModel:   modelName,
 		ToModel:     best.name,
 		ModelTag:    modelTag(best.name),
@@ -511,6 +519,7 @@ func (s *Service) findValueAlternative(modelName string, currentPrice ModelPrice
 		savings := (monthlyInput*currentPrice.InputPricePer1M + monthlyOutput*currentPrice.OutputPricePer1M) -
 			(monthlyInput*openBest.price.InputPricePer1M + monthlyOutput*openBest.price.OutputPricePer1M)
 		rec := &Recommendation{
+			Type:        "model_replacement",
 			FromModel:   modelName,
 			ToModel:     openBest.name,
 			ModelTag:    "open",
@@ -528,6 +537,7 @@ func (s *Service) findValueAlternative(modelName string, currentPrice ModelPrice
 		savings := (monthlyInput*currentPrice.InputPricePer1M + monthlyOutput*currentPrice.OutputPricePer1M) -
 			(monthlyInput*cheaperBest.price.InputPricePer1M + monthlyOutput*cheaperBest.price.OutputPricePer1M)
 		rec := &Recommendation{
+			Type:        "model_replacement",
 			FromModel:   modelName,
 			ToModel:     cheaperBest.name,
 			ModelTag:    modelTag(cheaperBest.name),
@@ -545,6 +555,7 @@ func (s *Service) findValueAlternative(modelName string, currentPrice ModelPrice
 		extraCost := (monthlyInput*upgradeBest.price.InputPricePer1M + monthlyOutput*upgradeBest.price.OutputPricePer1M) -
 			(monthlyInput*currentPrice.InputPricePer1M + monthlyOutput*currentPrice.OutputPricePer1M)
 		rec := &Recommendation{
+			Type:        "model_replacement",
 			FromModel:   modelName,
 			ToModel:     upgradeBest.name,
 			ModelTag:    modelTag(upgradeBest.name),
@@ -617,4 +628,170 @@ func formatLatency(ms float64) string {
 
 func formatErrorRate(rate float64) string {
 	return fmt.Sprintf("%.1f%%", rate*100)
+}
+
+// findRuntimeParameterOptimizations generates lightweight runtime-parameter recommendations.
+// It does not mutate runtime defaults; it only surfaces guidance in the optimization plan.
+func (s *Service) findRuntimeParameterOptimizations(taskType string) []Recommendation {
+	recs := make([]Recommendation, 0, 2)
+	switch taskType {
+	case TaskStructured:
+		recs = append(recs, Recommendation{
+			Type:        "runtime_params",
+			FromModel:   "runtime",
+			ToModel:     "structured_output",
+			SavingsUSD:  0,
+			QualityDiff: "equivalent_or_better",
+			Reason:      "结构化输出场景建议降低 temperature 并显式设置 response_format/json schema，以提升稳定性。",
+		})
+	case TaskLongContext:
+		recs = append(recs, Recommendation{
+			Type:        "runtime_params",
+			FromModel:   "runtime",
+			ToModel:     "long_context",
+			SavingsUSD:  0,
+			QualityDiff: "equivalent_or_better",
+			Reason:      "长上下文场景建议控制 max_tokens 并适度降低 temperature，减少截断和长响应成本。",
+		})
+	case TaskBatchLowCost:
+		recs = append(recs, Recommendation{
+			Type:        "runtime_params",
+			FromModel:   "runtime",
+			ToModel:     "batch_low_cost",
+			SavingsUSD:  0,
+			QualityDiff: "equivalent_or_better",
+			Reason:      "批量低成本场景建议降低 max_tokens 上限，并优先使用更保守的采样参数以减少成本波动。",
+		})
+	case TaskToolCalling:
+		recs = append(recs, Recommendation{
+			Type:        "runtime_params",
+			FromModel:   "runtime",
+			ToModel:     "tool_calling",
+			SavingsUSD:  0,
+			QualityDiff: "equivalent_or_better",
+			Reason:      "工具调用场景建议降低 temperature，并限制无关输出，提升 function calling 命中率。",
+		})
+	}
+	return recs
+}
+
+// findFallbackChainEnhancements generates recommendations for improving existing combo fallback chains.
+// For combos with only 1 step, suggests adding a backup step.
+// For combos with 2 steps, suggests adding a last_resort step.
+// Returns recommendations with type "fallback_chain".
+func (s *Service) findFallbackChainEnhancements(channels []config.Channel, taskType string) []Recommendation {
+	combos := s.configSvc.ListModelCombos()
+	recommendations := make([]Recommendation, 0, len(combos))
+
+	for _, combo := range combos {
+		steps := combo.Steps
+		if len(steps) == 0 {
+			continue
+		}
+
+		// Suggest filling missing roles in the fallback chain
+		hasPrimary := false
+		hasBackup := false
+		hasLastResort := false
+		for _, step := range steps {
+			switch step.StepRole {
+			case "primary":
+				hasPrimary = true
+			case "backup":
+				hasBackup = true
+			case "last_resort":
+				hasLastResort = true
+			}
+		}
+
+		// If the combo has only 1 step and no backup, suggest adding a backup
+		if len(steps) == 1 && !hasBackup && !hasLastResort {
+			primaryModel := steps[0].Model
+			// Find a cheaper/simpler alternative model as backup
+			backupModel := findBackupModel(primaryModel, s.pricing)
+			if backupModel != "" {
+				recommendations = append(recommendations, Recommendation{
+					Type:        "fallback_chain",
+					FromModel:   combo.Name,
+					ToModel:     backupModel,
+					SavingsUSD:  0,
+					QualityDiff: "equivalent_or_better",
+					Reason:      fmt.Sprintf("Combo「%s」仅有一个步骤，建议添加回退模型 %s 作为 backup 步骤，提高可用性", combo.Name, backupModel),
+				})
+			}
+		}
+
+		// If the combo has 2 steps but no last_resort, suggest adding one
+		if len(steps) == 2 && !hasLastResort {
+			lastModel := steps[len(steps)-1].Model
+			backupModel := findBackupModel(lastModel, s.pricing)
+			if backupModel != "" {
+				recommendations = append(recommendations, Recommendation{
+					Type:        "fallback_chain",
+					FromModel:   combo.Name,
+					ToModel:     backupModel,
+					SavingsUSD:  0,
+					QualityDiff: "equivalent_or_better",
+					Reason:      fmt.Sprintf("Combo「%s」仅有 2 个步骤，建议添加 %s 作为 last_resort 保底步骤，防止全部回退失败", combo.Name, backupModel),
+				})
+			}
+		}
+
+		// If the combo has no primary step role assigned, suggest a role assignment
+		if !hasPrimary && len(steps) > 0 {
+			recommendations = append(recommendations, Recommendation{
+				Type:        "fallback_chain",
+				FromModel:   combo.Name,
+				ToModel:     steps[0].Model,
+				SavingsUSD:  0,
+				QualityDiff: "equivalent_or_better",
+				Reason:      fmt.Sprintf("Combo「%s」的步骤缺少角色语义(primary/backup/last_resort)，建议分配角色以优化回退顺序", combo.Name),
+			})
+		}
+	}
+
+	return recommendations
+}
+
+// findBackupModel finds a suitable backup model for a given primary model.
+// Returns a cheaper or simpler model that can serve as fallback.
+func findBackupModel(primaryModel string, pricing map[string]ModelPriceInfo) string {
+	primaryPrice, hasPrimary := pricing[primaryModel]
+	if !hasPrimary {
+		return ""
+	}
+
+	// Look for a cheaper model with similar or acceptable quality
+	var bestMatch string
+	var bestScore float64
+
+	for model, price := range pricing {
+		if model == primaryModel {
+			continue
+		}
+		// Prefer models that are cheaper and have reasonable quality
+		if price.InputPricePer1M < primaryPrice.InputPricePer1M && price.Quality >= primaryPrice.Quality-1 {
+			score := (primaryPrice.InputPricePer1M - price.InputPricePer1M) * float64(price.Quality+1)
+			if score > bestScore {
+				bestScore = score
+				bestMatch = model
+			}
+		}
+	}
+
+	if bestMatch == "" {
+		// Fallback: any cheaper model
+		for model, price := range pricing {
+			if model == primaryModel {
+				continue
+			}
+			if price.InputPricePer1M < primaryPrice.InputPricePer1M {
+				if bestMatch == "" || price.InputPricePer1M < pricing[bestMatch].InputPricePer1M {
+					bestMatch = model
+				}
+			}
+		}
+	}
+
+	return bestMatch
 }

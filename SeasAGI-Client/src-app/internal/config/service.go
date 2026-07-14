@@ -61,13 +61,14 @@ type CandidateProvider struct {
 }
 
 type ModelComboStep struct {
-	ChannelID             string              `json:"channel_id,omitempty"`
-	Model                 string              `json:"model"`
-	StepRole              string              `json:"step_role,omitempty"`
-	Providers             []CandidateProvider `json:"providers,omitempty"`
-	Channels              []string            `json:"channels,omitempty"`
-	SelectionPolicy       string              `json:"selection_policy,omitempty"`
-	AllowProviderFallback bool                `json:"allow_provider_fallback,omitempty"`
+	ChannelID                  string              `json:"channel_id,omitempty"`
+	Model                      string              `json:"model"`
+	StepRole                   string              `json:"step_role,omitempty"`
+	Providers                  []CandidateProvider `json:"providers,omitempty"`
+	Channels                   []string            `json:"channels,omitempty"`
+	SelectionPolicy            string              `json:"selection_policy,omitempty"`
+	AllowProviderFallback      bool                `json:"allow_provider_fallback,omitempty"`
+	AllowCrossProviderFallback bool                `json:"allow_cross_provider_fallback,omitempty"`
 }
 
 type ModelCombo struct {
@@ -653,6 +654,11 @@ func modelCost(model string) float64 {
 		}
 	}
 	return 1.0
+}
+
+// ModelCost returns the estimated cost per 1K tokens for the given model.
+func ModelCost(model string) float64 {
+	return modelCost(model)
 }
 
 func (s *Service) ApplyComboSortPreset(comboName string, preset string) error {

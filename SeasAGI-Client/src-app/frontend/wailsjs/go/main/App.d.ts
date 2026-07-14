@@ -180,7 +180,7 @@ export function OpenInBrowser(arg1:string):Promise<void>;
 
 export function PerformUpdate():Promise<void>;
 
-export function PreviewComboOptimization(arg1:string):Promise<{[key: string]: any}>;
+export function PreviewComboOptimization(arg1:string,arg2:string):Promise<{[key: string]: any}>;
 
 export function PushCloudCombo(arg1:string,arg2:string,arg3:string,arg4:string,arg5:number,arg6:string,arg7:{[key: string]: any},arg8:string):Promise<{[key: string]: any}>;
 

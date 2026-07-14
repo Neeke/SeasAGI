@@ -163,18 +163,18 @@ export function PlaygroundPage() {
     <div className="page playground-page">
       <div className="page-header-row">
         <div>
-          <h1>{t("nav.playground") || "Playground"}</h1>
+          <h1>{t("nav.playground")}</h1>
           <p className="page-subtitle">
-            {t("page.playgroundDescription") || "Send a test message through the local gateway to verify your channel configuration."}
+            {t("playground.description")}
           </p>
         </div>
         <div className="hero-metrics">
           <div className="hero-metric-card">
-            <span className="hero-metric-label">当前模型</span>
-            <strong className="hero-metric-value">{selectedModel === "auto" ? "Auto" : selectedModel}</strong>
+            <span className="hero-metric-label">{t("playground.currentModel")}</span>
+            <strong className="hero-metric-value">{selectedModel === "auto" ? t("playground.auto") : selectedModel}</strong>
           </div>
           <div className="hero-metric-card">
-            <span className="hero-metric-label">消息数</span>
+            <span className="hero-metric-label">{t("playground.messageCount")}</span>
             <strong className="hero-metric-value">{messages.length}</strong>
           </div>
         </div>
@@ -182,14 +182,14 @@ export function PlaygroundPage() {
 
       {!gatewayRunning && (
         <div className="alert alert-warning playground-warning">
-          {t("playground.gatewayNotRunning") || "Local gateway is not running. Start the gateway from the home page first."}
+          {t("playground.gatewayNotRunning")}
         </div>
       )}
 
       <div className="playground-toolbar section-card">
         <div className="playground-toolbar-copy">
-          <h2>测试配置</h2>
-          <p className="hint">选择通道、模型或 Combo 组合方案，发送消息以验证配置。</p>
+          <h2>{t("playground.testConfigTitle")}</h2>
+          <p className="hint">{t("playground.testConfigHint")}</p>
         </div>
         <div className="playground-toolbar-actions">
           <select
@@ -204,10 +204,10 @@ export function PlaygroundPage() {
             className="select-input"
             style={{ minWidth: 180 }}
           >
-            <option value="">无 Combo</option>
+            <option value="">{t("playground.noCombo")}</option>
             {combos.map((c) => (
               <option key={c.name} value={c.name}>
-                {c.name} ({c.steps?.length || 0}步)
+                {t("playground.comboWithSteps", { name: c.name, count: c.steps?.length || 0 })}
               </option>
             ))}
           </select>
@@ -222,7 +222,7 @@ export function PlaygroundPage() {
             style={{ minWidth: 180 }}
             disabled={!!selectedCombo}
           >
-            <option value="auto">Auto (gateway routing)</option>
+            <option value="auto">{t("playground.autoGatewayRouting")}</option>
             {channels.filter(c => c.enabled).map((ch) => (
               <option key={ch.channel_id} value={ch.channel_id}>
                 {ch.display_name || ch.channel_id}
@@ -235,7 +235,7 @@ export function PlaygroundPage() {
             className="select-input"
             disabled={!!selectedCombo}
           >
-            <option value="auto">Auto (default model)</option>
+            <option value="auto">{t("playground.autoDefaultModel")}</option>
             {availableModels.map((m) => (
               <option key={m} value={m}>
                 {m}
@@ -244,7 +244,7 @@ export function PlaygroundPage() {
           </select>
           {messages.length > 0 && (
             <button className="btn-outline" onClick={handleClear}>
-              {t("playground.clear") || "Clear"}
+              {t("playground.clear")}
             </button>
           )}
         </div>
@@ -255,10 +255,10 @@ export function PlaygroundPage() {
           {messages.length === 0 ? (
             <div className="empty-state playground-empty-state">
               <p className="playground-empty-title">
-                {t("playground.emptyTitle") || "Send a message to get started."}
+                {t("playground.emptyTitle")}
               </p>
               <p className="text-dim">
-                {t("playground.emptyHint") || `Using "${selectedModel === "auto" ? "default model" : selectedModel}". Type a message and press Enter to send.`}
+                {t("playground.emptyHint", { model: selectedModel === "auto" ? t("playground.defaultModel") : selectedModel })}
               </p>
             </div>
           ) : (
@@ -280,7 +280,7 @@ export function PlaygroundPage() {
                             className="btn-link btn-curl-toggle"
                             onClick={() => setShowComboTrace(showComboTrace === `${i}` ? null : `${i}`)}
                           >
-                            {showComboTrace === `${i}` ? "隐藏执行链" : "查看执行链"}
+                            {showComboTrace === `${i}` ? t("playground.hideComboTrace") : t("playground.showComboTrace")}
                           </button>
                         )}
                         {msg.curlCommand && (
@@ -288,21 +288,21 @@ export function PlaygroundPage() {
                             className="btn-link btn-curl-toggle"
                             onClick={() => setShowCurl(showCurl === `${i}` ? null : `${i}`)}
                           >
-                            {showCurl === `${i}` ? "隐藏 cURL" : "查看 cURL"}
+                            {showCurl === `${i}` ? t("playground.hideCurl") : t("playground.showCurl")}
                           </button>
                         )}
                       </div>
                     )}
                     {msg.role === "assistant" && msg.comboSteps && showComboTrace === `${i}` && (
                       <div className="combo-trace-block">
-                        <div className="combo-trace-title">Combo 执行链</div>
+                        <div className="combo-trace-title">{t("playground.comboTraceTitle")}</div>
                         {msg.comboSteps.map((step, si) => (
                           <div key={si} className={`combo-trace-step combo-trace-${step.status}`}>
                             <span className="combo-trace-step-num">#{step.step}</span>
                             <span className="combo-trace-step-role">{step.role}</span>
                             <span className="combo-trace-step-model">{step.model}</span>
                             <span className="combo-trace-step-status">
-                              {step.status === "ok" ? "✓" : step.status === "fallback" ? "→ 回退" : "✗"}
+                              {step.status === "ok" ? t("playground.traceOk") : step.status === "fallback" ? t("playground.traceFallback") : t("playground.traceFail")}
                             </span>
                             {step.latency_ms != null && <span className="combo-trace-step-latency">{step.latency_ms}ms</span>}
                           </div>

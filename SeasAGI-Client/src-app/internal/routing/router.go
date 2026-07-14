@@ -2,7 +2,9 @@ package routing
 
 import (
 	"crypto/sha1"
+	"encoding/json"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -290,6 +292,9 @@ func (r *Resolver) expandStepCandidates(step config.ModelComboStep) []expandedCa
 				candidates = sorted
 			}
 		}
+		if len(candidates) == 0 && step.AllowCrossProviderFallback {
+			return r.tryCrossProviderFallback(step.Model)
+		}
 		return candidates
 	}
 
@@ -310,10 +315,36 @@ func (r *Resolver) expandStepCandidates(step config.ModelComboStep) []expandedCa
 				model:   model,
 			})
 		}
+		if len(candidates) == 0 && step.AllowCrossProviderFallback {
+			return r.tryCrossProviderFallback(step.Model)
+		}
 		return candidates
 	}
 
 	return nil
+}
+
+// tryCrossProviderFallback searches the global channel pool for channels supporting the given model.
+// This is used when a step's explicit providers/channels are all unavailable and cross-provider fallback is enabled.
+func (r *Resolver) tryCrossProviderFallback(model string) []expandedCandidate {
+	if model == "" {
+		return nil
+	}
+	channels, _ := r.configSvc.ResolveChannelsForModel(model)
+	if len(channels) == 0 {
+		return nil
+	}
+	candidates := make([]expandedCandidate, 0, len(channels))
+	for _, ch := range channels {
+		if !ch.Enabled {
+			continue
+		}
+		candidates = append(candidates, expandedCandidate{
+			channel: ch,
+			model:   model,
+		})
+	}
+	return candidates
 }
 
 // sortCandidatesByPolicy reorders candidates based on the selection policy
@@ -475,6 +506,112 @@ func (r *Resolver) rotateSteps(model string, candidates []PlanStep, stickyLimit 
 	return ordered
 }
 
+// FilterCandidatesByConstraints filters plan steps based on request-level constraints.
+// Supported constraints: max_price, max_latency_ms, data_policy.
+// If filtering eliminates all candidates, returns nil so the caller can handle the empty case.
+func (r *Resolver) FilterCandidatesByConstraints(candidates []PlanStep, constraints map[string]any) []PlanStep {
+	if len(constraints) == 0 || len(candidates) == 0 {
+		return candidates
+	}
+
+	filtered := make([]PlanStep, 0, len(candidates))
+	for _, step := range candidates {
+		if r.passesConstraints(step, constraints) {
+			filtered = append(filtered, step)
+		}
+	}
+
+	if len(filtered) == 0 {
+		// All candidates filtered out by constraints — return nil to signal no valid candidates
+		return nil
+	}
+	return filtered
+}
+
+func (r *Resolver) passesConstraints(step PlanStep, constraints map[string]any) bool {
+	// max_price: exclude if channel model cost exceeds the limit
+	if v, ok := constraints["max_price"]; ok {
+		if maxPrice, ok := toFloat64(v); ok && maxPrice > 0 {
+			cost := config.ModelCost(step.UpstreamModel)
+			if cost > maxPrice {
+				return false
+			}
+		}
+	}
+
+	// max_latency_ms: exclude if estimated step latency exceeds the limit
+	if v, ok := constraints["max_latency_ms"]; ok {
+		if maxLatency, ok := toFloat64(v); ok && maxLatency > 0 {
+			estLatency := estimatePlanStepLatencyMs(step)
+			if estLatency > maxLatency {
+				return false
+			}
+		}
+	}
+
+	// data_policy: filter by channel type
+	if v, ok := constraints["data_policy"]; ok {
+		if policy, ok := v.(string); ok {
+			switch policy {
+			case "local_only":
+				if step.Channel.ChannelType != "custom" {
+					return false
+				}
+			case "cloud_only":
+				if step.Channel.ChannelType != "platform" {
+					return false
+				}
+				// "any" or empty: no filtering
+			}
+		}
+	}
+
+	return true
+}
+
+func toFloat64(v any) (float64, bool) {
+	switch n := v.(type) {
+	case float64:
+		return n, true
+	case int:
+		return float64(n), true
+	case int64:
+		return float64(n), true
+	case json.Number:
+		if f, err := n.Float64(); err == nil {
+			return f, true
+		}
+	}
+	return 0, false
+}
+
+func estimateChannelLatencyMs(channelType string) float64 {
+	// Heuristic baseline retained as fallback.
+	switch channelType {
+	case "custom":
+		return 500
+	case "platform":
+		return 1500
+	default:
+		return 1000
+	}
+}
+
+func estimatePlanStepLatencyMs(step PlanStep) float64 {
+	// Prefer model-name heuristics when available; otherwise fall back to channel heuristic.
+	model := strings.ToLower(strings.TrimSpace(step.UpstreamModel))
+	switch {
+	case strings.Contains(model, "flash"), strings.Contains(model, "mini"), strings.Contains(model, "haiku"), strings.Contains(model, "nano"):
+		return 600
+	case strings.Contains(model, "pro"), strings.Contains(model, "sonnet"), strings.Contains(model, "4o"), strings.Contains(model, "gpt-4"):
+		return 1400
+	case strings.Contains(model, "opus"), strings.Contains(model, "reasoner"):
+		return 2200
+	default:
+		return estimateChannelLatencyMs(step.Channel.ChannelType)
+	}
+}
+
 // sortByTaskType reorders plan steps based on the request task type.
 // For "tools" requests, channels with better tool-calling support are prioritized first.
 // For other task types, the original order is preserved.
@@ -525,6 +662,20 @@ func (r *Resolver) sortByTaskType(steps []PlanStep, taskType string) []PlanStep 
 			}
 		}
 		return append(longCtx, others...)
+
+	case "batch_low_cost":
+		// For batch/low-cost tasks, prefer the cheapest providers
+		batchFriendly := make([]PlanStep, 0, len(steps))
+		others := make([]PlanStep, 0, len(steps))
+		for _, step := range steps {
+			pt := step.Channel.ProviderType
+			if pt == "google" || pt == "openrouter" || pt == "deepseek" {
+				batchFriendly = append(batchFriendly, step)
+			} else {
+				others = append(others, step)
+			}
+		}
+		return append(batchFriendly, others...)
 
 	default:
 		return steps

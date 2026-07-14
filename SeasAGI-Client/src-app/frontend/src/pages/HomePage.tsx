@@ -142,7 +142,7 @@ function TunnelStatus() {
     setEnabledRelay("");
     setRelayResult({
       type: "ok",
-      message: "已关闭远程访问加速，客户端将直接访问远端模型 API",
+      message: t("home.relayDisabled"),
     });
   };
 
@@ -172,7 +172,7 @@ function TunnelStatus() {
                   checked={!relayEnabled}
                   onChange={handleDisableRelay}
                 />
-                <span>不启用</span>
+                <span>{t("home.relayOff")}</span>
               </label>
               <label className="relay-radio-label">
                 <input
@@ -181,7 +181,7 @@ function TunnelStatus() {
                   checked={relayEnabled}
                   onChange={handleEnableRelay}
                 />
-                <span>启用中继加速</span>
+                <span>{t("home.relayOn")}</span>
               </label>
             </div>
             {relayEnabled && relayGateways.length > 0 && (
@@ -274,7 +274,7 @@ export function HomePage() {
           setCloudUsage(usage);
           setCloudBilling(billing);
         })
-        .catch(() => setCloudError("加载失败"))
+        .catch(() => setCloudError(t("home.cloudLoadFailed")))
         .finally(() => setLoadingCloud(false));
     } else {
       setCloudUsage(null);
@@ -420,19 +420,19 @@ export function HomePage() {
       {auth.is_logged_in && cloudBilling && (
         <div className="section section-card snapshot-card">
           <div className="section-heading">
-            <h2>权益快照</h2>
-            <p className="hint">当前套餐、配额与关键能力概览。</p>
+            <h2>{t("home.snapshotTitle")}</h2>
+            <p className="hint">{t("home.snapshotHint")}</p>
           </div>
           <div className="snapshot-grid">
             <div className="snapshot-item">
-              <span className="snapshot-label">当前套餐</span>
+              <span className="snapshot-label">{t("home.snapshotCurrentPlan")}</span>
               <span className="snapshot-value">
                 <span className={`plan-badge plan-badge-${planTier || "free"}`}>{planLabel || cloudBilling.plan_name}</span>
-                <span className="snapshot-price">{cloudBilling.price > 0 ? `$${cloudBilling.price}/mo` : "免费"}</span>
+                <span className="snapshot-price">{cloudBilling.price > 0 ? `$${cloudBilling.price}/mo` : t("home.free")}</span>
               </span>
             </div>
             <div className="snapshot-item">
-              <span className="snapshot-label">配额消耗</span>
+              <span className="snapshot-label">{t("home.snapshotQuotaUsage")}</span>
               <span className="snapshot-value">
                 <span className="snapshot-quota-bar">
                   <span className="snapshot-quota-fill" style={{ width: `${Math.min(100, (cloudBilling.used_quota / cloudBilling.quota) * 100)}%` }} />
@@ -441,41 +441,41 @@ export function HomePage() {
               </span>
             </div>
             <div className="snapshot-item">
-              <span className="snapshot-label">中继通道</span>
+              <span className="snapshot-label">{t("home.snapshotRelayChannels")}</span>
               <span className="snapshot-value">
                 <span className={`status-badge ${cloudBilling.relay_enabled ? "status-green" : "status-dim"}`}>
-                  {cloudBilling.relay_enabled ? "已启用" : "未启用"}
+                  {cloudBilling.relay_enabled ? t("home.enabled") : t("home.disabled")}
                 </span>
               </span>
             </div>
             <div className="snapshot-item">
-              <span className="snapshot-label">本地网关</span>
+              <span className="snapshot-label">{t("home.snapshotLocalGateway")}</span>
               <span className="snapshot-value">
                 <span className={`status-badge ${isRunning ? "status-green" : "status-dim"}`}>
-                  {isRunning ? "运行中" : "已停止"}
+                  {isRunning ? t("home.running") : t("home.stopped")}
                 </span>
               </span>
             </div>
             <div className="snapshot-item">
-              <span className="snapshot-label">可用通道</span>
+              <span className="snapshot-label">{t("home.snapshotAvailableChannels")}</span>
               <span className="snapshot-value">
                 <strong>{channels.length}</strong>
                 <span className="snapshot-sub">
-                  平台 {platformChannels.length} · 自定义 {customChannels.length}
+                  {t("home.snapshotChannelBreakdown", { platform: platformChannels.length, custom: customChannels.length })}
                 </span>
               </span>
             </div>
             <div className="snapshot-item">
-              <span className="snapshot-label">云端通道数</span>
+              <span className="snapshot-label">{t("home.snapshotCloudChannels")}</span>
               <span className="snapshot-value">
                 <strong>{cloudBilling.relay_gateways?.length || 0}</strong>
-                <span className="snapshot-sub">中继网关节点</span>
+                <span className="snapshot-sub">{t("home.snapshotRelayNodes")}</span>
               </span>
             </div>
           </div>
           <div className="snapshot-footer">
-            <button className="btn-primary btn-sm" onClick={() => navigate("/usage")}>查看用量详情</button>
-            <button className="btn-secondary btn-sm" onClick={() => navigate("/subscription")}>管理套餐</button>
+            <button className="btn-primary btn-sm" onClick={() => navigate("/usage")}>{t("home.viewUsageDetails")}</button>
+            <button className="btn-secondary btn-sm" onClick={() => navigate("/subscription")}>{t("home.manageSubscription")}</button>
           </div>
         </div>
       )}
@@ -487,15 +487,15 @@ export function HomePage() {
       <div className="page-header">
         <div>
           <h1>{t("home.gatewayStatus")}</h1>
-          <p className="page-subtitle">管理本地网关、默认路由和远程加速入口，快速查看当前运行状态。</p>
+          <p className="page-subtitle">{t("home.pageSubtitle")}</p>
         </div>
         <div className="hero-metrics">
           <div className="hero-metric-card">
-            <span className="hero-metric-label">网关状态</span>
+            <span className="hero-metric-label">{t("home.metricGatewayStatus")}</span>
             <strong className="hero-metric-value">{isRunning ? t("home.running") : t("home.stopped")}</strong>
           </div>
           <div className="hero-metric-card">
-            <span className="hero-metric-label">可用通道</span>
+            <span className="hero-metric-label">{t("home.metricAvailableChannels")}</span>
             <strong className="hero-metric-value">{channels.length}</strong>
           </div>
         </div>
@@ -509,7 +509,7 @@ export function HomePage() {
               <span className={`status-dot ${isRunning ? "ok" : "off"}`}></span>
               <strong className="status-card-title">{isRunning ? t("home.running") : t("home.stopped")}</strong>
             </div>
-            <div className="text-dim">本地网关用于统一转发和调试请求，可随时启停。</div>
+            <div className="text-dim">{t("home.gatewayDesc")}</div>
           </div>
           <button onClick={handleToggleGateway} className="btn-primary">
             {isRunning ? t("home.stop") : t("home.start")}
@@ -533,7 +533,7 @@ export function HomePage() {
         <div className="status-card">
           <div className="status-card-copy">
             <label>{t("home.defaultModel")}</label>
-            <div className="text-dim">设置未显式指定模型时的默认路由目标。</div>
+            <div className="text-dim">{t("home.defaultModelDesc")}</div>
           </div>
           <select
             value={appConfig?.default_model || ""}
@@ -552,7 +552,7 @@ export function HomePage() {
         <div className="status-card">
           <div className="status-card-copy">
             <label>{t("home.defaultChannel")}</label>
-            <div className="text-dim">设置默认承载请求的通道，可与默认模型联动。</div>
+            <div className="text-dim">{t("home.defaultChannelDesc")}</div>
           </div>
           <select
             value={appConfig?.default_channel_id || ""}
@@ -571,7 +571,7 @@ export function HomePage() {
         <div className="section-card-inline">
           <div>
             <strong>{t("home.defaultCombo")}</strong>
-            <div className="text-dim">设置默认 Combo 组合方案，选择后自动覆盖默认模型和通道设置。</div>
+            <div className="text-dim">{t("home.defaultComboDesc")}</div>
           </div>
           <select
             value={defaultComboName || ""}
@@ -585,7 +585,7 @@ export function HomePage() {
             <option value="">{t("home.notSet")}</option>
             {combos.map((c) => (
               <option key={c.name} value={c.name}>
-                {c.name} ({c.steps?.length || 0}步)
+                {t("home.comboWithStepCount", { name: c.name, count: c.steps?.length || 0 })}
               </option>
             ))}
           </select>
@@ -594,7 +594,7 @@ export function HomePage() {
 
       <div className="section-heading">
         <h2>{t("home.availableChannels")}</h2>
-        <p className="hint">按平台通道与自定义通道分组查看当前可路由资源和健康状态。</p>
+        <p className="hint">{t("home.availableChannelsHint")}</p>
       </div>
 
       {platformChannels.length > 0 && (
