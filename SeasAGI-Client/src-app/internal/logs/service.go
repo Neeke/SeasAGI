@@ -80,9 +80,9 @@ func (s *Service) persistToDisk() {
 		return
 	}
 	dir := filepath.Dir(s.filePath)
-	os.MkdirAll(dir, 0755)
+	os.MkdirAll(dir, 0700)
 	tmpFile := s.filePath + ".tmp"
-	if err := os.WriteFile(tmpFile, data, 0644); err != nil {
+	if err := os.WriteFile(tmpFile, data, 0600); err != nil {
 		return
 	}
 	os.Rename(tmpFile, s.filePath)

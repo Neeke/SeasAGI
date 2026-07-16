@@ -3,6 +3,7 @@ package updater
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -13,7 +14,7 @@ import (
 )
 
 const (
-	releaseCheckURL = "https://api.github.com/repos/seasagi/seasagi/releases/latest"
+	releaseCheckURL = "https://api.github.com/repos/SeasX/seasagi/releases/latest"
 	currentVersion  = "0.1.0"
 	checkInterval   = 4 * time.Hour
 )
@@ -150,7 +151,7 @@ func parseVersion(v string) [3]int {
 }
 
 func openReleasesPage() error {
-	return exec.Command("open", "https://github.com/seasagi/seasagi/releases").Run()
+	return exec.Command("open", "https://github.com/SeasX/seasagi/releases").Run()
 }
 
 func downloadDMG(url string) (string, error) {
@@ -161,7 +162,13 @@ func downloadDMG(url string) (string, error) {
 	fileName := fmt.Sprintf("SeasAGI-update-%d.dmg", time.Now().Unix())
 	dmgPath := filepath.Join(downloadDir, fileName)
 
-	resp, err := http.Get(url)
+	client := &http.Client{Timeout: 5 * time.Minute}
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -177,7 +184,9 @@ func downloadDMG(url string) (string, error) {
 	}
 	defer f.Close()
 
-	if _, err := f.ReadFrom(resp.Body); err != nil {
+	// Limit download size to 1GB to prevent disk fill attacks
+	limitedReader := io.LimitReader(resp.Body, 1<<30)
+	if _, err := f.ReadFrom(limitedReader); err != nil {
 		os.Remove(dmgPath)
 		return "", err
 	}

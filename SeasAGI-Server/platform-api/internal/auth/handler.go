@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -161,11 +162,24 @@ func Middleware() gin.HandlerFunc {
 	}
 }
 
-func generateAccessToken(userID, email string) (string, error) {
+func getJWTSecret() string {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		secret = "dev-jwt-secret"
+		log.Fatal("JWT_SECRET environment variable is required. Set it in production!")
 	}
+	return secret
+}
+
+func getJWTRefreshSecret() string {
+	secret := os.Getenv("JWT_REFRESH_SECRET")
+	if secret == "" {
+		log.Fatal("JWT_REFRESH_SECRET environment variable is required. Set it in production!")
+	}
+	return secret
+}
+
+func generateAccessToken(userID, email string) (string, error) {
+	secret := getJWTSecret()
 	claims := Claims{
 		UserID: userID,
 		Email:  email,
@@ -179,10 +193,7 @@ func generateAccessToken(userID, email string) (string, error) {
 }
 
 func generateRefreshToken(userID string) (string, error) {
-	secret := os.Getenv("JWT_REFRESH_SECRET")
-	if secret == "" {
-		secret = "dev-jwt-refresh-secret"
-	}
+	secret := getJWTRefreshSecret()
 	claims := Claims{
 		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -195,10 +206,7 @@ func generateRefreshToken(userID string) (string, error) {
 }
 
 func validateToken(tokenString string) (*Claims, error) {
-	secret := os.Getenv("JWT_SECRET")
-	if secret == "" {
-		secret = "dev-jwt-secret"
-	}
+	secret := getJWTSecret()
 	return validateTokenWithSecret(tokenString, secret)
 }
 

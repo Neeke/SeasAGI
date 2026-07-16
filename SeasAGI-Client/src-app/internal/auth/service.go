@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
 	"os"
 	"sync"
@@ -121,10 +121,10 @@ func (s *Service) callPlatformLogin(email, password string) (string, error) {
 		if result.Error == "" {
 			result.Error = "platform login failed"
 		}
-		return "", fmt.Errorf(result.Error)
+		return "", errors.New(result.Error)
 	}
 	if result.AccessToken == "" {
-		return "", fmt.Errorf("platform returned empty access token")
+		return "", errors.New("platform returned empty access token")
 	}
 	return result.AccessToken, nil
 }
@@ -173,7 +173,7 @@ func (s *Service) FetchPlatformChannels(ctx context.Context) ([]map[string]inter
 		if result.Error == "" {
 			result.Error = "fetch platform channels failed"
 		}
-		return nil, fmt.Errorf(result.Error)
+		return nil, errors.New(result.Error)
 	}
 	return result.Data, nil
 }

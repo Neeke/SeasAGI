@@ -262,6 +262,8 @@ func traceMiddleware() gin.HandlerFunc {
 }
 
 func debugLogMiddleware() gin.HandlerFunc {
+	// WARNING: This middleware logs request and response bodies including sensitive data (passwords, API keys, tokens).
+	// It MUST only be enabled in development/debug environments. NEVER enable in production.
 	return func(c *gin.Context) {
 		bodyBytes, _ := io.ReadAll(c.Request.Body)
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))

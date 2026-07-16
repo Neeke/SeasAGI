@@ -15,8 +15,7 @@ import (
 func Middleware() gin.HandlerFunc {
 	adminSecret := os.Getenv("ADMIN_SECRET")
 	if adminSecret == "" {
-		adminSecret = "dev-admin-secret"
-		log.Println("Warning: ADMIN_SECRET not set, using default dev secret. Set ADMIN_SECRET in production!")
+		log.Fatal("ADMIN_SECRET environment variable is required. Set it in production!")
 	}
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
