@@ -12,11 +12,11 @@
 
 SeasAGI is a layered AI gateway platform consisting of three sub-projects:
 
-| Sub-project | License | Description |
-|-------------|---------|-------------|
-| `SeasAGI-Client/` | **GPL 3.0** fully open-source | Native desktop client (Wails + Go + React), local unified gateway, API Keys never uploaded |
-| `SeasAGI-Server/` | **AGPL 3.0** open-source self-hostable | Community edition cloud control plane, basic auth / Combo CRUD / basic usage / basic relay forwarding |
-| `SeasAGI-Server-Enterprise/` | Closed-source | Enterprise edition cloud, includes Stripe billing / multi-tenant governance / Combo governance approval / admin dashboard. See [Enterprise README](SeasAGI-Server-Enterprise/README.md) |
+| Sub-project | License | Build | Description |
+|-------------|---------|-------|-------------|
+| `SeasAGI-Client/` | **GPL 3.0** fully open-source | [![Build status](https://ci.appveyor.com/api/projects/status/github/SeasX/SeasAGI?svg=true)](https://ci.appveyor.com/project/SeasX/SeasAGI) | Native desktop client (Wails + Go + React), local unified gateway, API Keys never uploaded |
+| `SeasAGI-Server/` | **AGPL 3.0** open-source self-hostable | [![Build status](https://ci.appveyor.com/api/projects/status/github/SeasX/SeasAGI?svg=true)](https://ci.appveyor.com/project/SeasX/SeasAGI) | Community edition cloud control plane, basic auth / Combo CRUD / basic usage / basic relay forwarding |
+| `SeasAGI-Server-Enterprise/` | Closed-source | — | Enterprise edition cloud, includes Stripe billing / multi-tenant governance / Combo governance approval / admin dashboard. See [Enterprise README](SeasAGI-Server-Enterprise/README.md) |
 
 The client can **run independently** — all local gateway features work without a Server. The cloud is an optional value-add service providing remote accelerated channels, usage sync, team collaboration, and enterprise governance.
 

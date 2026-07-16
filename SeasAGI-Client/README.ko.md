@@ -4,6 +4,12 @@
 
 # SeasAGI Client
 
+[![Build status](https://ci.appveyor.com/api/projects/status/github/SeasX/SeasAGI?svg=true)](https://ci.appveyor.com/project/SeasX/SeasAGI)
+[![macOS](https://img.shields.io/badge/platform-macOS-blue)](https://github.com/SeasX/SeasAGI)
+[![Linux](https://img.shields.io/badge/platform-Linux-blue)](https://github.com/SeasX/SeasAGI)
+[![Windows](https://img.shields.io/badge/platform-Windows-blue)](https://github.com/SeasX/SeasAGI)
+[![License](https://img.shields.io/badge/license-AGPL%20v3-green)](LICENSE)
+
 데스크톱 클라이언트 하위 프로젝트로, 데스크톱 메인라인 소스 코드와 클라이언트 빌드 스크립트를 보관합니다.
 
 ## 디렉토리 구조

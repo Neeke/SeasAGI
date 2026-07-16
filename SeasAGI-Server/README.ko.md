@@ -2,6 +2,12 @@
 
 # SeasAGI Server Community
 
+[![Build status](https://ci.appveyor.com/api/projects/status/github/SeasX/SeasAGI?svg=true)](https://ci.appveyor.com/project/SeasX/SeasAGI)
+[![macOS](https://img.shields.io/badge/platform-macOS-blue)](https://github.com/SeasX/SeasAGI)
+[![Linux](https://img.shields.io/badge/platform-Linux-blue)](https://github.com/SeasX/SeasAGI)
+[![Windows](https://img.shields.io/badge/platform-Windows-blue)](https://github.com/SeasX/SeasAGI)
+[![License](https://img.shields.io/badge/license-AGPL%20v3-green)](LICENSE)
+
 커뮤니티 에디션 클라우드 하위 프로젝트입니다. 오픈소스 플랫폼 컨트롤 플레인과 플랫폼 릴레이 게이트웨이를 포함합니다. 엔터프라이즈 거버넌스, 결제 및 관리자 대시보드는 포함되지 않습니다.
 
 ## 디렉토리 구조

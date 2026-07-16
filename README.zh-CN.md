@@ -12,11 +12,11 @@
 
 SeasAGI 是一个分层的 AI 网关平台，由三个子项目组成：
 
-| 子项目 | 许可证 | 说明 |
-|--------|--------|------|
-| `SeasAGI-Client/` | **GPL 3.0** 完全开源 | 原生桌面客户端（Wails + Go + React），本地统一网关，API Keys 永不上传 |
-| `SeasAGI-Server/` | **AGPL 3.0** 开源自部署 | 社区版云端控制面，基础认证 / Combo CRUD / 基础用量 / 基础中继转发 |
-| `SeasAGI-Server-Enterprise/` | 闭源 | 企业版云端，包含 Stripe 计费 / 多租户治理 / Combo 治理审批 / 管理后台。详见 [企业版 README](SeasAGI-Server-Enterprise/README.md) |
+| 子项目 | 许可证 | 构建 | 说明 |
+|--------|--------|------|------|
+| `SeasAGI-Client/` | **GPL 3.0** 完全开源 | [![Build status](https://ci.appveyor.com/api/projects/status/github/Neeke/SeasAGI?svg=true)](https://ci.appveyor.com/project/Neeke/SeasAGI) | 原生桌面客户端（Wails + Go + React），本地统一网关，API Keys 永不上传 |
+| `SeasAGI-Server/` | **AGPL 3.0** 开源自部署 | [![Build status](https://ci.appveyor.com/api/projects/status/github/Neeke/SeasAGI?svg=true)](https://ci.appveyor.com/project/Neeke/SeasAGI) | 社区版云端控制面，基础认证 / Combo CRUD / 基础用量 / 基础中继转发 |
+| `SeasAGI-Server-Enterprise/` | 闭源 | — | 企业版云端，包含 Stripe 计费 / 多租户治理 / Combo 治理审批 / 管理后台。详见 [企业版 README](SeasAGI-Server-Enterprise/README.md) |
 
 客户端可以**独立运行** — 所有本地网关功能无需服务端即可使用。云端是可选增值服务，提供远程加速渠道、用量同步、团队协作和企业治理。
 

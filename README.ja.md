@@ -12,11 +12,11 @@
 
 SeasAGI は 3 つのサブプロジェクトから構成される階層型 AI ゲートウェイプラットフォームです：
 
-| サブプロジェクト | ライセンス | 説明 |
-|-------------|---------|-------------|
-| `SeasAGI-Client/` | **GPL 3.0** 完全オープンソース | ネイティブデスクトップクライアント（Wails + Go + React）、ローカル統合ゲートウェイ、API Keys はアップロードされない |
-| `SeasAGI-Server/` | **AGPL 3.0** オープンソース セルフホスト可能 | コミュニティエディションクラウドコントロールプレーン、基本認証 / Combo CRUD / 基本使用量 / 基本リレーフォワーディング |
-| `SeasAGI-Server-Enterprise/` | クローズドソース | エンタープライズエディションクラウド、Stripe 課金 / マルチテナントガバナンス / Combo ガバナンス承認 / 管理ダッシュボードを含む。[エンタープライズ README](SeasAGI-Server-Enterprise/README.md) を参照 |
+| サブプロジェクト | ライセンス | ビルド | 説明 |
+|-------------|---------|-------|-------------|
+| `SeasAGI-Client/` | **GPL 3.0** 完全オープンソース | [![Build status](https://ci.appveyor.com/api/projects/status/github/SeasX/SeasAGI?svg=true)](https://ci.appveyor.com/project/SeasX/SeasAGI) | ネイティブデスクトップクライアント（Wails + Go + React）、ローカル統合ゲートウェイ、API Keys はアップロードされない |
+| `SeasAGI-Server/` | **AGPL 3.0** オープンソース セルフホスト可能 | [![Build status](https://ci.appveyor.com/api/projects/status/github/SeasX/SeasAGI?svg=true)](https://ci.appveyor.com/project/SeasX/SeasAGI) | コミュニティエディションクラウドコントロールプレーン、基本認証 / Combo CRUD / 基本使用量 / 基本リレーフォワーディング |
+| `SeasAGI-Server-Enterprise/` | クローズドソース | — | エンタープライズエディションクラウド、Stripe 課金 / マルチテナントガバナンス / Combo ガバナンス承認 / 管理ダッシュボードを含む。[エンタープライズ README](SeasAGI-Server-Enterprise/README.md) を参照 |
 
 クライアントは**単体で動作**可能 — すべてのローカルゲートウェイ機能は Server なしで動作します。クラウドはリモート高速チャネル、使用量同期、チーム協調、エンタープライズガバナンスを提供するオプションの付加価値サービスです。
 

@@ -2,6 +2,12 @@
 
 # SeasAGI Server Community
 
+[![Build status](https://ci.appveyor.com/api/projects/status/github/SeasX/SeasAGI?svg=true)](https://ci.appveyor.com/project/SeasX/SeasAGI)
+[![macOS](https://img.shields.io/badge/platform-macOS-blue)](https://github.com/SeasX/SeasAGI)
+[![Linux](https://img.shields.io/badge/platform-Linux-blue)](https://github.com/SeasX/SeasAGI)
+[![Windows](https://img.shields.io/badge/platform-Windows-blue)](https://github.com/SeasX/SeasAGI)
+[![License](https://img.shields.io/badge/license-AGPL%20v3-green)](LICENSE)
+
 社区版云端子项目，包含开源平台控制面与平台中继网关，不包含企业治理、计费和管理后台。
 
 ## 目录

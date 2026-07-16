@@ -2,6 +2,12 @@
 
 # SeasAGI Server Community
 
+[![Build status](https://ci.appveyor.com/api/projects/status/github/SeasX/SeasAGI?svg=true)](https://ci.appveyor.com/project/SeasX/SeasAGI)
+[![macOS](https://img.shields.io/badge/platform-macOS-blue)](https://github.com/SeasX/SeasAGI)
+[![Linux](https://img.shields.io/badge/platform-Linux-blue)](https://github.com/SeasX/SeasAGI)
+[![Windows](https://img.shields.io/badge/platform-Windows-blue)](https://github.com/SeasX/SeasAGI)
+[![License](https://img.shields.io/badge/license-AGPL%20v3-green)](LICENSE)
+
 コミュニティ版クラウドサブプロジェクトです。オープンソースのプラットフォームコントロールプレーンとプラットフォーム中継ゲートウェイを含みます。エンタープライズガバナンス、課金、管理画面は含みません。
 
 ## ディレクトリ構造

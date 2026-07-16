@@ -4,6 +4,12 @@
 
 # SeasAGI Client
 
+[![Build status](https://ci.appveyor.com/api/projects/status/github/SeasX/SeasAGI?svg=true)](https://ci.appveyor.com/project/SeasX/SeasAGI)
+[![macOS](https://img.shields.io/badge/platform-macOS-blue)](https://github.com/SeasX/SeasAGI)
+[![Linux](https://img.shields.io/badge/platform-Linux-blue)](https://github.com/SeasX/SeasAGI)
+[![Windows](https://img.shields.io/badge/platform-Windows-blue)](https://github.com/SeasX/SeasAGI)
+[![License](https://img.shields.io/badge/license-AGPL%20v3-green)](LICENSE)
+
 Client sub-project, containing the desktop mainline source code and client build scripts.
 
 ## Directory Structure
