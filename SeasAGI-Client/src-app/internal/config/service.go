@@ -192,13 +192,25 @@ func (s *Service) ensureBuiltinTemplates() {
 			StickyUses: 1,
 		},
 		{
+			Name:        "claude-opus-4-8-fallback",
+			Description: "Claude Opus 4.8 主力 + Sonnet 5 回退，企业级智能",
+			Tags:        []string{"生产", "企业", "Anthropic", "前沿"},
+			Steps: []ModelComboStep{
+				{Model: "claude-opus-4-8"},
+				{Model: "claude-sonnet-5"},
+			},
+			Models:     []string{"claude-opus-4-8", "claude-sonnet-5"},
+			Strategy:   "fallback",
+			StickyUses: 1,
+		},
+		{
 			Name:        "claude-sonnet-round-robin",
-			Description: "Claude Sonnet 轮询，适合高并发场景",
+			Description: "Claude Sonnet 5 轮询，适合高并发场景",
 			Tags:        []string{"生产", "高并发", "Anthropic"},
 			Steps: []ModelComboStep{
-				{Model: "claude-sonnet-4-20250514"},
+				{Model: "claude-sonnet-5"},
 			},
-			Models:     []string{"claude-sonnet-4-20250514"},
+			Models:     []string{"claude-sonnet-5"},
 			Strategy:   "round_robin",
 			StickyUses: 3,
 		},
@@ -563,7 +575,11 @@ var modelTierMap = map[string]int{
 	"claude-4-opus":            12,
 	"claude-4-sonnet":          11,
 	"claude-opus-4-20250514":   10,
+	"claude-opus-4-8":          12,
 	"claude-3-opus":            10,
+	"claude-fable-5":           13,
+	"claude-sonnet-5":          11,
+	"claude-haiku-4-5":         5,
 	"o3":                       10,
 	"claude-3-5-sonnet":        8,
 	"o3-mini":                  9,
@@ -576,7 +592,10 @@ var modelTierMap = map[string]int{
 	"kimi-2.6":                 9,
 	"qwen-max":                 8,
 	"mistral-large":            8,
+	"mistral-medium-3.5":       8,
 	"llama-3.1-405b":           8,
+	"llama-4-maverick":         8,
+	"llama-4-scout":            7,
 	"gpt-5-mini":               8,
 	"gpt-4o-mini":              5,
 	"claude-3-5-haiku":         5,
@@ -584,7 +603,8 @@ var modelTierMap = map[string]int{
 	"deepseek-v4-flash":        7,
 	"glm-5":                    8,
 	"kimi-2.5":                 8,
-	"deepseek-chat":            7,
+	"deepseek-chat":            7, // Deprecated — use deepseek-v4-pro after 2026-07-24
+	"deepseek-reasoner":        7, // Deprecated — use deepseek-v4-flash (thinking) after 2026-07-24
 	"deepseek-coder":           6,
 	"qwen-plus":                7,
 	"llama-3.1-70b":            7,
@@ -595,6 +615,7 @@ var modelTierMap = map[string]int{
 	"claude-3-haiku":           3,
 	"gemini-1.5-flash":         3,
 	"minimax-m2.7":             7,
+	"minimax-m3":               9,
 }
 
 var modelCostMap = map[string]float64{
@@ -605,7 +626,11 @@ var modelCostMap = map[string]float64{
 	"claude-4-opus":            80.0,
 	"claude-4-sonnet":          18.0,
 	"claude-opus-4-20250514":   15.0,
+	"claude-opus-4-8":          30.0,
 	"claude-3-opus":            15.0,
+	"claude-fable-5":           60.0,
+	"claude-sonnet-5":          18.0,
+	"claude-haiku-4-5":         1.0,
 	"o3":                       10.0,
 	"o3-mini":                  1.1,
 	"o1":                       15.0,
@@ -616,7 +641,8 @@ var modelCostMap = map[string]float64{
 	"gemini-2.5-pro":           1.25,
 	"glm-5.1":                  3.0,
 	"kimi-2.6":                 4.0,
-	"deepseek-chat":            0.27,
+	"deepseek-chat":            0.27, // Deprecated — use deepseek-v4-pro after 2026-07-24
+	"deepseek-reasoner":        0.40, // Deprecated — use deepseek-v4-flash after 2026-07-24
 	"deepseek-coder":           0.14,
 	"deepseek-v4-flash":        0.40,
 	"glm-5":                    2.0,
@@ -630,6 +656,10 @@ var modelCostMap = map[string]float64{
 	"claude-3-haiku":           0.25,
 	"gemini-1.5-flash":         0.075,
 	"minimax-m2.7":             1.5,
+	"minimax-m3":               1.5,
+	"mistral-medium-3.5":       9.0,
+	"llama-4-maverick":         1.1,
+	"llama-4-scout":            0.4,
 }
 
 func modelTier(model string) int {

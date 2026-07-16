@@ -46,7 +46,7 @@ const TASK_TYPE_META_KEYS: Record<string, { title: string; subtitle: string; hin
 
 const HIGH_COST_MODELS = new Set([
   "gpt-4o", "gpt-4-turbo", "gpt-4.1", "gpt-4.1-mini",
-  "claude-3-5-sonnet", "claude-3-opus",
+  "claude-3-5-sonnet", "claude-3-opus", "claude-opus-4-8", "claude-fable-5", "claude-sonnet-5",
   "gemini-2.0-pro", "gemini-2.5-pro",
 ]);
 

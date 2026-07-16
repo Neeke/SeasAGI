@@ -34,6 +34,8 @@ func NewExecutorRegistry() *ExecutorRegistry {
 	r.Register("moonshot", func() ProviderAdapter { return &OpenAIExecutor{} })
 	r.Register("zhipu", func() ProviderAdapter { return &OpenAIExecutor{} })
 	r.Register("xiaomi", func() ProviderAdapter { return &OpenAIExecutor{} })
+	r.Register("mistral", func() ProviderAdapter { return &OpenAIExecutor{} })
+	r.Register("qwen", func() ProviderAdapter { return &OpenAIExecutor{} })
 
 	return r
 }

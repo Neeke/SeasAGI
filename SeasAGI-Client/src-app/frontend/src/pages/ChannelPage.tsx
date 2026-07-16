@@ -289,6 +289,8 @@ export function ChannelPage() {
                 <option value="gemini">Google Gemini</option>
                 <option value="openrouter">OpenRouter</option>
                 <option value="deepseek">DeepSeek</option>
+                <option value="mistral">Mistral AI</option>
+                <option value="qwen">Qwen (Alibaba Cloud)</option>
                 <option value="bailian">{t("channel.providerBailian")}</option>
                 <option value="minimax">MiniMax</option>
                 <option value="moonshot">Moonshot AI (Kimi)</option>

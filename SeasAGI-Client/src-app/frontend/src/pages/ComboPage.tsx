@@ -236,8 +236,8 @@ export function ComboPage({ embedded, showTemplatesTab }: { embedded?: boolean; 
         strategy: "fallback",
         steps: [
           { channel_id: "openai", model: "gpt-4o" },
-          { channel_id: "anthropic", model: "claude-3-5-sonnet" },
-          { channel_id: "google", model: "gemini-2.0-flash" },
+          { channel_id: "anthropic", model: "claude-sonnet-5" },
+          { channel_id: "google", model: "gemini-2.5-flash" },
         ],
       },
       cost_first: {
@@ -245,8 +245,8 @@ export function ComboPage({ embedded, showTemplatesTab }: { embedded?: boolean; 
         description: t("combo.costFirstDesc"),
         strategy: "fallback",
         steps: [
-          { channel_id: "openrouter", model: "qwen/qwen2.5-32b-instruct" },
-          { channel_id: "google", model: "gemini-2.0-flash" },
+          { channel_id: "openrouter", model: "minimax/minimax-m3" },
+          { channel_id: "google", model: "gemini-2.5-flash" },
           { channel_id: "openai", model: "gpt-4o-mini" },
         ],
       },
@@ -255,9 +255,9 @@ export function ComboPage({ embedded, showTemplatesTab }: { embedded?: boolean; 
         description: t("combo.speedFirstDesc"),
         strategy: "fallback",
         steps: [
-          { channel_id: "google", model: "gemini-2.0-flash" },
+          { channel_id: "google", model: "gemini-2.5-flash" },
           { channel_id: "openai", model: "gpt-4o-mini" },
-          { channel_id: "anthropic", model: "claude-3-haiku" },
+          { channel_id: "anthropic", model: "claude-haiku-4-5" },
         ],
       },
       tools_first: {
@@ -266,8 +266,8 @@ export function ComboPage({ embedded, showTemplatesTab }: { embedded?: boolean; 
         strategy: "fallback",
         steps: [
           { channel_id: "openai", model: "gpt-4o" },
-          { channel_id: "anthropic", model: "claude-3-5-sonnet" },
-          { channel_id: "google", model: "gemini-2.0-flash" },
+          { channel_id: "anthropic", model: "claude-sonnet-5" },
+          { channel_id: "google", model: "gemini-2.5-flash" },
         ],
       },
     };
