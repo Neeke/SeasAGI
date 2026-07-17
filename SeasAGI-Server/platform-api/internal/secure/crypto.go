@@ -3,6 +3,7 @@ package secure
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/rand"
 	"encoding/base64"
 	"fmt"
 	"os"
@@ -19,6 +20,9 @@ func EncryptString(plain string) (string, error) {
 		return "", err
 	}
 	iv := make([]byte, gcm.NonceSize())
+	if _, err := rand.Read(iv); err != nil {
+		return "", err
+	}
 	cipherText := gcm.Seal(iv, iv, []byte(plain), nil)
 	return base64.StdEncoding.EncodeToString(cipherText), nil
 }
