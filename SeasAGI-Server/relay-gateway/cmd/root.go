@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -24,6 +25,11 @@ import (
 func Execute() error {
 	store := channel.NewStore()
 	defer store.Close()
+	if err := store.LoadModelCatalog(); err != nil {
+		log.Printf("Warning: model catalog load failed: %v", err)
+	} else {
+		log.Println("Model catalog loaded")
+	}
 	relay.SetChannelStore(store)
 
 	trace.InitStore(store.DBPath())

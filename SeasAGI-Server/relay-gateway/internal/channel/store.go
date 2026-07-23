@@ -3,6 +3,8 @@ package channel
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -10,6 +12,7 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+	"gopkg.in/yaml.v3"
 )
 
 type Channel struct {
@@ -110,6 +113,24 @@ func (s *Store) openDB() {
 		channel_id TEXT NOT NULL,
 		upstream_model TEXT NOT NULL,
 		PRIMARY KEY(logical_model, channel_id)
+	)`)
+	_, _ = s.db.Exec(`CREATE TABLE IF NOT EXISTS model_catalog (
+		model_id TEXT PRIMARY KEY,
+		display_name TEXT NOT NULL DEFAULT '',
+		description TEXT NOT NULL DEFAULT '',
+		category TEXT NOT NULL DEFAULT '',
+		family TEXT NOT NULL DEFAULT '',
+		provider TEXT NOT NULL DEFAULT '',
+		modality TEXT NOT NULL DEFAULT 'chat',
+		context_window INTEGER NOT NULL DEFAULT 0,
+		max_output_tokens INTEGER NOT NULL DEFAULT 0,
+		input_price_usd_per_1m REAL NOT NULL DEFAULT 0,
+		output_price_usd_per_1m REAL NOT NULL DEFAULT 0,
+		capabilities TEXT NOT NULL DEFAULT '[]',
+		input_modalities TEXT NOT NULL DEFAULT '[]',
+		output_modalities TEXT NOT NULL DEFAULT '[]',
+		supported_parameters TEXT NOT NULL DEFAULT '[]',
+		metadata TEXT NOT NULL DEFAULT '{}'
 	)`)
 }
 
@@ -423,4 +444,126 @@ func (s *Store) ResolveChannel(logicalModel string) (*Channel, string) {
 	})
 
 	return candidates[0], logicalModel
+}
+
+type catalogModel struct {
+	Name                string            `yaml:"name"`
+	DisplayName         string            `yaml:"display_name"`
+	Description         string            `yaml:"description"`
+	Category            string            `yaml:"category"`
+	Family              string            `yaml:"family"`
+	Provider            string            `yaml:"provider"`
+	Modality            string            `yaml:"modality"`
+	ContextWindow       int64             `yaml:"context_window"`
+	MaxOutputTokens     int64             `yaml:"max_output_tokens"`
+	InputPriceUSDPer1M  float64           `yaml:"input_price_usd_per_1m"`
+	OutputPriceUSDPer1M float64           `yaml:"output_price_usd_per_1m"`
+	InputModalities     []string          `yaml:"input_modalities"`
+	OutputModalities    []string          `yaml:"output_modalities"`
+	Capabilities        []string          `yaml:"capabilities"`
+	SupportedParameters []string          `yaml:"supported_parameters"`
+	Metadata            map[string]string `yaml:"metadata"`
+}
+
+type catalogFile struct {
+	Version int            `yaml:"version"`
+	Models  []catalogModel `yaml:"models"`
+}
+
+func (s *Store) LoadModelCatalog() error {
+	candidates := []string{
+		"data/model-catalog.yaml",
+		"../data/model-catalog.yaml",
+		"../../data/model-catalog.yaml",
+		"../../../data/model-catalog.yaml",
+	}
+	var catalogPath string
+	for _, p := range candidates {
+		if _, err := os.Stat(p); err == nil {
+			catalogPath = p
+			break
+		}
+	}
+	if catalogPath == "" {
+		return fmt.Errorf("model-catalog.yaml not found in candidate paths")
+	}
+
+	data, err := os.ReadFile(catalogPath)
+	if err != nil {
+		return fmt.Errorf("failed to read model catalog: %w", err)
+	}
+
+	var cat catalogFile
+	if err := yaml.Unmarshal(data, &cat); err != nil {
+		return fmt.Errorf("failed to parse model catalog: %w", err)
+	}
+
+	if s.db == nil {
+		return fmt.Errorf("database not initialized")
+	}
+
+	for _, m := range cat.Models {
+		caps, _ := json.Marshal(m.Capabilities)
+		inMods, _ := json.Marshal(m.InputModalities)
+		outMods, _ := json.Marshal(m.OutputModalities)
+		params, _ := json.Marshal(m.SupportedParameters)
+		meta, _ := json.Marshal(m.Metadata)
+		_, _ = s.db.Exec(`INSERT OR REPLACE INTO model_catalog
+			(model_id, display_name, description, category, family, provider, modality,
+			 context_window, max_output_tokens, input_price_usd_per_1m, output_price_usd_per_1m,
+			 capabilities, input_modalities, output_modalities, supported_parameters, metadata)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+			m.Name, m.DisplayName, m.Description, m.Category, m.Family, m.Provider, m.Modality,
+			m.ContextWindow, m.MaxOutputTokens, m.InputPriceUSDPer1M, m.OutputPriceUSDPer1M,
+			string(caps), string(inMods), string(outMods), string(params), string(meta))
+	}
+
+	log.Printf("Model catalog loaded: %d models from %s", len(cat.Models), catalogPath)
+	return nil
+}
+
+func (s *Store) GetModelMetadata(modelID string) map[string]interface{} {
+	if s.db == nil {
+		return nil
+	}
+	var displayName, description, category, family, provider, modality string
+	var contextWindow, maxOutputTokens int64
+	var inputPrice, outputPrice float64
+	var capsJSON, inModJSON, outModJSON, paramsJSON, metaJSON string
+	err := s.db.QueryRow(`SELECT display_name, description, category, family, provider, modality,
+		context_window, max_output_tokens, input_price_usd_per_1m, output_price_usd_per_1m,
+		capabilities, input_modalities, output_modalities, supported_parameters, metadata
+		FROM model_catalog WHERE model_id = ?`, modelID).Scan(
+		&displayName, &description, &category, &family, &provider, &modality,
+		&contextWindow, &maxOutputTokens, &inputPrice, &outputPrice,
+		&capsJSON, &inModJSON, &outModJSON, &paramsJSON, &metaJSON)
+	if err != nil {
+		return nil
+	}
+
+	var capabilities, inputModalities, outputModalities, supportedParameters []string
+	var metadata map[string]string
+	json.Unmarshal([]byte(capsJSON), &capabilities)
+	json.Unmarshal([]byte(inModJSON), &inputModalities)
+	json.Unmarshal([]byte(outModJSON), &outputModalities)
+	json.Unmarshal([]byte(paramsJSON), &supportedParameters)
+	json.Unmarshal([]byte(metaJSON), &metadata)
+
+	return map[string]interface{}{
+		"display_name":            displayName,
+		"description":             description,
+		"category":                category,
+		"family":                  family,
+		"provider":                provider,
+		"modality":                modality,
+		"context_window":          contextWindow,
+		"max_output_tokens":       maxOutputTokens,
+		"input_price_usd_per_1m":  inputPrice,
+		"output_price_usd_per_1m": outputPrice,
+		"capabilities":            capabilities,
+		"input_modalities":        inputModalities,
+		"output_modalities":       outputModalities,
+		"supported_parameters":    supportedParameters,
+		"metadata":                metadata,
+	}
 }

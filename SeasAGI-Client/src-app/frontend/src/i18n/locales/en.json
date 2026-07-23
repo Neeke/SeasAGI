@@ -728,6 +728,8 @@
   "token.tokenStatus": "Token Status",
   "token.generated": "Generated",
   "token.notGenerated": "Not Generated",
+  "auth.register": "Register",
+  "auth.login": "Log In",
   "auth.brandSubtitle": "Cloud Sync · Smart Routing · Usage Analytics",
   "auth.registerDesc": "Register a cloud account to unlock usage analytics, model recommendations, and multi-device sync",
   "auth.loginDesc": "Log in to your existing account to sync cloud configurations and usage data",

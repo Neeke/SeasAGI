@@ -25,6 +25,7 @@ import (
 	combotemplate "github.com/seasagi/platform-api/internal/combotemplate"
 	"github.com/seasagi/platform-api/internal/database"
 	"github.com/seasagi/platform-api/internal/device"
+	"github.com/seasagi/platform-api/internal/modelcatalog"
 	"github.com/seasagi/platform-api/internal/relay"
 	"github.com/seasagi/platform-api/internal/usage"
 	"github.com/seasagi/platform-api/internal/user"
@@ -41,6 +42,12 @@ func Execute() error {
 	}
 	defer database.Close()
 	log.Println("Database initialized")
+
+	if err := modelcatalog.LoadAndSyncCatalog(); err != nil {
+		log.Printf("Warning: model catalog sync failed: %v", err)
+	} else {
+		log.Println("Model catalog synced")
+	}
 
 	r := gin.New()
 	r.Use(corsMiddleware(), traceMiddleware(), gin.Recovery(), gin.Logger())
@@ -81,6 +88,9 @@ func Execute() error {
 			authenticated.PUT("/channels/:id", channel.UpdateChannel)
 			authenticated.DELETE("/channels/:id", channel.DeleteChannel)
 
+			authenticated.GET("/models", modelcatalog.ListModels)
+			authenticated.GET("/models/:name", modelcatalog.GetModel)
+
 			authenticated.POST("/devices/bind", device.BindDevice)
 			authenticated.GET("/devices", device.ListDevices)
 			authenticated.DELETE("/devices/:id", device.RemoveDevice)
@@ -110,6 +120,7 @@ func Execute() error {
 
 			adminGroup.POST("/channels/seed", admin.SeedChannel)
 			adminGroup.POST("/channels/:id/models", admin.SeedChannelModels)
+			adminGroup.POST("/models/sync", modelcatalog.SyncCatalog)
 			adminGroup.GET("/channels", channel.ListChannels)
 			adminGroup.POST("/channels", channel.CreateChannel)
 			adminGroup.PUT("/channels/:id", channel.UpdateChannel)

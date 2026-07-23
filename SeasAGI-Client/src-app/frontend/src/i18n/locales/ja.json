@@ -728,6 +728,8 @@
   "layout.syncFailed": "同期に失敗しました",
   "layout.policyLocked": "ポリシーがロックされています",
   "layout.forceApplied": "強制ポリシーを適用済み",
+  "auth.register": "登録",
+  "auth.login": "ログイン",
   "auth.brandSubtitle": "クラウド同期 · スマートルーティング · 使用量分析",
   "auth.registerDesc": "クラウドアカウントを登録して、使用量分析、モデル推奨、マルチデバイス同期を利用可能",
   "auth.loginDesc": "既存のアカウントにログインして、クラウド構成と使用量データを同期",

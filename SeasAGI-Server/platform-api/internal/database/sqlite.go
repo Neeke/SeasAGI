@@ -867,6 +867,35 @@ func migrate() error {
 				`ALTER TABLE model_combos ADD COLUMN task_profile TEXT NOT NULL DEFAULT '{}'`,
 			},
 		},
+		{
+			version: "2026-07-23-022-model-catalog",
+			sqls: []string{
+				`CREATE TABLE IF NOT EXISTS model_catalog (
+					model_id TEXT PRIMARY KEY,
+					display_name TEXT NOT NULL DEFAULT '',
+					description TEXT NOT NULL DEFAULT '',
+					category TEXT NOT NULL DEFAULT '',
+					family TEXT NOT NULL DEFAULT '',
+					provider TEXT NOT NULL DEFAULT '',
+					modality TEXT NOT NULL DEFAULT 'chat',
+					context_window INTEGER NOT NULL DEFAULT 0,
+					max_output_tokens INTEGER NOT NULL DEFAULT 0,
+					input_price_usd_per_1m REAL NOT NULL DEFAULT 0,
+					output_price_usd_per_1m REAL NOT NULL DEFAULT 0,
+					capabilities TEXT NOT NULL DEFAULT '[]',
+					input_modalities TEXT NOT NULL DEFAULT '[]',
+					output_modalities TEXT NOT NULL DEFAULT '[]',
+					supported_parameters TEXT NOT NULL DEFAULT '[]',
+					metadata TEXT NOT NULL DEFAULT '{}',
+					status TEXT NOT NULL DEFAULT 'active',
+					source TEXT NOT NULL DEFAULT 'catalog',
+					updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+				)`,
+				`CREATE INDEX IF NOT EXISTS idx_model_catalog_category ON model_catalog(category)`,
+				`CREATE INDEX IF NOT EXISTS idx_model_catalog_provider ON model_catalog(provider)`,
+				`CREATE INDEX IF NOT EXISTS idx_model_catalog_modality ON model_catalog(modality)`,
+			},
+		},
 	}
 
 	if _, err := DB.Exec(`CREATE TABLE IF NOT EXISTS schema_migrations (version TEXT PRIMARY KEY, applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)`); err != nil {

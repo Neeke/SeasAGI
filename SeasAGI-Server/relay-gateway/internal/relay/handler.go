@@ -162,11 +162,17 @@ func ListModels(c *gin.Context) {
 		if ch, ok := channelStore.GetChannel(channelID); ok && ch.Enabled {
 			models := make([]map[string]interface{}, 0, len(ch.Models))
 			for _, m := range ch.Models {
-				models = append(models, map[string]interface{}{
+				entry := map[string]interface{}{
 					"id":       m,
 					"object":   "model",
 					"owned_by": ch.ProviderType,
-				})
+				}
+				if meta := channelStore.GetModelMetadata(m); meta != nil {
+					for k, v := range meta {
+						entry[k] = v
+					}
+				}
+				models = append(models, entry)
 			}
 			c.JSON(http.StatusOK, gin.H{"object": "list", "data": models})
 			return
@@ -178,11 +184,17 @@ func ListModels(c *gin.Context) {
 			for _, m := range ch.Models {
 				if !seen[m] {
 					seen[m] = true
-					allModels = append(allModels, map[string]interface{}{
+					entry := map[string]interface{}{
 						"id":       m,
 						"object":   "model",
 						"owned_by": ch.ProviderType,
-					})
+					}
+					if meta := channelStore.GetModelMetadata(m); meta != nil {
+						for k, v := range meta {
+							entry[k] = v
+						}
+					}
+					allModels = append(allModels, entry)
 				}
 			}
 		}

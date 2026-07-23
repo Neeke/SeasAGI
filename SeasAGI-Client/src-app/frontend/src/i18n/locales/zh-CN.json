@@ -728,6 +728,8 @@
   "token.tokenStatus": "令牌状态",
   "token.generated": "已生成",
   "token.notGenerated": "未生成",
+  "auth.register": "注册",
+  "auth.login": "登录",
   "auth.brandSubtitle": "云端同步 · 智能路由 · 用量分析",
   "auth.registerDesc": "注册云端账户，解锁用量分析、模型推荐与多端同步能力",
   "auth.loginDesc": "登录已有账户，同步云端配置和用量数据",

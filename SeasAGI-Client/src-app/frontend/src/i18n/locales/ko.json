@@ -728,6 +728,8 @@
   "layout.syncFailed": "동기화 실패",
   "layout.policyLocked": "정책이 잠겼습니다",
   "layout.forceApplied": "강제 정책이 적용됨",
+  "auth.register": "등록",
+  "auth.login": "로그인",
   "auth.brandSubtitle": "클라우드 동기화 · 스마트 라우팅 · 사용량 분석",
   "auth.registerDesc": "클라우드 계정을 등록하여 사용량 분석, 모델 추천 및 멀티 디바이스 동기화 이용",
   "auth.loginDesc": "기존 계정에 로그인하여 클라우드 구성 및 사용량 데이터 동기화",
