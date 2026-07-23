@@ -11,6 +11,13 @@ import { AccessTokenPage } from "./pages/AccessTokenPage";
 import { SubscriptionPage } from "./pages/SubscriptionPage";
 import { TeamWorkspacePage } from "./pages/TeamWorkspacePage";
 import { PlaygroundPage } from "./pages/PlaygroundPage";
+import { TokenMarketPage } from "./pages/TokenMarketPage";
+import { TokenListingCreatePage } from "./pages/TokenListingCreatePage";
+import { TokenMyListingsPage } from "./pages/TokenMyListingsPage";
+import { TokenListingDetailPage } from "./pages/TokenListingDetailPage";
+import { TokenScanTradePage } from "./pages/TokenScanTradePage";
+import { TokenMyOrdersPage } from "./pages/TokenMyOrdersPage";
+import { TokenMySettlementsPage } from "./pages/TokenMySettlementsPage";
 import { Layout } from "./components/Layout";
 
 export default function App() {
@@ -33,6 +40,13 @@ export default function App() {
             <Route path="/team" element={<TeamWorkspacePage />} />
             <Route path="/enterprise" element={<Navigate to="/" replace />} />
             <Route path="/playground" element={<PlaygroundPage />} />
+            <Route path="/token-market" element={<TokenMarketPage />} />
+            <Route path="/token-market/create" element={<TokenListingCreatePage />} />
+            <Route path="/token-market/my-listings" element={<TokenMyListingsPage />} />
+            <Route path="/token-market/listing/:id" element={<TokenListingDetailPage />} />
+            <Route path="/token-market/scan-trade" element={<TokenScanTradePage />} />
+            <Route path="/token-market/my-orders" element={<TokenMyOrdersPage />} />
+            <Route path="/token-market/my-settlements" element={<TokenMySettlementsPage />} />
           </Routes>
         </Layout>
       </BrowserRouter>

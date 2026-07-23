@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="./assets/favicon.png">
+<title>SeasAGI - 本地大模型 API 智能切换网关</title>
+<style>
+:root {
+  --bg-page: linear-gradient(180deg, #f7f8fb 0%, #eef2f7 100%);
+  --bg-primary: #f7f8fb;
+  --bg-card: rgba(255, 255, 255, 0.86);
+  --bg-card-solid: #ffffff;
+  --bg-accent-soft: rgba(59, 130, 246, 0.06);
+  --border: rgba(15, 23, 42, 0.07);
+  --border-strong: rgba(15, 23, 42, 0.12);
+  --text: #161c2d;
+  --text-secondary: #5f6980;
+  --text-muted: #8e97aa;
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+  --accent-light: rgba(59, 130, 246, 0.1);
+  --green: #22c55e;
+  --green-bg: rgba(34, 197, 94, 0.1);
+  --amber: #f59e0b;
+  --amber-bg: rgba(245, 158, 11, 0.1);
+  --red: #ef4444;
+  --red-bg: rgba(239, 68, 68, 0.1);
+  --purple: #8b5cf6;
+  --purple-bg: rgba(139, 92, 246, 0.1);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04);
+  --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 12px 40px rgba(30, 41, 59, 0.08);
+  --radius: 12px;
+  --radius-lg: 18px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans SC",sans-serif; background:var(--bg-page); color:var(--text); line-height:1.7; -webkit-font-smoothing:antialiased; min-height:100vh; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { color:var(--accent-hover); }
+
+/* ─── Navbar ─── */
+.navbar { position:fixed; top:0; left:0; right:0; z-index:100; background:rgba(247,248,251,0.82); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border-bottom:1px solid var(--border); }
+.nav-inner { max-width:1100px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; padding:12px 24px; }
+.nav-logo { display:flex; align-items:center; gap:10px; }
+.logo-box { width:32px; height:32px; border-radius:8px; object-fit:cover; }
+.nav-logo span { font-size:17px; font-weight:700; color:var(--text); }
+.nav-logo span em { font-style:normal; color:var(--accent); }
+.nav-links { display:flex; align-items:center; gap:20px; }
+.nav-links a { font-size:13px; font-weight:500; color:var(--text-secondary); transition:color .2s; }
+.nav-links a:hover { color:var(--text); }
+.lang-btn { background:var(--bg-card-solid); border:1px solid var(--border-strong); color:var(--text-secondary); padding:5px 12px; border-radius:8px; cursor:pointer; font-size:12px; font-weight:500; transition:all .2s; }
+.lang-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+/* ─── Hero ─── */
+.hero { padding:120px 24px 64px; text-align:center; }
+.hero h1 { font-size:clamp(32px,4.5vw,52px); font-weight:800; margin-bottom:12px; line-height:1.25; letter-spacing:-0.02em; color:var(--text); }
+.hero h1 span { background:linear-gradient(135deg,var(--accent),var(--purple)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.hero p { font-size:16px; color:var(--text-secondary); max-width:580px; margin:0 auto 28px; line-height:1.7; }
+.hero-btns { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+.btn { display:inline-flex; align-items:center; gap:6px; padding:10px 24px; border-radius:10px; font-size:14px; font-weight:600; border:none; cursor:pointer; transition:all .22s; }
+.btn-primary { background:var(--accent); color:#fff; }
+.btn-primary:hover { background:var(--accent-hover); transform:translateY(-1px); box-shadow:0 4px 20px rgba(59,130,246,0.25); }
+.btn-outline { background:var(--bg-card-solid); color:var(--text); border:1px solid var(--border-strong); box-shadow:var(--shadow-sm); }
+.btn-outline:hover { border-color:var(--accent); color:var(--accent); box-shadow:var(--shadow); }
+
+/* ─── Sections ─── */
+.sec { padding:64px 24px; }
+.sec-inner { max-width:1100px; margin:0 auto; }
+.sec-title { font-size:26px; font-weight:700; margin-bottom:8px; text-align:center; letter-spacing:-0.01em; }
+.sec-sub { font-size:14px; color:var(--text-secondary); text-align:center; margin-bottom:40px; max-width:560px; margin-left:auto; margin-right:auto; }
+
+/* ─── Feature Grid ─── */
+.grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+@media (max-width:860px) { .grid-3 { grid-template-columns:repeat(2,1fr); } }
+@media (max-width:540px) { .grid-3 { grid-template-columns:1fr; } }
+.card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; transition:all .25s; box-shadow:var(--shadow-sm); }
+.card:hover { border-color:rgba(59,130,246,0.2); box-shadow:var(--shadow); transform:translateY(-2px); }
+.card-icon { font-size:24px; margin-bottom:10px; }
+.card h3 { font-size:15px; font-weight:600; margin-bottom:6px; }
+.card p { font-size:13px; color:var(--text-secondary); line-height:1.6; }
+
+/* ─── Pricing Plans ─── */
+.plans { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+@media (max-width:720px) { .plans { grid-template-columns:1fr; } }
+.plan { background:var(--bg-card-solid); border:1px solid var(--border); border-radius:var(--radius); padding:28px 24px; text-align:center; transition:all .25s; box-shadow:var(--shadow-sm); }
+.plan.featured { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent),var(--shadow); position:relative; }
+.plan.featured::before { content:"推荐"; position:absolute; top:-10px; left:50%; transform:translateX(-50%); background:var(--accent); color:#fff; padding:3px 14px; border-radius:20px; font-size:11px; font-weight:600; }
+.plan.en::before { content:"Recommended"; }
+.plan-ent { border-color:var(--accent); border-style:dashed; position:relative; }
+.plan-ent::before { content:"📞"; position:absolute; top:-10px; left:50%; transform:translateX(-50%); background:var(--bg); color:var(--text); padding:3px 14px; border-radius:20px; font-size:11px; font-weight:600; border:1px solid var(--border); }
+.plan-ent .plan-price { min-height:40px; display:flex; align-items:center; justify-content:center; }
+.plan:hover { box-shadow:var(--shadow); transform:translateY(-2px); }
+.plan-name { font-size:17px; font-weight:600; margin-bottom:4px; }
+.plan-price { font-size:34px; font-weight:800; margin:14px 0; }
+.plan-price small { font-size:13px; font-weight:400; color:var(--text-muted); }
+.plan-desc { font-size:13px; color:var(--text-secondary); margin-bottom:18px; }
+.plan-audience-banner { display:flex; align-items:center; gap:8px; margin-bottom:24px; padding:14px 18px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow-sm); flex-wrap:wrap; justify-content:center; }
+.plan-audience-item { display:flex; align-items:center; gap:6px; font-size:13px; color:var(--text-secondary); }
+.plan-audience-icon { font-size:16px; }
+.plan-audience-item strong { color:var(--text); font-weight:700; }
+.plan-audience-arrow { color:var(--text-muted); font-size:14px; }
+.plan-upgrade-path { margin-top:16px; padding-top:14px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:6px; }
+.plan-upgrade-path a { font-size:12px; color:var(--accent); text-decoration:none; display:flex; align-items:center; justify-content:center; gap:4px; }
+.plan-upgrade-path a:hover { text-decoration:underline; }
+.plan-audience-label { display:inline-block; padding:2px 10px; border-radius:20px; font-size:11px; font-weight:600; margin-bottom:10px; }
+.plan-audience-label.individual { background:rgba(59,130,246,0.1); color:var(--accent); }
+.plan-audience-label.professional { background:rgba(34,197,94,0.12); color:var(--green); }
+.plan-audience-label.team { background:rgba(234,179,8,0.14); color:#b8860b; }
+.plan-audience-label.enterprise-aud { background:rgba(168,85,247,0.12); color:#a855f7; }
+.plan-feats { list-style:none; margin-bottom:20px; }
+.plan-feats li { padding:7px 0; font-size:13px; color:var(--text-secondary); border-bottom:1px solid var(--border); }
+.plan-feats li:before { content:"✓ "; color:var(--green); font-weight:700; }
+
+/* ─── Channel Status ─── */
+.ch-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:28px; }
+@media (max-width:540px) { .ch-stats { grid-template-columns:repeat(2,1fr); } }
+.ch-stat { text-align:center; padding:18px; background:var(--bg-card-solid); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow-sm); }
+.ch-stat-num { font-size:26px; font-weight:700; color:var(--accent); }
+.ch-stat-lbl { font-size:12px; color:var(--text-muted); margin-top:4px; }
+.chtbl { width:100%; border-collapse:collapse; font-size:13px; }
+.chtbl th { text-align:left; padding:10px 14px; font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid var(--border-strong); background:var(--bg-accent-soft); }
+.chtbl td { padding:10px 14px; border-bottom:1px solid var(--border); }
+.chtbl tr:hover td { background:var(--bg-accent-soft); }
+.dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px; }
+.dot.on { background:var(--green); box-shadow:0 0 6px var(--green-bg); }
+.banner { background:var(--bg-accent-soft); border:1px solid var(--border); border-radius:var(--radius); padding:36px; text-align:center; margin-top:36px; }
+.banner h3 { font-size:18px; margin-bottom:6px; }
+.banner p { color:var(--text-secondary); margin-bottom:18px; font-size:13px; }
+
+/* ─── Competitive Comparison ─── */
+.cmp-section { padding:64px 24px; background:var(--bg-card-solid); border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
+.cmp-inner { max-width:1100px; margin:0 auto; }
+.cmp-title { font-size:26px; font-weight:700; margin-bottom:8px; text-align:center; letter-spacing:-0.01em; }
+.cmp-sub { font-size:14px; color:var(--text-secondary); text-align:center; margin-bottom:40px; max-width:640px; margin-left:auto; margin-right:auto; }
+
+.cmp-grid { display:flex; gap:16px; margin-bottom:40px; }
+.cmp-grid > .cmp-card { flex:1; min-width:0; }
+@media (max-width:900px) { .cmp-grid { flex-wrap:wrap; } .cmp-grid > .cmp-card { flex:1 1 calc(50% - 8px); min-width:240px; } }
+@media (max-width:540px) { .cmp-grid > .cmp-card { flex:1 1 100%; } }
+.cmp-card { background:var(--bg-primary); border:1px solid var(--border); border-radius:var(--radius); padding:24px; transition:all .25s; box-shadow:var(--shadow-sm); }
+.cmp-card:hover { box-shadow:var(--shadow); transform:translateY(-2px); }
+.cmp-card[data-featured] { border-color:var(--accent); background:var(--bg-card-solid); }
+.cmp-card-head { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.cmp-card-icon { font-size:28px; }
+.cmp-card-name { font-size:16px; font-weight:700; }
+.cmp-card-desc { font-size:12px; color:var(--text-secondary); margin-bottom:12px; }
+.cmp-card-tag { display:inline-block; padding:2px 8px; border-radius:16px; font-size:10px; font-weight:600; margin-right:4px; }
+.tag-go { background:rgba(0,173,216,0.1); color:#0089b3; }
+.tag-ts { background:rgba(49,120,198,0.1); color:#2563b0; }
+.tag-rust { background:rgba(222,165,77,0.1); color:#c2892a; }
+.tag-node { background:rgba(104,159,56,0.1); color:#4d7a28; }
+.adv-list { list-style:none; }
+.adv-list li { padding:6px 0; font-size:13px; color:var(--text-secondary); border-bottom:1px solid var(--border); display:flex; align-items:flex-start; gap:6px; }
+.adv-list li:last-child { border-bottom:none; }
+.adv-mark { color:var(--green); font-weight:700; flex-shrink:0; }
+
+.cmp-table-wrap { overflow-x:auto; margin-top:20px; }
+.cmp-table { width:100%; border-collapse:collapse; font-size:13px; }
+.cmp-table th { text-align:left; padding:10px 12px; font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid var(--border-strong); background:var(--bg-accent-soft); }
+.cmp-table td { padding:9px 12px; border-bottom:1px solid var(--border); }
+.cmp-table tr:hover td { background:var(--bg-accent-soft); }
+.cmp-yes { color:var(--green); font-weight:600; }
+.cmp-no { color:var(--text-muted); }
+.cmp-partial { color:var(--amber); }
+
+/* ─── Steps ─── */
+.steps { display:flex; gap:20px; justify-content:center; }
+.step { flex:1; max-width:240px; text-align:center; }
+.step-num { width:40px; height:40px; border-radius:50%; background:var(--accent-light); color:var(--accent); font-size:18px; font-weight:700; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
+.step h4 { font-size:15px; margin-bottom:6px; }
+.step p { font-size:13px; color:var(--text-secondary); }
+
+/* ─── FAQ (Two-column grid) ─── */
+.faq-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; max-width:960px; margin:0 auto; }
+@media (max-width:720px) { .faq-grid { grid-template-columns:1fr; } }
+.faq-item { background:var(--bg-card-solid); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow-sm); transition:box-shadow .2s; }
+.faq-item:hover { box-shadow:var(--shadow); }
+.faq-q { padding:14px 18px; font-size:13px; font-weight:600; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:8px; transition:background .2s; user-select:none; }
+.faq-q:hover { background:var(--bg-accent-soft); }
+.faq-a { padding:0 18px 16px; font-size:13px; color:var(--text-secondary); display:none; line-height:1.7; }
+.faq-item.open .faq-a { display:block; }
+.faq-arrow { font-size:11px; color:var(--text-muted); transition:transform .2s; flex-shrink:0; }
+.faq-item.open .faq-arrow { transform:rotate(180deg); }
+
+/* ─── Footer ─── */
+.ftr { text-align:center; padding:32px 24px; border-top:1px solid var(--border); color:var(--text-muted); font-size:12px; }
+.ftr-links { display:flex; justify-content:center; gap:18px; margin-bottom:10px; }
+.ftr-links a { font-size:12px; color:var(--text-secondary); }
+.ftr-links a:hover { color:var(--accent); }
+
+/* ─── Language Toggle ─── */
+.lang-zh,.lang-en,.lang-zh-i,.lang-en-i { display:none; }
+body.show-zh .lang-zh { display:revert; }
+body.show-en .lang-en { display:revert; }
+body.show-zh .lang-zh-i { display:inline; }
+body.show-en .lang-en-i { display:inline; }
+
+/* ─── Modal ─── */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center; }
+.modal-overlay.open { display:flex; }
+.modal-box { background:var(--bg-card-solid); border-radius:12px; padding:28px; width:90%; max-width:480px; max-height:90vh; overflow-y:auto; box-shadow:0 12px 40px rgba(0,0,0,0.15); position:relative; }
+.modal-close { position:absolute; top:12px; right:16px; font-size:24px; cursor:pointer; color:var(--text-muted); line-height:1; }
+.modal-close:hover { color:var(--text); }
+.modal-box h3 { margin:0 0 8px; font-size:18px; }
+.form-row { margin-bottom:12px; }
+.form-row input,.form-row textarea { width:100%; padding:10px 14px; border:1px solid var(--border-strong); border-radius:8px; font-size:14px; background:var(--bg-card); color:var(--text); outline:none; box-sizing:border-box; font-family:inherit; }
+.form-row input:focus,.form-row textarea:focus { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-light); }
+.form-row textarea { resize:vertical; }
+</style>
+</head>
+<body class="show-en">
+
+<nav class="navbar">
+<div class="nav-inner">
+<div class="nav-logo"><img class="logo-box" src="./assets/seasagi-icon.png" alt="SeasAGI"><span><em>Seas</em>AGI</span></div>
+<div class="nav-links">
+<a href="#features" class="lang-zh-i">功能</a><a href="#features" class="lang-en-i">Features</a>
+<a href="#compare" class="lang-zh-i">对比</a><a href="#compare" class="lang-en-i">Compare</a>
+<a href="#plans" class="lang-zh-i">套餐</a><a href="#plans" class="lang-en-i">Pricing</a>
+<a href="#channels" class="lang-zh-i">通道</a><a href="#channels" class="lang-en-i">Channels</a>
+<a href="#faq" class="lang-zh-i">FAQ</a><a href="#faq" class="lang-en-i">FAQ</a>
+<a href="https://github.com/neeke/seasagi" target="_blank" style="color:var(--text);font-size:15px;">⭐</a>
+<button class="lang-btn" id="langToggle" onclick="toggleLang()">中文</button>
+</div></div></nav>
+
+<section class="hero">
+<div class="lang-zh">
+<h1>本地大模型 API 的<br><span>智能切换网关</span></h1>
+<p>SeasAGI 采用开源客户端 + Server Open Core 模式：桌面客户端 GPL 3.0 完全开源；云端分社区版（AGPL 3.0 可自托管）与企业版，提供智能路由、会话粘滞、成本优化、全链路可观测，让每个 API 调用都物超所值。</p>
+</div>
+<div class="lang-en">
+<h1>Local LLM API<br><span>Smart Switching Gateway</span></h1>
+<p>SeasAGI follows an open-source client + server open-core model: the desktop client is fully open source, while the cloud server is split into Community and Enterprise editions for smart routing, session stickiness, cost optimization, governance collaboration, and full observability.</p>
+</div>
+<div class="hero-btns">
+<a href="https://github.com/neeke/seasagi/releases" class="btn btn-primary lang-zh-i">📥 下载客户端</a>
+<a href="https://github.com/neeke/seasagi/releases" class="btn btn-primary lang-en-i">📥 Download Client</a>
+<a href="https://github.com/neeke/seasagi" class="btn btn-outline lang-zh-i">💻 GitHub 源码</a>
+<a href="https://github.com/neeke/seasagi" class="btn btn-outline lang-en-i">💻 View on GitHub</a>
+</div></section>
+
+<section class="sec" id="features">
+<div class="sec-inner">
+<h2 class="sec-title lang-zh">为什么选择 SeasAGI？</h2>
+<h2 class="sec-title lang-en">Why SeasAGI?</h2>
+<p class="sec-sub lang-zh">相比手动管理多个 API Key 和 Provider，SeasAGI 提供一套完整的智能管理方案，并支持快捷策略与任务类型感知路由。</p>
+<p class="sec-sub lang-en">Compared to manually managing multiple API keys and providers, SeasAGI provides a complete intelligent management solution with quick strategies and task-aware routing.</p>
+<div class="grid-3">
+<div class="card"><div class="card-icon">🔄</div><h3 class="lang-zh">统一 API 网关</h3><h3 class="lang-en">Unified API Gateway</h3><p class="lang-zh">兼容 OpenAI 协议，一个本地地址管理所有 Provider，无缝替换任何 API Client 的 Base URL。</p><p class="lang-en">OpenAI-compatible protocol. One local address manages all providers. Seamlessly replace any API client's Base URL.</p></div>
+<div class="card"><div class="card-icon">🧠</div><h3 class="lang-zh">自适应智能路由</h3><h3 class="lang-en">Adaptive Smart Routing</h3><p class="lang-zh">Fallback / Round-Robin / Sticky + 会话粘滞 + 动态 429 惩罚降级 + 排序预设，并按通用对话 / 工具调用 / 结构化输出 / 长上下文自动切换偏好。</p><p class="lang-en">Fallback / Round-Robin / Sticky + session sticky + dynamic 429 penalty + sort presets, with task-aware preference switching for chat, tool calling, structured output, and long context.</p></div>
+<div class="card"><div class="card-icon">💰</div><h3 class="lang-zh">成本优化引擎</h3><h3 class="lang-en">Cost Optimizer</h3><p class="lang-zh">按模型/通道分组分析 + 任务类型差异化优化建议 + 稳定/成本/速度/工具四种快捷策略一键落地，量化网关节省效果。</p><p class="lang-en">Per-model/channel analytics + task-specific recommendations + one-click stable/cost/speed/tools strategies. Quantify your gateway savings.</p></div>
+<div class="card"><div class="card-icon">🔐</div><h3 class="lang-zh">本地优先 · 隐私安全</h3><h3 class="lang-en">Local-First & Private</h3><p class="lang-zh">API Key 仅存储于本地 Keychain，常量时间比较防时序攻击，请求直连 Provider，永不经过第三方中转。</p><p class="lang-en">API keys in local Keychain. Constant-time comparison. Requests go directly to providers. Never through third parties.</p></div>
+<div class="card"><div class="card-icon">📊</div><h3 class="lang-zh">全链路可观测</h3><h3 class="lang-en">Full Observability</h3><p class="lang-zh">错误分类分布 + 请求时间线 + 近期错误 + 链路诊断 + Recharts 图表可视化，API 消费一目了然。</p><p class="lang-en">Error distribution + request timeline + recent errors + route tracing + Recharts visualization. Complete API spending visibility.</p></div>
+<div class="card"><div class="card-icon">🩺</div><h3 class="lang-zh">自动探活与容错</h3><h3 class="lang-en">Auto Health & Fault Tolerance</h3><p class="lang-zh">Key 健康检查（5min 探活 + 自动禁用）+ per-key Cooldown + 熔断器 + 指数退避 + 7 条错误规则。</p><p class="lang-en">Key health check (5min probe + auto-disable) + per-key cooldown + circuit breaker + exponential backoff + 7 error rules.</p></div>
+<div class="card"><div class="card-icon">🧪</div><h3 class="lang-zh">Playground 即时测试</h3><h3 class="lang-en">Playground</h3><p class="lang-zh">内置聊天测试界面，配置完通道直接验证，展示路由路径和模型信息，缩短反馈循环。</p><p class="lang-en">Built-in chat test UI. Verify channels instantly after config. Shows route path and model info. Shorter feedback loop.</p></div>
+<div class="card"><div class="card-icon">🔌</div><h3 class="lang-zh">8 执行器 + 6 翻译</h3><h3 class="lang-en">8 Executors + 6 Translators</h3><p class="lang-zh">OpenAI/Azure/Anthropic/Gemini/Ollama/DeepSeek/Grok/中继 + 协议自动翻译，多模态内容扁平化兼容。</p><p class="lang-en">OpenAI/Azure/Anthropic/Gemini/Ollama/DeepSeek/Grok/Relay + auto protocol translation + multimodal content flattening.</p></div>
+<div class="card"><div class="card-icon">☁️</div><h3 class="lang-zh">Open Core 云端</h3><h3 class="lang-en">Open-Core Cloud</h3><p class="lang-zh">Server 拆分为社区版（AGPL 3.0，基础控制面 + 基础中继）与企业版（闭源，计费、治理、Admin Dashboard、企业协同）。客户端可独立运行，云端能力按版本增强。</p><p class="lang-en">The server is split into Community (AGPL 3.0, basic control plane + relay) and Enterprise (closed-source, billing, governance, admin dashboard, collaboration). The client runs independently, while cloud capabilities scale by edition.</p></div>
+<div class="card"><div class="card-icon">🛒</div><h3 class="lang-zh">Token 市场</h3><h3 class="lang-en">Token Market</h3><p class="lang-zh">用户间 API Key 交易市场：闲置 Key 一键上架（一口价 / 折扣），扫码交易，平台 10% 佣金，卖家收益透明，管理后台风控审计。</p><p class="lang-en">Peer-to-peer API Key marketplace: list unused keys at fixed price or discount, QR code scan trading, 10% platform commission, transparent seller earnings, admin risk control & audit.</p></div>
+</div></div></section>
+
+<section class="cmp-section" id="compare">
+<div class="cmp-inner">
+<h2 class="cmp-title lang-zh">竞品优势对比</h2>
+<h2 class="cmp-title lang-en">Competitive Advantages</h2>
+<p class="cmp-sub lang-zh">SeasAGI vs 9Router / cc-switch / FreeLLMAPI — 只列优势，清晰对比</p>
+<p class="cmp-sub lang-en">SeasAGI vs 9Router / cc-switch / FreeLLMAPI — advantages only, clear comparison</p>
+
+<div class="cmp-grid">
+<div class="lang-zh cmp-card" data-featured>
+<div class="cmp-card-head"><div class="cmp-card-icon">🌊</div><div><div class="cmp-card-name">SeasAGI</div><span class="cmp-card-tag tag-go">Go</span><span class="cmp-card-tag tag-ts">TypeScript</span></div></div>
+<div class="cmp-card-desc">开源客户端 + 社区版云端 + 企业版云端的分层 AI 网关平台</div>
+<ul class="adv-list">
+<li><span class="adv-mark">✓</span> 桌面原生应用（Wails + 系统托盘 + 自动更新）</li>
+<li><span class="adv-mark">✓</span> 客户端本地代理，直连 Provider，无服务端瓶颈</li>
+<li><span class="adv-mark">✓</span> 会话粘滞路由（SHA1 + 30min TTL）</li>
+<li><span class="adv-mark">✓</span> 动态 429 惩罚降级 + 排序预设</li>
+<li><span class="adv-mark">✓</span> Key 健康检查 + per-key Cooldown</li>
+<li><span class="adv-mark">✓</span> 完整多租户 + Stripe 支付 + 套餐门控</li>
+<li><span class="adv-mark">✓</span> 8 执行器 + 6 协议翻译 + 多模态扁平化</li>
+<li><span class="adv-mark">✓</span> 隧道远程访问</li>
+<li><span class="adv-mark">✓</span> OAuth PKCE + Keychain + 常量时间比较</li>
+<li><span class="adv-mark">✓</span> 全链路可观测 + Recharts 可视化 + 成本估算</li>
+<li><span class="adv-mark">✓</span> Token 市场（API Key 交易 + 佣金 + 风控）</li>
+<li><span class="adv-mark">✓</span> Playground + Combo 拖拽排序 + Zod 校验</li>
+<li><span class="adv-mark">✓</span> 审计/风控/告警 + i18n 四语言</li>
+</ul>
+</div>
+<div class="lang-en cmp-card" data-featured>
+<div class="cmp-card-head"><div class="cmp-card-icon">🌊</div><div><div class="cmp-card-name">SeasAGI</div><span class="cmp-card-tag tag-go">Go</span><span class="cmp-card-tag tag-ts">TypeScript</span></div></div>
+<div class="cmp-card-desc">Layered AI gateway platform: open-source client + community server + enterprise server</div>
+<ul class="adv-list">
+<li><span class="adv-mark">✓</span> Native desktop app (Wails + system tray + auto-update)</li>
+<li><span class="adv-mark">✓</span> Client-side proxy, direct to providers, no server bottleneck</li>
+<li><span class="adv-mark">✓</span> Session sticky routing (SHA1 + 30min TTL)</li>
+<li><span class="adv-mark">✓</span> Dynamic 429 penalty + sort presets</li>
+<li><span class="adv-mark">✓</span> Key health check + per-key cooldown</li>
+<li><span class="adv-mark">✓</span> Full multi-tenant + Stripe + plan gating</li>
+<li><span class="adv-mark">✓</span> 8 executors + 6 protocol translators + content flattening</li>
+<li><span class="adv-mark">✓</span> Tunnel remote access</li>
+<li><span class="adv-mark">✓</span> OAuth PKCE + Keychain + constant-time compare</li>
+<li><span class="adv-mark">✓</span> Full observability + Recharts + cost estimation</li>
+<li><span class="adv-mark">✓</span> Token Market (API Key trading + commission + risk control)</li>
+<li><span class="adv-mark">✓</span> Playground + combo drag-sort + Zod validation</li>
+<li><span class="adv-mark">✓</span> Audit/risk/alert + 4-language i18n</li>
+</ul>
+</div>
+
+<div class="lang-zh cmp-card">
+<div class="cmp-card-head"><div class="cmp-card-icon">9️⃣</div><div><div class="cmp-card-name">9Router</div><span class="cmp-card-tag tag-rust">Rust</span></div></div>
+<div class="cmp-card-desc">Rust 实现的高性能 LLM API 路由器</div>
+<ul class="adv-list">
+<li><span class="adv-mark">✓</span> Rust 原生高性能，内存安全</li>
+<li><span class="adv-mark">✓</span> 轻量级单二进制部署</li>
+<li style="color:var(--text-muted)"><span style="color:var(--amber)">△</span> 无桌面客户端，无本地网关代理</li>
+<li style="color:var(--text-muted)"><span style="color:var(--amber)">△</span> 无多租户/计费/支付体系</li>
+<li style="color:var(--text-muted)"><span style="color:var(--amber)">△</span> 无会话粘滞/动态惩罚/健康检查</li>
+<li style="color:var(--text-muted)"><span style="color:var(--amber)">△</span> 无协议翻译/OAuth</li>
+</ul>
+</div>
+<div class="lang-en cmp-card">
+<div class="cmp-card-head"><div class="cmp-card-icon">9️⃣</div><div><div class="cmp-card-name">9Router</div><span class="cmp-card-tag tag-rust">Rust</span></div></div>
+<div class="cmp-card-desc">High-performance LLM API router in Rust</div>
+<ul class="adv-list">
+<li><span class="adv-mark">✓</span> Rust native performance, memory-safe</li>
+<li><span class="adv-mark">✓</span> Lightweight single binary deployment</li>
+<li style="color:var(--text-muted)"><span style="color:var(--amber)">△</span> No desktop client, no local gateway proxy</li>
+<li style="color:var(--text-muted)"><span style="color:var(--amber)">△</span> No multi-tenant/billing/payment</li>
+<li style="color:var(--text-muted)"><span style="color:var(--amber)">△</span> No session sticky/dynamic penalty/health check</li>
+<li style="color:var(--text-muted)"><span style="color:var(--amber)">△</span> No protocol translation/OAuth</li>
+</ul>
+</div>
+
+<div class="lang-zh cmp-card">
+<div class="cmp-card-head"><div class="cmp-card-icon">⚡</div><div><div class="cmp-card-name">cc-switch</div><span class="cmp-card-tag tag-go">Go</span></div></div>
+<div class="cmp-card-desc">Go 实现的 LLM API 切换代理</div>
+<ul class="adv-list">
+<li><span class="adv-mark">✓</span> Go 实现，部署简单</li>
+<li><span class="adv-mark">✓</span> 基础模型切换与代理</li>
+<li style="color:var(--text-muted)"><span style="color:var(--amber)">△</span> 无桌面客户端，无本地网关</li>
+<li style="color:var(--text-muted)"><span style="color:var(--amber)">△</span> 无多租户/计费/支付</li>
+<li style="color:var(--text-muted)"><span style="color:var(--amber)">△</span> 无智能路由/Combo/会话粘滞</li>
+<li style="color:var(--text-muted)"><span style="color:var(--amber)">△</span> 无可视化/分析/成本估算</li>
+</ul>
+</div>
+<div class="lang-en cmp-card">
+<div class="cmp-card-head"><div class="cmp-card-icon">⚡</div><div><div class="cmp-card-name">cc-switch</div><span class="cmp-card-tag tag-go">Go</span></div></div>
+<div class="cmp-card-desc">LLM API switching proxy in Go</div>
+<ul class="adv-list">
+<li><span class="adv-mark">✓</span> Go implementation, simple deployment</li>
+<li><span class="adv-mark">✓</span> Basic model switching and proxy</li>
+<li style="color:var(--text-muted)"><span style="color:var(--amber)">△</span> No desktop client, no local gateway</li>
+<li style="color:var(--text-muted)"><span style="color:var(--amber)">△</span> No multi-tenant/billing/payment</li>
+<li style="color:var(--text-muted)"><span style="color:var(--amber)">△</span> No smart routing/combo/session sticky</li>
+<li style="color:var(--text-muted)"><span style="color:var(--amber)">△</span> No visualization/analytics/cost estimation</li>
+</ul>
+</div>
+
+<div class="lang-zh cmp-card">
+<div class="cmp-card-head"><div class="cmp-card-icon">🆓</div><div><div class="cmp-card-name">FreeLLMAPI</div><span class="cmp-card-tag tag-node">Node.js</span><span class="cmp-card-tag tag-ts">TypeScript</span></div></div>
+<div class="cmp-card-desc">自托管 LLM API 网关，前后端 TypeScript 统一栈</div>
+<ul class="adv-list">
+<li><span class="adv-mark">✓</span> 前后端 TypeScript 统一栈，开发效率高</li>
+<li><span class="adv-mark">✓</span> 动态 429 惩罚 + Fallback 排序预设</li>
+<li><span class="adv-mark">✓</span> 丰富的分析可视化 + Playground</li>
+<li style="color:var(--text-muted)"><span style="color:var(--amber)">△</span> 无桌面客户端，服务端代理有单点瓶颈</li>
+<li style="color:var(--text-muted)"><span style="color:var(--amber)">△</span> 无多租户/计费/支付</li>
+<li style="color:var(--text-muted)"><span style="color:var(--amber)">△</span> 无协议翻译/OAuth/Keychain</li>
+</ul>
+</div>
+<div class="lang-en cmp-card">
+<div class="cmp-card-head"><div class="cmp-card-icon">🆓</div><div><div class="cmp-card-name">FreeLLMAPI</div><span class="cmp-card-tag tag-node">Node.js</span><span class="cmp-card-tag tag-ts">TypeScript</span></div></div>
+<div class="cmp-card-desc">Self-hosted LLM API gateway, full-stack TypeScript</div>
+<ul class="adv-list">
+<li><span class="adv-mark">✓</span> Full-stack TypeScript, high dev efficiency</li>
+<li><span class="adv-mark">✓</span> Dynamic 429 penalty + fallback sort presets</li>
+<li><span class="adv-mark">✓</span> Rich analytics visualization + Playground</li>
+<li style="color:var(--text-muted)"><span style="color:var(--amber)">△</span> No desktop client, server proxy has single-point bottleneck</li>
+<li style="color:var(--text-muted)"><span style="color:var(--amber)">△</span> No multi-tenant/billing/payment</li>
+<li style="color:var(--text-muted)"><span style="color:var(--amber)">△</span> No protocol translation/OAuth/Keychain</li>
+</ul>
+</div>
+</div>
+
+<div class="cmp-table-wrap">
+<table class="cmp-table">
+<thead><tr>
+<th><span class="lang-zh">能力维度</span><span class="lang-en">Capability</span></th>
+<th>SeasAGI</th>
+<th>9Router</th>
+<th>cc-switch</th>
+<th>FreeLLMAPI</th>
+</tr></thead>
+<tbody>
+<tr><td><span class="lang-zh">桌面原生客户端</span><span class="lang-en">Native Desktop Client</span></td><td class="cmp-yes">✓ Wails</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
+<tr><td><span class="lang-zh">本地网关代理</span><span class="lang-en">Local Gateway Proxy</span></td><td class="cmp-yes">✓ 直连</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-partial">△ 服务端</td></tr>
+<tr><td><span class="lang-zh">会话粘滞路由</span><span class="lang-en">Session Sticky Routing</span></td><td class="cmp-yes">✓ SHA1</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-yes">✓ SHA1</td></tr>
+<tr><td><span class="lang-zh">动态 429 惩罚</span><span class="lang-en">Dynamic 429 Penalty</span></td><td class="cmp-yes">✓</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-yes">✓</td></tr>
+<tr><td><span class="lang-zh">Key 健康检查</span><span class="lang-en">Key Health Check</span></td><td class="cmp-yes">✓ 5min</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-yes">✓</td></tr>
+<tr><td><span class="lang-zh">per-key Cooldown</span><span class="lang-en">Per-key Cooldown</span></td><td class="cmp-yes">✓ 120s</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-yes">✓</td></tr>
+<tr><td><span class="lang-zh">多租户 + 支付</span><span class="lang-en">Multi-tenant + Payment</span></td><td class="cmp-yes">✓ Stripe</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
+<tr><td><span class="lang-zh">协议翻译</span><span class="lang-en">Protocol Translation</span></td><td class="cmp-yes">✓ 6 种</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
+<tr><td><span class="lang-zh">OAuth PKCE</span><span class="lang-en">OAuth PKCE</span></td><td class="cmp-yes">✓ 4 Provider</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
+<tr><td><span class="lang-zh">Keychain 安全存储</span><span class="lang-en">Keychain Storage</span></td><td class="cmp-yes">✓</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
+<tr><td><span class="lang-zh">成本估算</span><span class="lang-en">Cost Estimation</span></td><td class="cmp-yes">✓ GPT-4o</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-yes">✓</td></tr>
+<tr><td><span class="lang-zh">错误分类分布</span><span class="lang-en">Error Distribution</span></td><td class="cmp-yes">✓ 7 类</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-yes">✓</td></tr>
+<tr><td><span class="lang-zh">请求时间线</span><span class="lang-en">Request Timeline</span></td><td class="cmp-yes">✓</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-yes">✓</td></tr>
+<tr><td><span class="lang-zh">Playground</span><span class="lang-en">Playground</span></td><td class="cmp-yes">✓</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-yes">✓</td></tr>
+<tr><td><span class="lang-zh">Combo 拖拽排序</span><span class="lang-en">Combo Drag Sort</span></td><td class="cmp-yes">✓ @dnd-kit</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-yes">✓ @dnd-kit</td></tr>
+<tr><td><span class="lang-zh">Token 市场</span><span class="lang-en">Token Market</span></td><td class="cmp-yes">✓ 佣金+风控</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
+<tr><td><span class="lang-zh">审计/风控/告警</span><span class="lang-en">Audit/Risk/Alert</span></td><td class="cmp-yes">✓</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
+<tr><td><span class="lang-zh">i18n</span><span class="lang-en">Internationalization</span></td><td class="cmp-yes">✓ 4 语言</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
+</tbody></table></div>
+
+</div></section>
+
+<section class="sec" id="plans">
+<div class="sec-inner">
+<h2 class="sec-title lang-zh">灵活的选择</h2><h2 class="sec-title lang-en">Flexible Plans</h2>
+<p class="sec-sub lang-zh">客户端 GPL 3.0 全量开源免费，云端社区版 AGPL 3.0 可自托管，企业版闭源提供增值能力</p><p class="sec-sub lang-en">Client GPL 3.0 fully open source. Cloud Community AGPL 3.0 for self-host. Enterprise closed-source for advanced features.</p>
+
+<div class="plan-audience-banner">
+<div class="plan-audience-item">
+<span class="plan-audience-icon">💻</span>
+<div><strong class="lang-zh">个人开发者</strong><strong class="lang-en">Individual</strong><span class="lang-zh">—— 免费本地使用 + BYOK 自备 Key</span><span class="lang-en"> — Free local + BYOK</span></div>
+</div>
+<div class="plan-audience-arrow">→</div>
+<div class="plan-audience-item">
+<span class="plan-audience-icon">🚀</span>
+<div><strong class="lang-zh">专业用户</strong><strong class="lang-en">Professional</strong><span class="lang-zh">—— 云端通道 + 千万 Token 配额</span><span class="lang-en"> — Cloud channels + 10M quota</span></div>
+</div>
+<div class="plan-audience-arrow">→</div>
+<div class="plan-audience-item">
+<span class="plan-audience-icon">👥</span>
+<div><strong class="lang-zh">小团队</strong><strong class="lang-en">Small Team</strong><span class="lang-zh">—— 共享配额 + 集中管理</span><span class="lang-en"> — Shared quota + central mgmt</span></div>
+</div>
+<div class="plan-audience-arrow">→</div>
+<div class="plan-audience-item">
+<span class="plan-audience-icon">🏢</span>
+<div><strong class="lang-zh">企业</strong><strong class="lang-en">Enterprise</strong><span class="lang-zh">—— 治理审计 + SLA 保障</span><span class="lang-en"> — Governance + SLA</span></div>
+</div>
+</div>
+
+<div class="plans">
+<div class="lang-zh plan">
+<div class="plan-name">Free</div>
+<div class="plan-price">$0<small>/月</small></div>
+<div class="plan-audience-label individual">开源客户端</div>
+<div class="plan-desc">客户端 GPL 3.0 全量开源</div>
+<ul class="plan-feats">
+<li>SeasAGI-Client 全量免费</li>
+<li>任意个数本地通道</li>
+<li>智能路由 / 会话粘滞 / 引擎</li>
+<li>8 执行器 + 6 协议翻译</li>
+<li>Playground / 日志 / 诊断</li>
+<li>社区版云端（AGPL 3.0）可选自托管</li>
+</ul>
+<a href="https://github.com/neeke/seasagi/releases" class="btn btn-primary" style="width:100%;justify-content:center;">📥 免费下载</a>
+<div class="plan-upgrade-path">
+<a href="#plans" onclick="document.querySelector('.plans').children[1].scrollIntoView({behavior:'smooth'})">升级到 Pro →</a>
+</div>
+</div>
+<div class="lang-en plan">
+<div class="plan-name">Free</div>
+<div class="plan-price">$0 <small>forever</small></div>
+<div class="plan-audience-label individual">Open Source</div>
+<div class="plan-desc">Client GPL 3.0, fully open source</div>
+<ul class="plan-feats">
+<li>SeasAGI-Client fully free</li>
+<li>Unlimited local channels</li>
+<li>Smart routing / sticky / engine</li>
+<li>8 executors + 6 translators</li>
+<li>Playground / logs / diagnostics</li>
+<li>Community server (AGPL 3.0) self-host option</li>
+</ul>
+<a href="https://github.com/neeke/seasagi/releases" class="btn btn-primary" style="width:100%;justify-content:center;">📥 Free Download</a>
+<div class="plan-upgrade-path">
+<a href="#plans" onclick="document.querySelector('.plans').children[1].scrollIntoView({behavior:'smooth'})">Upgrade to Pro →</a>
+</div>
+</div>
+<div class="lang-zh plan featured">
+<div class="plan-name">Pro</div>
+<div class="plan-price">$9.9 <small>/ 月</small></div>
+<div class="plan-audience-label professional">个人开发者</div>
+<div class="plan-desc">个人效率 · 分析 · 轻量云增值</div>
+<ul class="plan-feats">
+<li>免费版全部功能</li>
+<li>30+ 云端通道直连</li>
+<li>智能推荐模型组合</li>
+<li>云端用量 + 账单 + 可视化</li>
+<li>月 1000 万 Token 配额</li>
+<li>邮件工单支持</li>
+</ul>
+<a href="#" class="btn btn-primary" style="width:100%;justify-content:center;">🚀 立即订阅</a>
+<div class="plan-upgrade-path">
+<a href="#plans" onclick="document.querySelector('.plans').children[3].scrollIntoView({behavior:'smooth'})">了解 Teams →</a>
+</div>
+</div>
+<div class="lang-en plan featured en">
+<div class="plan-name">Pro</div>
+<div class="plan-price">$9.9 <small>/ mo</small></div>
+<div class="plan-audience-label professional">For professionals</div>
+<div class="plan-desc">Personal efficiency, analytics, light cloud</div>
+<ul class="plan-feats">
+<li>All Free features</li>
+<li>30+ cloud channels</li>
+<li>Smart model combo recommendations</li>
+<li>Cloud usage & billing & visualization</li>
+<li>10M tokens/month quota</li>
+<li>Email ticket support</li>
+</ul>
+<a href="#" class="btn btn-primary" style="width:100%;justify-content:center;">🚀 Subscribe Now</a>
+<div class="plan-upgrade-path">
+<a href="#plans" onclick="document.querySelector('.plans').children[3].scrollIntoView({behavior:'smooth'})">Learn about Teams →</a>
+</div>
+</div>
+<div class="lang-zh plan">
+<div class="plan-name">Teams</div>
+<div class="plan-price">$24.9 <small>/ 席位 / 月</small></div>
+<div class="plan-audience-label team">小团队</div>
+<div class="plan-desc">协作 · 共享配置 · 集中管理</div>
+<ul class="plan-feats">
+<li>Pro 全部功能</li>
+<li>60+ 云端通道</li>
+<li>月 5000 万 Token 配额</li>
+<li>团队共享策略与路由配置</li>
+<li>集中账单与成本归因</li>
+<li>基础权限与审计事件</li>
+</ul>
+<a href="#" class="btn btn-outline" style="width:100%;justify-content:center;">👥 订阅 Teams</a>
+<div class="plan-upgrade-path">
+<a href="javascript:void(0)" onclick="showEntForm()">联系 Enterprise 销售 →</a>
+</div>
+</div>
+<div class="lang-en plan">
+<div class="plan-name">Teams</div>
+<div class="plan-price">$24.9 <small>/ seat / mo</small></div>
+<div class="plan-audience-label team">For small teams</div>
+<div class="plan-desc">Collaboration, shared config, central billing</div>
+<ul class="plan-feats">
+<li>All Pro features</li>
+<li>60+ cloud channels</li>
+<li>50M tokens/month quota</li>
+<li>Team shared config & routing rules</li>
+<li>Centralized billing & cost attribution</li>
+<li>Basic RBAC & audit events</li>
+</ul>
+<a href="#" class="btn btn-outline" style="width:100%;justify-content:center;">👥 Subscribe Teams</a>
+<div class="plan-upgrade-path">
+<a href="javascript:void(0)" onclick="showEntForm()">Contact Enterprise Sales →</a>
+</div>
+</div>
+<div class="lang-zh plan plan-ent">
+<div class="plan-name">Enterprise</div>
+<div class="plan-price"><span style="font-size:24px;font-weight:700;">联系销售</span></div>
+<div class="plan-audience-label enterprise-aud">企业</div>
+<div class="plan-desc">治理 · 审计 · 合规 · SLA</div>
+<ul class="plan-feats">
+<li>Teams 全部功能</li>
+<li>全模型与通道开放</li>
+<li>自定义配额与策略</li>
+<li>SSO / SCIM / RBAC</li>
+<li>审计日志与报表</li>
+<li>专属客户经理 & SLA 保障</li>
+</ul>
+<a href="javascript:void(0)" onclick="showEntForm()" class="btn btn-outline" style="width:100%;justify-content:center;">📞 联系销售</a>
+</div>
+<div class="lang-en plan plan-ent">
+<div class="plan-name">Enterprise</div>
+<div class="plan-price"><span style="font-size:24px;font-weight:700;">Contact Sales</span></div>
+<div class="plan-audience-label enterprise-aud">For enterprises</div>
+<div class="plan-desc">Governance, audit, compliance & SLA</div>
+<ul class="plan-feats">
+<li>All Teams features</li>
+<li>Access to all models & channels</li>
+<li>Custom quota & policies</li>
+<li>SSO / SCIM / RBAC</li>
+<li>Audit logs & reports</li>
+<li>Dedicated account manager & SLA</li>
+</ul>
+<a href="javascript:void(0)" onclick="showEntForm()" class="btn btn-outline" style="width:100%;justify-content:center;">📞 Contact Sales</a>
+</div>
+</div></div></section>
+
+<section class="sec" id="channels" style="background:var(--bg-accent-soft)">
+<div class="sec-inner">
+<h2 class="sec-title lang-zh">云端通道状态</h2><h2 class="sec-title lang-en">Cloud Channel Status</h2>
+<p class="sec-sub lang-zh">实时查看云端各 Provider 通道的健康状态和性价比</p><p class="sec-sub lang-en">Real-time health status and cost-performance of cloud provider channels</p>
+<div class="ch-stats">
+<div class="ch-stat"><div class="ch-stat-num">32</div><div class="ch-stat-lbl lang-zh">在线通道</div><div class="ch-stat-lbl lang-en">Online Channels</div></div>
+<div class="ch-stat"><div class="ch-stat-num">99.2%</div><div class="ch-stat-lbl lang-zh">可用率</div><div class="ch-stat-lbl lang-en">Availability</div></div>
+<div class="ch-stat"><div class="ch-stat-num">&lt;200ms</div><div class="ch-stat-lbl lang-zh">平均延迟</div><div class="ch-stat-lbl lang-en">Avg Latency</div></div>
+<div class="ch-stat"><div class="ch-stat-num">18</div><div class="ch-stat-lbl lang-zh">覆盖区域</div><div class="ch-stat-lbl lang-en">Regions</div></div>
+</div>
+<div style="overflow-x:auto">
+<table class="chtbl">
+<thead><tr>
+<th class="lang-zh-i">通道</th><th class="lang-en-i">Channel</th>
+<th>Provider</th>
+<th class="lang-zh-i">模型</th><th class="lang-en-i">Model</th>
+<th class="lang-zh-i">状态</th><th class="lang-en-i">Status</th>
+<th class="lang-zh-i">延迟</th><th class="lang-en-i">Latency</th>
+<th class="lang-zh-i">输入价格</th><th class="lang-en-i">Input Price</th>
+<th class="lang-zh-i">输出价格</th><th class="lang-en-i">Output Price</th>
+<th class="lang-zh-i">区域</th><th class="lang-en-i">Region</th>
+</tr></thead>
+<tbody>
+<tr><td>OpenAI</td><td>GPT-4o</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span></td><td>120ms</td><td>$2.50/M</td><td>$10.00/M</td><td>🇺🇸</td></tr>
+<tr><td>OpenAI</td><td>GPT-4o-mini</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span></td><td>95ms</td><td>$0.15/M</td><td>$0.60/M</td><td>🇺🇸</td></tr>
+<tr><td>Anthropic</td><td>Claude 3.5 Sonnet</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span></td><td>180ms</td><td>$3.00/M</td><td>$15.00/M</td><td>🇺🇸</td></tr>
+<tr><td>Anthropic</td><td>Claude 3 Haiku</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span></td><td>150ms</td><td>$0.25/M</td><td>$1.25/M</td><td>🇺🇸</td></tr>
+<tr><td>Google</td><td>Gemini 1.5 Pro</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span></td><td>110ms</td><td>$1.25/M</td><td>$5.00/M</td><td>🇺🇸</td></tr>
+<tr><td>Google</td><td>Gemini 1.5 Flash</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span></td><td>85ms</td><td>$0.075/M</td><td>$0.30/M</td><td>🇺🇸</td></tr>
+<tr><td>DeepSeek</td><td>DeepSeek V3</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span></td><td>160ms</td><td>$0.27/M</td><td>$1.10/M</td><td>🇨🇳</td></tr>
+<tr><td>DeepSeek</td><td>DeepSeek Coder</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span></td><td>140ms</td><td>$0.14/M</td><td>$0.28/M</td><td>🇨🇳</td></tr>
+<tr><td>Qwen</td><td>Qwen Max</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span></td><td>130ms</td><td>$2.00/M</td><td>$6.00/M</td><td>🇨🇳</td></tr>
+<tr><td>Qwen</td><td>Qwen Plus</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span></td><td>100ms</td><td>$0.80/M</td><td>$2.00/M</td><td>🇨🇳</td></tr>
+<tr><td>Mistral</td><td>Mistral Large</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span></td><td>170ms</td><td>$2.00/M</td><td>$6.00/M</td><td>🇪🇺</td></tr>
+<tr><td>Meta</td><td>Llama 3.1 405B</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span></td><td>190ms</td><td>$2.00/M</td><td>$6.00/M</td><td>🇺🇸</td></tr>
+</tbody></table></div>
+
+<div class="banner">
+<div class="lang-zh"><h3>⭐ 开源项目 · 三层许可</h3><p>SeasAGI 采用分层开源策略：<strong>客户端 GPL 3.0</strong> 全量开源，<strong>云端社区版 AGPL 3.0</strong> 开源可自托管，<strong>云端企业版</strong>闭源面向商业部署。<br>欢迎 Star、Fork、Issue、PR — 你的每一次贡献都让项目变得更好。</p></div>
+<div class="lang-en"><h3>⭐ Open Source · Three-Tier Licensing</h3><p>SeasAGI adopts a layered open-source strategy: <strong>Client GPL 3.0</strong> fully open source, <strong>Cloud Community AGPL 3.0</strong> open source for self-host, <strong>Cloud Enterprise</strong> closed-source for commercial deployment.<br>Stars, forks, issues and PRs are welcome — every contribution makes the project better.</p></div>
+<a href="https://github.com/neeke/seasagi" class="btn btn-primary">⭐ Star on GitHub</a>
+</div></div></section>
+
+<section class="sec" id="faq">
+<div class="sec-inner">
+<h2 class="sec-title lang-zh">常见问题</h2><h2 class="sec-title lang-en">FAQ</h2>
+<div class="faq-grid">
+<div class="faq-item">
+<div class="faq-q" onclick="toggleFaq(this)"><span class="lang-zh-i">SeasAGI 和直接调用 API 有什么区别？</span><span class="lang-en-i">How is SeasAGI different from calling APIs directly?</span><span class="faq-arrow">▼</span></div>
+<div class="faq-a lang-zh">直接调用 API 需要手动管理多个 Key、处理失败重试、选择最优模型。SeasAGI 自动完成这一切：统一网关、会话粘滞路由、动态 429 惩罚降级、成本优化引擎、全链路可观测，一个工具搞定所有管理。</div>
+<div class="faq-a lang-en">Direct API calls require manually managing multiple keys, handling failures, and choosing the optimal model. SeasAGI automates all of this: unified gateway, session sticky routing, dynamic 429 penalty, cost optimization engine, and full observability — all in one tool.</div>
+</div>
+<div class="faq-item">
+<div class="faq-q" onclick="toggleFaq(this)"><span class="lang-zh-i">API Key 安全吗？</span><span class="lang-en-i">Are my API keys secure?</span><span class="faq-arrow">▼</span></div>
+<div class="faq-a lang-zh">API Key 仅本地存储在 macOS Keychain 中，校验使用常量时间比较防时序攻击，请求直接由客户端发往 Provider，永不经过 SeasAGI 云端，你拥有完全的控制权。</div>
+<div class="faq-a lang-en">API keys are stored locally in macOS Keychain. Validation uses constant-time comparison to prevent timing attacks. Requests go directly from the client to providers, never through SeasAGI cloud. You have full control.</div>
+</div>
+<div class="faq-item">
+<div class="faq-q" onclick="toggleFaq(this)"><span class="lang-zh-i">会话粘滞是什么？为什么需要？</span><span class="lang-en-i">What is session sticky routing?</span><span class="faq-arrow">▼</span></div>
+<div class="faq-a lang-zh">会话粘滞基于首条用户消息的 SHA1 哈希，将同一对话的后续请求自动路由到同一模型，防止多轮对话中途切换模型导致上下文断裂或幻觉。30 分钟 TTL 自动过期。</div>
+<div class="faq-a lang-en">Session sticky routing uses SHA1 hash of the first user message to route all subsequent requests in the same conversation to the same model, preventing context breaks or hallucinations from mid-conversation model switches. 30-min TTL auto-expires.</div>
+</div>
+<div class="faq-item">
+<div class="faq-q" onclick="toggleFaq(this)"><span class="lang-zh-i">和竞品相比有什么优势？</span><span class="lang-en-i">Advantages over competitors?</span><span class="faq-arrow">▼</span></div>
+<div class="faq-a lang-zh">SeasAGI 是唯一提供桌面原生客户端 + 本地网关代理的方案，直连 Provider 无服务端瓶颈；唯一具备完整多租户 + Stripe 支付体系；唯一支持 6 种协议翻译 + OAuth PKCE；同时借鉴了 FreeLLMAPI 的动态 429 惩罚、排序预设、Playground 等能力，并增加了会话粘滞、Key 健康检查、per-key Cooldown 等企业级特性。</div>
+<div class="faq-a lang-en">SeasAGI is the only solution with a native desktop client + local gateway proxy (direct to providers, no server bottleneck); the only one with full multi-tenant + Stripe payment; the only one with 6 protocol translators + OAuth PKCE. It also incorporates FreeLLMAPI's dynamic 429 penalty, sort presets, and Playground, plus adds session sticky, key health check, per-key cooldown and other enterprise features.</div>
+</div>
+<div class="faq-item">
+<div class="faq-q" onclick="toggleFaq(this)"><span class="lang-zh-i">支持哪些 Provider？</span><span class="lang-en-i">Which providers are supported?</span><span class="faq-arrow">▼</span></div>
+<div class="faq-a lang-zh">内置 8 种 Provider 执行器：OpenAI、Azure、Anthropic、Gemini、Ollama、DeepSeek、Grok、平台中继。6 种协议翻译自动适配不同格式。任何兼容 OpenAI 协议的 Provider 也可手动添加。</div>
+<div class="faq-a lang-en">8 built-in provider executors: OpenAI, Azure, Anthropic, Gemini, Ollama, DeepSeek, Grok, platform relay. 6 protocol translators auto-adapt different formats. Any OpenAI-compatible provider can be added manually.</div>
+</div>
+<div class="faq-item">
+<div class="faq-q" onclick="toggleFaq(this)"><span class="lang-zh-i">怎样开始使用？</span><span class="lang-en-i">How do I get started?</span><span class="faq-arrow">▼</span></div>
+<div class="faq-a lang-zh">1. 从 GitHub Releases 下载对应平台客户端 → 2. 安装后添加你的 Provider 通道 → 3. 将任何 API Client 的 Base URL 改为 http://127.0.0.1:4318/v1 → 4. 享受智能路由！</div>
+<div class="faq-a lang-en">1. Download from GitHub Releases → 2. Add your provider channels → 3. Change any API client's Base URL to http://127.0.0.1:4318/v1 → 4. Enjoy smart routing!</div>
+</div>
+<div class="faq-item">
+<div class="faq-q" onclick="toggleFaq(this)"><span class="lang-zh-i">开源版有什么限制？</span><span class="lang-en-i">Any limits on open source version?</span><span class="faq-arrow">▼</span></div>
+<div class="faq-a lang-zh">开源客户端（GPL 3.0）无功能限制，所有特性完全免费。云端社区版（AGPL 3.0）提供基础控制面与基础中继，支持自托管。企业版（闭源）提供远程加速通道、用量同步、治理审批、管理后台等增值服务。客户端本身永久免费，不受订阅状态影响。</div>
+<div class="faq-a lang-en">The open-source client (GPL 3.0) has no feature limits — fully free forever. The cloud community server (AGPL 3.0) provides a basic control plane and relay for self-host. The Enterprise (closed-source) offers relay gateways, usage sync, governance, and admin dashboard. The local client never requires a subscription.</div>
+</div>
+<div class="faq-item">
+<div class="faq-q" onclick="toggleFaq(this)"><span class="lang-zh-i">配额用完后怎么办？</span><span class="lang-en-i">What happens when I exceed my quota?</span><span class="faq-arrow">▼</span></div>
+<div class="faq-a lang-zh">各套餐均包含月度请求配额。超出部分按量计费，费用透明。你可以随时在客户端用量页面查看当前配额消耗和预估超额费用。建议使用 BYOK（自备 Key）避免超额费用，或升级到 Teams/Enterprise 获得更高配额。也可以在 Token 市场购买其他用户闲置的 API Key。</div>
+<div class="faq-a lang-en">Each plan includes a monthly request quota. Overages are billed at transparent usage-based rates. You can monitor quota consumption and estimated overage costs in the client usage dashboard. Use BYOK to avoid cloud usage charges, or upgrade to Teams/Enterprise for higher quotas. You can also buy unused API keys from other users in the Token Market.</div>
+</div>
+<div class="faq-item">
+<div class="faq-q" onclick="toggleFaq(this)"><span class="lang-zh-i">Token 市场是什么？</span><span class="lang-en-i">What is the Token Market?</span><span class="faq-arrow">▼</span></div>
+<div class="faq-a lang-zh">Token 市场是 SeasAGI 客户端内置的 API Key 交易平台。用户可以将闲置的 API Key 上架出售（支持一口价和折扣两种模式），其他用户可浏览市场、查看卖家信息、扫码完成交易。平台收取 10% 佣金，卖家获得 90% 收益。交易二维码带 HMAC 签名和 5 分钟有效期，企业版提供完整的管理后台和风控审计。</div>
+<div class="faq-a lang-en">The Token Market is a built-in API Key trading platform in the SeasAGI client. Users can list unused API keys for sale (fixed price or discount mode), and other users can browse the marketplace, view seller info, and complete trades via QR code scanning. The platform charges a 10% commission, and sellers receive 90% of the proceeds. Trade QR codes include HMAC signatures with 5-minute expiry. The Enterprise edition provides a full admin dashboard with risk control and audit logging.</div>
+</div>
+<div class="faq-item">
+<div class="faq-q" onclick="toggleFaq(this)"><span class="lang-zh-i">如何参与贡献？</span><span class="lang-en-i">How to contribute?</span><span class="faq-arrow">▼</span></div>
+<div class="faq-a lang-zh">客户端全量开源（GPL 3.0），欢迎一切形式的贡献！可以 Star、Fork 仓库，提交 Issue 报告 Bug 或建议，创建 Pull Request 改进代码。详细的贡献指南请查看 GitHub 仓库的 CONTRIBUTING.md。</div>
+<div class="faq-a lang-en">The client is fully open source (GPL 3.0). All contributions welcome! Star and fork the repo, submit issues for bugs or suggestions, create PRs to improve code. See CONTRIBUTING.md in the GitHub repo for details.</div>
+</div>
+</div></div></section>
+
+<footer class="ftr">
+<div class="ftr-links">
+<a href="https://github.com/neeke/seasagi">GitHub</a>
+<a href="https://github.com/neeke/seasagi/issues" class="lang-zh-i">反馈问题</a><a href="https://github.com/neeke/seasagi/issues" class="lang-en-i">Issues</a>
+<a href="https://github.com/neeke/seasagi/blob/main/SeasAGI-Client/LICENSE">Client GPL 3.0</a>
+</div>
+<span class="lang-zh-i">© 2025 SeasAGI. 客户端 GPL 3.0 · 云端社区版 AGPL 3.0 · 企业版闭源</span>
+<span class="lang-en-i">© 2025 SeasAGI. Client GPL 3.0 · Cloud Community AGPL 3.0 · Enterprise Closed Source</span>
+</footer>
+
+<div class="modal-overlay" id="entModal">
+<div class="modal-box">
+<div class="modal-close" onclick="hideEntForm()">&times;</div>
+<div class="lang-zh"><h3>企业版咨询</h3><p style="color:var(--text-secondary);margin-bottom:16px;">填写以下信息，我们的团队将在 2 个工作日内与您联系。</p></div>
+<div class="lang-en"><h3>Enterprise Inquiry</h3><p style="color:var(--text-secondary);margin-bottom:16px;">Fill out the form and our team will contact you within 2 business days.</p></div>
+<form id="entForm" onsubmit="event.preventDefault();submitEntForm()">
+<div class="form-row"><input type="text" name="contact" placeholder="Your name / 联系人" required/></div>
+<div class="form-row"><input type="email" name="email" placeholder="Email / 邮箱" required/></div>
+<div class="form-row"><input type="text" name="cname" placeholder="Company / 公司名称" required/></div>
+<div class="form-row"><input type="text" name="tsize" placeholder="Team size / 团队规模"/></div>
+<div class="form-row"><input type="text" name="ucase" placeholder="Use case / 使用场景"/></div>
+<div class="form-row"><textarea name="msg" rows="3" placeholder="Additional message / 补充说明"></textarea></div>
+<button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Submit / 提交</button>
+</form>
+</div></div>
+
+<script>
+function toggleLang() {
+  const b=document.body,btn=document.getElementById("langToggle");
+  if(b.classList.contains("show-zh")){b.classList.replace("show-zh","show-en");btn.textContent="中文"}
+  else{b.classList.replace("show-en","show-zh");btn.textContent="English"}
+}
+function toggleFaq(el){el.parentElement.classList.toggle("open")}
+function showEntForm(){document.getElementById("entModal").classList.add("open")}
+function hideEntForm(){document.getElementById("entModal").classList.remove("open")}
+function submitEntForm(){
+  const form=document.getElementById("entForm");
+  const data={company_name:form.cname.value,contact_name:form.contact.value,email:form.email.value,team_size:form.tsize.value,use_case:form.ucase.value,message:form.msg.value};
+  fetch('/api/v1/checkout/enterprise-lead',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
+    .then(r=>r.json()).then(r=>{alert(r.message||r.message_zh||'Submitted');hideEntForm();form.reset()})
+    .catch(()=>alert('Submission failed. Please email us directly.'));
+}
+document.getElementById("entModal")?.addEventListener("click",function(e){if(e.target===this)hideEntForm()});
+</script>
+</body>
+</html>

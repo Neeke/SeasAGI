@@ -121,6 +121,7 @@ The left navigation has been consolidated into a single "Combo Optimization" ent
 ### Experience
 
 - Playground instant test page
+- Token Market: list unused API keys for sale (fixed price / discount), browse marketplace, QR code scan trading, order management, settlement & earnings
 - RTK Token compression (9 output types auto-detection)
 - Caveman concise output (4 styles)
 - Reasoning Content injection

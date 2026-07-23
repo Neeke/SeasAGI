@@ -38,6 +38,7 @@ The client can **run independently** — all local gateway features work without
 | **Auto Health-check & Fault Tolerance** | Key health check (5min probe + auto-disable) + per-key Cooldown + circuit breaker + exponential backoff |
 | **Local-first · Privacy Secure** | API Keys stored only in Keychain, constant-time comparison prevents timing attacks, requests go direct to Provider |
 | **Combo Optimization Workbench** | My Plans / Optimization Suggestions / Template Center / Execution Analysis — four tabs, Combo drag-and-drop sorting |
+| **Token Market** | Peer-to-peer API Key marketplace: list unused keys at fixed price or discount, QR code scan trading, 10% platform commission, seller earnings display |
 | **Playground Instant Test** | Built-in chat test UI, Combo selector + execution chain visualization + step fallback status |
 | **i18n** | Chinese / English / Japanese / Korean |
 
@@ -82,7 +83,8 @@ The client can **run independently** — all local gateway features work without
 │  │                       │  │                             │ │
 │  │  Basic Auth · Channel │  │  Billing · Plan Gatekeeping │ │
 │  │  Combo CRUD · Usage   │  │  Multi-tenant · Combo Gov.  │ │
-│  │  Relay Fwd · Deploy   │  │  Advanced Metrics · BYOK    │ │
+│  │  Relay Fwd · Deploy   │  │  Token Market · BYOK        │ │
+│  │                       │  │  Advanced Metrics · BYOK    │ │
 │  │                       │  │  Admin Dashboard · SSO/SCIM │ │
 │  └───────────────────────┘  └─────────────────────────────┘ │
 │  ┌─────────────────────────────────────────────────────────┐ │
@@ -117,9 +119,9 @@ SeasAGI/
 │   ├── relay-gateway/              Community relay data plane
 │   ├── deploy/                     Deploy scripts + systemd + nginx
 │   └── scripts/                    Build scripts
-├── web-docs/                      Official website & docs
-│   ├── src-web/                    Static website
-│   └── ...
+├── src-web/                      Official website (static HTML)
+│   ├── index.html                  Landing page
+│   └── assets/                     Icons & images
 ├── build-all.sh                   One-click build script
 ├── SeasAGI.v5.md                  One-page summary
 ```

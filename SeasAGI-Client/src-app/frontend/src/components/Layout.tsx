@@ -21,7 +21,8 @@ type AppIconName =
   | "settings"
   | "sun"
   | "lock"
-  | "layers";
+  | "layers"
+  | "store";
 
 const navItems: Array<{ to: string; label: string; icon: AppIconName; cloudOnly?: boolean }> = [
   { to: "/", label: "nav.home", icon: "home" as AppIconName },
@@ -31,6 +32,7 @@ const navItems: Array<{ to: string; label: string; icon: AppIconName; cloudOnly?
   { to: "/playground", label: "nav.playground", icon: "playground" as AppIconName },
   { to: "/subscription", label: "nav.subscription", icon: "subscription" as AppIconName },
   { to: "/usage", label: "nav.usage", icon: "usage" as AppIconName },
+  { to: "/token-market", label: "nav.tokenMarket", icon: "store" as AppIconName, cloudOnly: true },
   { to: "/logs", label: "nav.logs", icon: "logs" as AppIconName },
   { to: "/settings", label: "nav.settings", icon: "settings" as AppIconName },
 ];
@@ -89,6 +91,8 @@ function AppIcon({ name, className = "" }: { name: AppIconName; className?: stri
       return <svg {...props}><rect x="5" y="10" width="14" height="10" rx="3" /><path d="M8 10V8a4 4 0 018 0v2" /></svg>;
     case "layers":
       return <svg {...props}><polygon points="12 2 22 7 12 12 2 7 12 2" /><polyline points="2 12 12 17 22 12" /><polyline points="2 17 12 22 22 17" /></svg>;
+    case "store":
+      return <svg {...props}><path d="M3 9l1.5-5h15L21 9" /><path d="M3 9v11h18V9" /><path d="M9 20v-6h6v6" /></svg>;
     default:
       return null;
   }
@@ -166,9 +170,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
               const disabled = !!item.cloudOnly && !auth.is_logged_in;
               if (disabled) {
                 return (
-                  <div key={item.to} className="nav-item nav-item-disabled" aria-disabled="true" title={t("home.localModeLoginLink")}>
+                  <div key={item.to} className="nav-item nav-item-disabled" aria-disabled="true" title={t("tokenMarket.loginToUse")} onClick={() => window.location.assign("#/auth")}>
                     <span className="nav-icon"><AppIcon name={item.icon} /></span>
                     <span className="nav-label">{t(item.label)}</span>
+                    <span className="nav-cloud-lock" title={t("tokenMarket.loginToUse")}><AppIcon name="lock" /></span>
                   </div>
                 );
               }
