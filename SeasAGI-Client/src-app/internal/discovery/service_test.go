@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"seasagi/internal/config"
+	"github.com/SeasAGI/SeasAGI-Client/internal/config"
 )
 
 // ---------------------------------------------------------------------------

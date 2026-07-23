@@ -3,7 +3,7 @@ package routing
 import (
 	"testing"
 
-	"seasagi/internal/config"
+	"github.com/SeasAGI/SeasAGI-Client/internal/config"
 )
 
 func TestNewResolver(t *testing.T) {

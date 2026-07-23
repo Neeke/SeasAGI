@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"seasagi/internal/config"
-	"seasagi/internal/providers"
+	"github.com/SeasAGI/SeasAGI-Client/internal/config"
+	"github.com/SeasAGI/SeasAGI-Client/internal/providers"
 )
 
 func (s *Service) handleEmbeddings(w http.ResponseWriter, r *http.Request) {

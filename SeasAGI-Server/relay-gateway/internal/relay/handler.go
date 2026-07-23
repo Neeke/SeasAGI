@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/seasagi/relay-gateway/internal/channel"
-	"github.com/seasagi/relay-gateway/internal/trace"
+	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/channel"
+	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/trace"
 )
 
 type ChatRequest struct {

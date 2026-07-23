@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/seasagi/platform-api/internal/database"
+	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/database"
 )
 
 type UsageEvent struct {

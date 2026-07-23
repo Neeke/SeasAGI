@@ -1,4 +1,4 @@
-module seasagi
+module github.com/SeasAGI/SeasAGI-Client
 
 go 1.21
 

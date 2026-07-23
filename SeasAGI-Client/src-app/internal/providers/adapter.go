@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"seasagi/internal/protocol"
+	"github.com/SeasAGI/SeasAGI-Client/internal/protocol"
 )
 
 type ProviderConfig struct {

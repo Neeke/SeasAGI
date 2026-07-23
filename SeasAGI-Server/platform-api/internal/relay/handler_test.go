@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/seasagi/platform-api/internal/database"
+	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/database"
 )
 
 func TestListRelayGatewaysFiltersDisabledAndInvalidRecords(t *testing.T) {

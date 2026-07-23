@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/seasagi/relay-gateway/internal/auth"
-	"github.com/seasagi/relay-gateway/internal/i18n"
+	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/auth"
+	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/i18n"
 )
 
 func AuthRequired() gin.HandlerFunc {

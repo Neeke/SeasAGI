@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"seasagi/internal/config"
-	"seasagi/internal/oauth"
+	"github.com/SeasAGI/SeasAGI-Client/internal/config"
+	"github.com/SeasAGI/SeasAGI-Client/internal/oauth"
 )
 
 const oauthCallbackAddr = "127.0.0.1:43819"

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"seasagi/internal/protocol"
+	"github.com/SeasAGI/SeasAGI-Client/internal/protocol"
 )
 
 type GeminiExecutor struct{}

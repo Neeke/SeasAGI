@@ -7,8 +7,8 @@ import (
 	"strings"
 	"sync"
 
-	"seasagi/internal/config"
-	"seasagi/internal/usage"
+	"github.com/SeasAGI/SeasAGI-Client/internal/config"
+	"github.com/SeasAGI/SeasAGI-Client/internal/usage"
 )
 
 type Recommendation struct {

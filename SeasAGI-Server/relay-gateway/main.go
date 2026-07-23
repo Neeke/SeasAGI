@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/seasagi/relay-gateway/cmd"
+	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/cmd"
 )
 
 func main() {

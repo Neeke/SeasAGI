@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/seasagi/relay-gateway/internal/channel"
+	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/channel"
 )
 
 func TestNewChecker_CustomInterval(t *testing.T) {

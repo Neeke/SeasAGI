@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"seasagi/internal/config"
+	"github.com/SeasAGI/SeasAGI-Client/internal/config"
 )
 
 type RoutingError struct {

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"seasagi/internal/config"
+	"github.com/SeasAGI/SeasAGI-Client/internal/config"
 )
 
 type ExportData struct {

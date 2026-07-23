@@ -1,4 +1,4 @@
-module github.com/seasagi/relay-gateway
+module github.com/SeasAGI/SeasAGI-Server/relay-gateway
 
 go 1.22
 

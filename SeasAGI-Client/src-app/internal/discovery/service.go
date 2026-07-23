@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"seasagi/internal/config"
-	"seasagi/internal/keychain"
-	"seasagi/internal/providers"
+	"github.com/SeasAGI/SeasAGI-Client/internal/config"
+	"github.com/SeasAGI/SeasAGI-Client/internal/keychain"
+	"github.com/SeasAGI/SeasAGI-Client/internal/providers"
 )
 
 type DiscoveredModel struct {

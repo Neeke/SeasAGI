@@ -11,14 +11,14 @@ import (
 	"sync"
 	"time"
 
-	"seasagi/internal/auth"
-	"seasagi/internal/config"
-	"seasagi/internal/keychain"
-	"seasagi/internal/logs"
-	"seasagi/internal/protocol"
-	"seasagi/internal/providers"
-	"seasagi/internal/routing"
-	"seasagi/internal/rtk"
+	"github.com/SeasAGI/SeasAGI-Client/internal/auth"
+	"github.com/SeasAGI/SeasAGI-Client/internal/config"
+	"github.com/SeasAGI/SeasAGI-Client/internal/keychain"
+	"github.com/SeasAGI/SeasAGI-Client/internal/logs"
+	"github.com/SeasAGI/SeasAGI-Client/internal/protocol"
+	"github.com/SeasAGI/SeasAGI-Client/internal/providers"
+	"github.com/SeasAGI/SeasAGI-Client/internal/routing"
+	"github.com/SeasAGI/SeasAGI-Client/internal/rtk"
 )
 
 type Service struct {

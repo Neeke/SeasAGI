@@ -1,4 +1,4 @@
-module github.com/seasagi/platform-api
+module github.com/SeasAGI/SeasAGI-Server/platform-api
 
 go 1.22
 

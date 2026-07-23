@@ -11,15 +11,15 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/channel"
+	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/health"
+	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/middleware"
+	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/ops"
+	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/policy"
+	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/ratelimit"
+	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/relay"
+	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/trace"
 	"github.com/gin-gonic/gin"
-	"github.com/seasagi/relay-gateway/internal/channel"
-	"github.com/seasagi/relay-gateway/internal/health"
-	"github.com/seasagi/relay-gateway/internal/middleware"
-	"github.com/seasagi/relay-gateway/internal/ops"
-	"github.com/seasagi/relay-gateway/internal/policy"
-	"github.com/seasagi/relay-gateway/internal/ratelimit"
-	"github.com/seasagi/relay-gateway/internal/relay"
-	"github.com/seasagi/relay-gateway/internal/trace"
 )
 
 func Execute() error {

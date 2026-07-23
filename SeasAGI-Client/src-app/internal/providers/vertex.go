@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"seasagi/internal/protocol"
+	"github.com/SeasAGI/SeasAGI-Client/internal/protocol"
 )
 
 type VertexExecutor struct{}

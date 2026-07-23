@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"seasagi/internal/keychain"
+	"github.com/SeasAGI/SeasAGI-Client/internal/keychain"
 )
 
 type AuthInfo struct {
