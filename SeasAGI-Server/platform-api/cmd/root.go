@@ -17,25 +17,30 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/admin"
 	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/auth"
+	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/backup"
 	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/channel"
 	combo "github.com/SeasAGI/SeasAGI-Server/platform-api/internal/combo"
 	combotemplate "github.com/SeasAGI/SeasAGI-Server/platform-api/internal/combotemplate"
 	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/database"
 	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/device"
 	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/modelcatalog"
+	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/providerresource"
 	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/relay"
+	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/secpolicy"
 	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/usage"
 	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/user"
 	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/version"
+	"github.com/gin-gonic/gin"
 )
 
 //go:embed all:admin_dist
 var adminAssets embed.FS
 
 func Execute() error {
+	secpolicy.ValidateStartup()
+
 	dbPath := os.Getenv("DB_PATH")
 	if err := database.Init(dbPath); err != nil {
 		return fmt.Errorf("database init failed: %w", err)
@@ -88,6 +93,13 @@ func Execute() error {
 			authenticated.PUT("/channels/:id", channel.UpdateChannel)
 			authenticated.DELETE("/channels/:id", channel.DeleteChannel)
 
+			authenticated.GET("/channels/:channel_id/resources", providerresource.ListResources)
+			authenticated.GET("/channels/:channel_id/resources/:resource_id", providerresource.GetResource)
+			authenticated.POST("/channels/:channel_id/resources", providerresource.CreateResource)
+			authenticated.PUT("/channels/:channel_id/resources/:resource_id", providerresource.UpdateResource)
+			authenticated.DELETE("/channels/:channel_id/resources/:resource_id", providerresource.DeleteResource)
+			authenticated.GET("/channels/:channel_id/resources/resolve", providerresource.ResolveResource)
+
 			authenticated.GET("/models", modelcatalog.ListModels)
 			authenticated.GET("/models/:name", modelcatalog.GetModel)
 
@@ -139,6 +151,13 @@ func Execute() error {
 			adminGroup.POST("/relay-gateways", relay.AdminCreateRelayGateway)
 			adminGroup.PUT("/relay-gateways/:id", relay.AdminUpdateRelayGateway)
 			adminGroup.DELETE("/relay-gateways/:id", relay.AdminDeleteRelayGateway)
+
+			adminGroup.GET("/sqlite/backups", backup.ListBackups)
+			adminGroup.POST("/sqlite/backups", backup.CreateBackup)
+			adminGroup.GET("/sqlite/backups/:id", backup.GetBackup)
+			adminGroup.DELETE("/sqlite/backups/:id", backup.DeleteBackup)
+			adminGroup.POST("/sqlite/backups/:id/restore", backup.RestoreBackup)
+			adminGroup.GET("/sqlite/backups/:id/verify", backup.VerifyBackup)
 		}
 	}
 

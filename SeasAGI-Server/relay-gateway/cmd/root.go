@@ -18,11 +18,14 @@ import (
 	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/policy"
 	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/ratelimit"
 	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/relay"
+	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/secpolicy"
 	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/trace"
 	"github.com/gin-gonic/gin"
 )
 
 func Execute() error {
+	secpolicy.ValidateStartup()
+
 	store := channel.NewStore()
 	defer store.Close()
 	if err := store.LoadModelCatalog(); err != nil {
@@ -31,6 +34,18 @@ func Execute() error {
 		log.Println("Model catalog loaded")
 	}
 	relay.SetChannelStore(store)
+	middleware.SetChannelStatsProvider(func() []middleware.ChannelStat {
+		stats := make([]middleware.ChannelStat, 0)
+		for _, ch := range store.ListChannels() {
+			stats = append(stats, middleware.ChannelStat{
+				ChannelID:    ch.ChannelID,
+				ProviderType: ch.ProviderType,
+				Enabled:      ch.Enabled,
+				Healthy:      ch.Health.Healthy,
+			})
+		}
+		return stats
+	})
 
 	trace.InitStore(store.DBPath())
 	policy.InitCache()

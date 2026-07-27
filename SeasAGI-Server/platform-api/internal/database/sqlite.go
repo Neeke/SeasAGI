@@ -12,12 +12,20 @@ import (
 
 var DB *sql.DB
 
+var dbFilePath string
+
+// Path returns the current database file path.
+func Path() string {
+	return dbFilePath
+}
+
 func Init(dbPath string) error {
 	if dbPath == "" {
 		homeDir, _ := os.UserHomeDir()
 		dbPath = filepath.Join(homeDir, ".seasagi", "platform-api.db")
 	}
 
+	dbFilePath = dbPath
 	os.MkdirAll(filepath.Dir(dbPath), 0755)
 
 	var err error
@@ -894,6 +902,53 @@ func migrate() error {
 				`CREATE INDEX IF NOT EXISTS idx_model_catalog_category ON model_catalog(category)`,
 				`CREATE INDEX IF NOT EXISTS idx_model_catalog_provider ON model_catalog(provider)`,
 				`CREATE INDEX IF NOT EXISTS idx_model_catalog_modality ON model_catalog(modality)`,
+			},
+		},
+		{
+			version: "2026-07-26-023-provider-resources",
+			sqls: []string{
+				`CREATE TABLE IF NOT EXISTS provider_resources (
+					resource_id TEXT PRIMARY KEY,
+					channel_id TEXT NOT NULL REFERENCES channels(channel_id) ON DELETE CASCADE,
+					resource_name TEXT NOT NULL DEFAULT '',
+					encrypted_api_key TEXT NOT NULL DEFAULT '',
+					region TEXT NOT NULL DEFAULT '',
+					environment TEXT NOT NULL DEFAULT 'production',
+					enabled INTEGER NOT NULL DEFAULT 1,
+					weight INTEGER NOT NULL DEFAULT 100,
+					priority INTEGER NOT NULL DEFAULT 0,
+					rate_limit_rpm INTEGER NOT NULL DEFAULT 0,
+					max_concurrency INTEGER NOT NULL DEFAULT 0,
+					healthy INTEGER NOT NULL DEFAULT 1,
+					status_code INTEGER NOT NULL DEFAULT 0,
+					error_message TEXT NOT NULL DEFAULT '',
+					consec_failures INTEGER NOT NULL DEFAULT 0,
+					cooldown_until DATETIME,
+					last_check DATETIME,
+					created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+				)`,
+				`CREATE INDEX IF NOT EXISTS idx_provider_resources_channel ON provider_resources(channel_id)`,
+				`CREATE INDEX IF NOT EXISTS idx_provider_resources_enabled ON provider_resources(enabled)`,
+			},
+		},
+		{
+			version: "2026-07-26-024-sqlite-backups",
+			sqls: []string{
+				`CREATE TABLE IF NOT EXISTS sqlite_backups (
+					backup_id TEXT PRIMARY KEY,
+					filename TEXT NOT NULL,
+					file_path TEXT NOT NULL,
+					file_size INTEGER NOT NULL DEFAULT 0,
+					sha256_checksum TEXT NOT NULL DEFAULT '',
+					status TEXT NOT NULL DEFAULT 'completed',
+					triggered_by TEXT NOT NULL DEFAULT 'system',
+					created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					expires_at DATETIME,
+					restored_at DATETIME
+				)`,
+				`CREATE INDEX IF NOT EXISTS idx_sqlite_backups_status ON sqlite_backups(status)`,
+				`CREATE INDEX IF NOT EXISTS idx_sqlite_backups_created ON sqlite_backups(created_at)`,
 			},
 		},
 	}
