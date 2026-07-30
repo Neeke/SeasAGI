@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	gsync "sync"
 	"sync/atomic"
 	"syscall"
@@ -28,6 +29,7 @@ import (
 	"github.com/SeasAGI/SeasAGI-Client/internal/localtoken"
 	"github.com/SeasAGI/SeasAGI-Client/internal/logs"
 	"github.com/SeasAGI/SeasAGI-Client/internal/mcp"
+	"github.com/SeasAGI/SeasAGI-Client/internal/mitm"
 	"github.com/SeasAGI/SeasAGI-Client/internal/network"
 	"github.com/SeasAGI/SeasAGI-Client/internal/optimizer"
 	"github.com/SeasAGI/SeasAGI-Client/internal/presets"
@@ -100,6 +102,18 @@ func runDesktop() {
 	logSvc := logs.NewService()
 	discoverySvc := discovery.NewService(configSvc)
 	gatewaySvc := gateway.NewService(cfg.ListenPort, accessToken, configSvc, authSvc, logSvc)
+	mitmCADir := filepath.Join(mustHomeDir(), ".seasagi", "mitm")
+	mitmCA, mitmCAErr := mitm.NewCA(mitmCADir)
+	if mitmCAErr != nil {
+		fmt.Printf("[WARN] MITM CA init failed: %v\n", mitmCAErr)
+	}
+	mitmRules := mitm.NewDefaultRules()
+	mitmGatewayURL := fmt.Sprintf("http://127.0.0.1:%d", cfg.ListenPort)
+	mitmMgr := mitm.NewManager(mitmCA, mitmRules, mitmGatewayURL)
+	if mitmCA != nil {
+		mitmMgr.SetTrustInstaller(mitm.NewTrustInstaller())
+		mitmMgr.SetSystemProxySetter(network.NewSystemProxySetter())
+	}
 	mcpSvc := mcp.NewService()
 	promptsSvc := prompts.NewService()
 	skillsSvc := skills.NewService()
@@ -111,6 +125,7 @@ func runDesktop() {
 	configioSvc := configio.NewService(configSvc)
 	optimizerSvc := optimizer.NewService(configSvc, usageSvc)
 	app := NewApp(authSvc, configSvc, gatewaySvc, logSvc, discoverySvc, mcpSvc, promptsSvc, skillsSvc, usageSvc, optimizerSvc, deeplinkMgr, presetsSvc, syncMgr, sessionsSvc, configioSvc, localTokenStore)
+	app.SetMITMManager(mitmMgr)
 
 	trayMgr := tray.NewManager(
 		func(channelID string) {
@@ -130,6 +145,7 @@ func runDesktop() {
 			lifecycleCancel()
 			trayMgr.Stop()
 			_ = app.StopTunnel()
+			_ = app.StopMITM()
 			app.oauthRefresh.Stop()
 			gatewaySvc.Stop()
 		})

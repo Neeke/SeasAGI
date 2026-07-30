@@ -354,3 +354,13 @@ export interface QuickStrategy {
     allowed_strategies?: string[];
   };
 }
+
+// MITM 代理状态
+export interface MITMStatus {
+  state: "stopped" | "starting" | "running" | "stopping" | "error";
+  proxy_port: number;
+  ca_installed: boolean;
+  rules_count: number;
+  system_proxy: boolean;
+  last_error?: string;
+}

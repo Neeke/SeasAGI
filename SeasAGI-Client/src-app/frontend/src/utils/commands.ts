@@ -1,4 +1,4 @@
-import type { Channel, DiscoveredModel, RequestLog, RuntimeStatus, AuthState, AppConfig, ModelCombo, CloudUsage, CloudBilling, CloudCombo, OptimizationPlan, OptimizationConfig, ModelStatsEntry, UsageSummary, OAuthProvider, OAuthConnection, ProviderHealthMetric, ProviderHealthSummary, BYOKPolicy, QuickStrategy, TaskProfile } from "../utils/types";
+import type { Channel, DiscoveredModel, RequestLog, RuntimeStatus, AuthState, AppConfig, ModelCombo, CloudUsage, CloudBilling, CloudCombo, OptimizationPlan, OptimizationConfig, ModelStatsEntry, UsageSummary, OAuthProvider, OAuthConnection, ProviderHealthMetric, ProviderHealthSummary, BYOKPolicy, QuickStrategy, TaskProfile, MITMStatus } from "../utils/types";
 
 type WailsAppApi = {
   StartLocalGateway(): Promise<void>;
@@ -89,6 +89,16 @@ type WailsAppApi = {
   SetByokPolicy(policy: Record<string, any>): Promise<BYOKPolicy>;
   GetQuickStrategies(): Promise<QuickStrategy[]>;
   GetTaskProfiles(): Promise<TaskProfile[]>;
+  StartMITM(): Promise<void>;
+  StopMITM(): Promise<void>;
+  IsMITMRunning(): Promise<boolean>;
+  GetMITMStatus(): Promise<MITMStatus>;
+  GetMITMRules(): Promise<string[]>;
+  AddMITMRule(domain: string): Promise<void>;
+  RemoveMITMRule(domain: string): Promise<void>;
+  GetMITMRecentIntercepts(n: number): Promise<Record<string, any>[]>;
+  GetMITMEnvHint(): Promise<Record<string, string>>;
+  TestMITMDomain(domain: string): Promise<Record<string, any>>;
 };
 
 function getAppApi(): WailsAppApi {
@@ -482,4 +492,44 @@ export async function getByokPolicies(): Promise<BYOKPolicy[]> {
 
 export async function setByokPolicy(policy: Record<string, any>): Promise<BYOKPolicy> {
   return getAppApi().SetByokPolicy(policy);
+}
+
+export async function startMITM(): Promise<void> {
+  return getAppApi().StartMITM();
+}
+
+export async function stopMITM(): Promise<void> {
+  return getAppApi().StopMITM();
+}
+
+export async function isMITMRunning(): Promise<boolean> {
+  return getAppApi().IsMITMRunning();
+}
+
+export async function getMITMStatus(): Promise<MITMStatus> {
+  return getAppApi().GetMITMStatus();
+}
+
+export async function getMITMRules(): Promise<string[]> {
+  return getAppApi().GetMITMRules();
+}
+
+export async function addMITMRule(domain: string): Promise<void> {
+  return getAppApi().AddMITMRule(domain);
+}
+
+export async function removeMITMRule(domain: string): Promise<void> {
+  return getAppApi().RemoveMITMRule(domain);
+}
+
+export async function getMITMRecentIntercepts(n: number): Promise<Record<string, any>[]> {
+  return getAppApi().GetMITMRecentIntercepts(n);
+}
+
+export async function getMITMEnvHint(): Promise<Record<string, string>> {
+  return getAppApi().GetMITMEnvHint();
+}
+
+export async function testMITMDomain(domain: string): Promise<Record<string, any>> {
+  return getAppApi().TestMITMDomain(domain);
 }

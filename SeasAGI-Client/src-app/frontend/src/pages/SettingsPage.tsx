@@ -5,7 +5,7 @@ import * as cmd from "../utils/commands";
 import { useTranslation } from "../i18n";
 import { SUPPORTED_LOCALES, type Locale } from "../i18n/index";
 import { getErrorMessage } from "../utils/errors";
-import type { OAuthConnection, OAuthProvider } from "../utils/types";
+import type { OAuthConnection, OAuthProvider, MITMStatus } from "../utils/types";
 
 export function SettingsPage() {
   const auth = useAppStore((s) => s.auth);
@@ -14,7 +14,7 @@ export function SettingsPage() {
   const setAppConfig = useAppStore((s) => s.setAppConfig);
   const { t, locale, setLocale } = useTranslation();
 
-  const [activeTab, setActiveTab] = useState<"account" | "routing">("account");
+  const [activeTab, setActiveTab] = useState<"account" | "routing" | "mitm">("account");
   const [routingStrategy, setRoutingStrategy] = useState(appConfig?.routing_strategy || "fallback");
   const [stickyUses, setStickyUses] = useState(appConfig?.sticky_channel_use || 3);
   const [platformApiURL, setPlatformApiURL] = useState("");
@@ -23,6 +23,12 @@ export function SettingsPage() {
   const [oauthConnections, setOAuthConnections] = useState<OAuthConnection[]>([]);
   const [oauthDrafts, setOAuthDrafts] = useState<Record<string, { clientId: string; clientSecret: string }>>({});
   const [oauthError, setOAuthError] = useState("");
+  const [mitmStatus, setMitmStatus] = useState<MITMStatus | null>(null);
+  const [mitmRules, setMitmRules] = useState<string[]>([]);
+  const [mitmNewRule, setMitmNewRule] = useState("");
+  const [mitmError, setMitmError] = useState("");
+  const [mitmToggling, setMitmToggling] = useState(false);
+  const [mitmDomainTests, setMitmDomainTests] = useState<Record<string, { loading: boolean; result: Record<string, any> | null }>>({});
 
   const handleLogout = async () => {
     try {
@@ -46,8 +52,22 @@ export function SettingsPage() {
     }
   };
 
+  const loadMITMState = async () => {
+    try {
+      const [status, rules] = await Promise.all([
+        cmd.getMITMStatus(),
+        cmd.getMITMRules(),
+      ]);
+      setMitmStatus(status);
+      setMitmRules(rules);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   useEffect(() => {
     void loadOAuthState();
+    void loadMITMState();
   }, []);
 
   useEffect(() => {
@@ -127,6 +147,7 @@ export function SettingsPage() {
       <div className="tab-bar settings-tab-bar">
         <button className={activeTab === "account" ? "active" : ""} onClick={() => setActiveTab("account")}>{t("settings.account")}</button>
         <button className={activeTab === "routing" ? "active" : ""} onClick={() => setActiveTab("routing")}>{t("settings.routing")}</button>
+        <button className={activeTab === "mitm" ? "active" : ""} onClick={() => setActiveTab("mitm")}>MITM</button>
       </div>
 
       {activeTab === "account" && (
@@ -428,6 +449,296 @@ export function SettingsPage() {
           </div>
         </div>
       )}
+
+      {activeTab === "mitm" && (
+        <div className="settings-stack">
+          {/* 一键开关 */}
+          <div className="tab-content section-card">
+            <div className="section-heading">
+              <h2>MITM Proxy</h2>
+              <p className="hint">一键接管 LLM API 流量，自动路由到本地网关。</p>
+            </div>
+            {mitmError && <div className="error-msg" style={{ marginTop: 12 }}>{mitmError}</div>}
+            <div
+              className={`settings-toggle-card settings-toggle-card-selectable${mitmStatus?.state === "running" ? " is-active" : ""}`}
+              role="switch"
+              aria-checked={mitmStatus?.state === "running"}
+              tabIndex={0}
+              onClick={async () => {
+                if (mitmToggling) return;
+                const isRunning = mitmStatus?.state === "running";
+                setMitmToggling(true);
+                try {
+                  setMitmError("");
+                  if (isRunning) {
+                    await cmd.stopMITM();
+                  } else {
+                    await cmd.startMITM();
+                  }
+                  await loadMITMState();
+                } catch (e) {
+                  setMitmError(getErrorMessage(e, isRunning ? "停止失败" : "启动失败"));
+                } finally {
+                  setMitmToggling(false);
+                }
+              }}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter" && event.key !== " ") return;
+                event.preventDefault();
+                (event.currentTarget as HTMLElement).click();
+              }}
+            >
+              <div>
+                <div className="settings-toggle-title">
+                  {mitmToggling ? "切换中..." : mitmStatus?.state === "running" ? "已启用" : "未启用"}
+                </div>
+                <div className="hint">
+                  {mitmStatus?.state === "running"
+                    ? `代理端口 ${mitmStatus.proxy_port} · CA ${mitmStatus.ca_installed ? "已安装" : "未安装"} · 系统代理 ${mitmStatus.system_proxy ? "已设置" : "未设置"}`
+                    : "点击开启一键接管 AI API 流量"}
+                </div>
+                {mitmStatus?.last_error && (
+                  <div className="error-msg" style={{ marginTop: 8 }}>{mitmStatus.last_error}</div>
+                )}
+              </div>
+              <div className="form-checkbox" style={{ marginBottom: 0 }}>
+                <input
+                  type="checkbox"
+                  checked={mitmStatus?.state === "running"}
+                  readOnly
+                  style={{ width: 20, height: 20 }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 域名配置 + 连通性检查 */}
+          <div className="tab-content section-card">
+            <div className="section-heading">
+              <h2>接管域名</h2>
+              <p className="hint">被接管的域名流量将通过 MITM 代理转发到本地网关，点击「测试」检查连通性。</p>
+            </div>
+            <div className="form-row">
+              <div className="form-group" style={{ marginBottom: 0, flex: 1 }}>
+                <input
+                  value={mitmNewRule}
+                  onChange={(e) => setMitmNewRule(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && mitmNewRule.trim()) {
+                      (e.currentTarget as HTMLElement).blur();
+                    }
+                  }}
+                  placeholder="api.example.com"
+                />
+              </div>
+              <button
+                onClick={async () => {
+                  if (!mitmNewRule.trim()) return;
+                  try {
+                    setMitmError("");
+                    await cmd.addMITMRule(mitmNewRule.trim());
+                    setMitmNewRule("");
+                    await loadMITMState();
+                  } catch (e) {
+                    setMitmError(getErrorMessage(e, "添加域名失败"));
+                  }
+                }}
+                className="btn-primary btn-sm"
+                style={{ height: 40, alignSelf: "flex-end" }}
+              >
+                添加
+              </button>
+            </div>
+            <div style={{ marginTop: 12 }}>
+              {mitmRules.length === 0 && (
+                <p className="hint">暂无接管域名，请添加需要拦截的 API 域名。</p>
+              )}
+              {mitmRules.map((domain) => {
+                const testState = mitmDomainTests[domain];
+                const testResult = testState?.result;
+                return (
+                  <div key={domain} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+                    <span className="hint" style={{ marginBottom: 0, minWidth: 180, fontFamily: "monospace" }}>{domain}</span>
+                    {testState?.loading && <span className="badge badge-yellow">测试中...</span>}
+                    {testResult && !testState?.loading && (
+                      <>
+                        <span className={`badge ${testResult.reachable ? "badge-green" : "badge-red"}`}>
+                          {testResult.reachable ? `可达 ${testResult.status_code}` : "不可达"}
+                        </span>
+                        {testResult.intercepted && <span className="badge badge-blue">已接管</span>}
+                        {testResult.latency_ms > 0 && <span className="hint" style={{ marginBottom: 0 }}>{testResult.latency_ms}ms</span>}
+                        {testResult.error && <span className="hint" style={{ marginBottom: 0, color: "var(--error, #e53e3e)" }}>{String(testResult.error).slice(0, 60)}</span>}
+                      </>
+                    )}
+                    <div style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
+                      <button
+                        onClick={async () => {
+                          setMitmDomainTests((prev) => ({ ...prev, [domain]: { loading: true, result: null } }));
+                          try {
+                            const result = await cmd.testMITMDomain(domain);
+                            setMitmDomainTests((prev) => ({ ...prev, [domain]: { loading: false, result } }));
+                          } catch (e) {
+                            setMitmDomainTests((prev) => ({ ...prev, [domain]: { loading: false, result: { reachable: false, error: String(e) } } }));
+                          }
+                        }}
+                        className="btn-secondary btn-sm"
+                        disabled={mitmStatus?.state !== "running" || testState?.loading}
+                      >
+                        测试
+                      </button>
+                      <button
+                        onClick={async () => {
+                          try {
+                            setMitmError("");
+                            await cmd.removeMITMRule(domain);
+                            setMitmDomainTests((prev) => {
+                              const next = { ...prev };
+                              delete next[domain];
+                              return next;
+                            });
+                            await loadMITMState();
+                          } catch (e) {
+                            setMitmError(getErrorMessage(e, "移除域名失败"));
+                          }
+                        }}
+                        className="btn-danger btn-sm"
+                      >
+                        移除
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 拦截日志 */}
+          {mitmStatus?.state === "running" && (
+            <MITMInterceptLog />
+          )}
+
+          {/* CLI 兼容提示 */}
+          <div className="tab-content section-card">
+            <div className="section-heading">
+              <h2>CLI 兼容</h2>
+              <p className="hint">终端/CLI 工具如不读取系统代理，可手动设置环境变量。</p>
+            </div>
+            <MITMEnvHint running={mitmStatus?.state === "running"} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MITMInterceptLog() {
+  const [intercepts, setIntercepts] = useState<Record<string, any>[]>([]);
+
+  useEffect(() => {
+    const timer = window.setInterval(async () => {
+      try {
+        const data = await cmd.getMITMRecentIntercepts(20);
+        setIntercepts(data || []);
+      } catch {
+        // ignore
+      }
+    }, 3000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  if (intercepts.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="tab-content section-card">
+      <div className="section-heading">
+        <h2>拦截日志</h2>
+        <p className="hint">最近 20 条被接管的请求（每 3 秒刷新）</p>
+      </div>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ textAlign: "left", borderBottom: "1px solid var(--border, #333)" }}>
+              <th style={{ padding: "4px 8px" }}>时间</th>
+              <th style={{ padding: "4px 8px" }}>方法</th>
+              <th style={{ padding: "4px 8px" }}>域名</th>
+              <th style={{ padding: "4px 8px" }}>路径</th>
+              <th style={{ padding: "4px 8px" }}>状态</th>
+              <th style={{ padding: "4px 8px" }}>延迟</th>
+            </tr>
+          </thead>
+          <tbody>
+            {intercepts.slice().reverse().map((entry, i) => (
+              <tr key={i} style={{ borderBottom: "1px solid var(--border-light, #222)" }}>
+                <td style={{ padding: "4px 8px", color: "var(--text-secondary, #888)" }}>
+                  {entry.time ? new Date(entry.time).toLocaleTimeString() : "-"}
+                </td>
+                <td style={{ padding: "4px 8px" }}>{entry.method || "-"}</td>
+                <td style={{ padding: "4px 8px", fontFamily: "monospace" }}>{entry.host || "-"}</td>
+                <td style={{ padding: "4px 8px", fontFamily: "monospace", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis" }}>{entry.path || "-"}</td>
+                <td style={{ padding: "4px 8px" }}>
+                  <span className={`badge ${entry.status >= 200 && entry.status < 400 ? "badge-green" : "badge-red"}`}>
+                    {entry.status || "-"}
+                  </span>
+                </td>
+                <td style={{ padding: "4px 8px" }}>{entry.duration_ms ? `${entry.duration_ms.toFixed(1)}ms` : "-"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function MITMEnvHint({ running }: { running: boolean }) {
+  const [hint, setHint] = useState<Record<string, string> | null>(null);
+
+  useEffect(() => {
+    if (!running) return;
+    void (async () => {
+      try {
+        const result = await cmd.getMITMEnvHint();
+        setHint(result);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, [running]);
+
+  if (!running || !hint) {
+    return <p className="hint">启动 MITM 代理后显示 CLI 环境变量设置命令。</p>;
+  }
+
+  return (
+    <div>
+      <p className="hint">Shell: <strong>{hint.shell}</strong></p>
+      <div className="form-row" style={{ marginTop: 8 }}>
+        <code style={{ flex: 1, padding: 8, background: "var(--bg-code, #1e1e1e)", borderRadius: 4, fontSize: 13, overflowX: "auto", whiteSpace: "nowrap" }}>
+          {hint.export_cmds}
+        </code>
+        <button
+          onClick={() => navigator.clipboard?.writeText(hint.export_cmds)}
+          className="btn-secondary btn-sm"
+          style={{ height: 40 }}
+        >
+          复制
+        </button>
+      </div>
+      <p className="hint" style={{ marginTop: 8 }}>停止后取消设置：</p>
+      <div className="form-row" style={{ marginTop: 4 }}>
+        <code style={{ flex: 1, padding: 8, background: "var(--bg-code, #1e1e1e)", borderRadius: 4, fontSize: 13, overflowX: "auto", whiteSpace: "nowrap" }}>
+          {hint.unset_cmds}
+        </code>
+        <button
+          onClick={() => navigator.clipboard?.writeText(hint.unset_cmds)}
+          className="btn-secondary btn-sm"
+          style={{ height: 40 }}
+        >
+          复制
+        </button>
+      </div>
     </div>
   );
 }

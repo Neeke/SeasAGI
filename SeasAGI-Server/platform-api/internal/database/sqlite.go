@@ -935,7 +935,7 @@ func migrate() error {
 		{
 			version: "2026-07-26-024-sqlite-backups",
 			sqls: []string{
-				`CREATE TABLE IF NOT EXISTS sqlite_backups (
+				`CREATE TABLE IF NOT EXISTS seasagi_backups (
 					backup_id TEXT PRIMARY KEY,
 					filename TEXT NOT NULL,
 					file_path TEXT NOT NULL,
@@ -947,8 +947,8 @@ func migrate() error {
 					expires_at DATETIME,
 					restored_at DATETIME
 				)`,
-				`CREATE INDEX IF NOT EXISTS idx_sqlite_backups_status ON sqlite_backups(status)`,
-				`CREATE INDEX IF NOT EXISTS idx_sqlite_backups_created ON sqlite_backups(created_at)`,
+				`CREATE INDEX IF NOT EXISTS idx_seasagi_backups_status ON seasagi_backups(status)`,
+				`CREATE INDEX IF NOT EXISTS idx_seasagi_backups_created ON seasagi_backups(created_at)`,
 			},
 		},
 	}

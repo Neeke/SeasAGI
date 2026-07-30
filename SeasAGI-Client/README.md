@@ -118,6 +118,19 @@ The left navigation has been consolidated into a single "Combo Optimization" ent
 - Tunnel remote access (Cloudflare Tunnel + Tailscale Funnel)
 - OAuth 2.0 PKCE (4 Providers + Token auto-refresh)
 
+### MITM Proxy — One-Click API Interception
+
+- **One-click toggle**: Enable/disable MITM proxy from Settings → MITM tab, no manual certificate setup required
+- **Automatic CA trust**: Auto-generates and installs root CA on macOS/Linux/Windows, dynamic per-domain certificate signing (23h TTL cache)
+- **System proxy integration**: Automatically sets OS-level HTTP/HTTPS proxy, transparently intercepts all matching traffic
+- **Domain allowlist**: Configure which API domains to intercept (defaults: OpenAI, Anthropic, Gemini, DeepSeek, Grok, OpenRouter), add/remove domains at runtime
+- **Connectivity check**: Built-in per-domain test button verifies interception status, reachability, and latency
+- **Local gateway routing**: Intercepted HTTPS traffic is transparently forwarded to the local SeasAGI gateway for unified routing, optimization, and observability
+- **Live intercept log**: Real-time table of recent 20 intercepted requests (method, host, path, status code, latency), auto-refreshing every 3 seconds
+- **CLI compatibility hints**: Auto-detects user's shell (bash/zsh/fish/PowerShell/cmd) and provides copy-paste `export` / `unset` commands for terminal tools that don't respect system proxy
+- **Crash recovery**: Residual system proxy auto-cleanup on restart, health probe goroutine auto-stops on proxy failure
+- **Passthrough safety**: Non-matching domains are transparently tunneled with 60s timeout, zero interference with normal browsing
+
 ### Experience
 
 - Playground instant test page

@@ -8,6 +8,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -26,6 +27,7 @@ import (
 	"github.com/SeasAGI/SeasAGI-Client/internal/localtoken"
 	"github.com/SeasAGI/SeasAGI-Client/internal/logs"
 	"github.com/SeasAGI/SeasAGI-Client/internal/mcp"
+	"github.com/SeasAGI/SeasAGI-Client/internal/mitm"
 	"github.com/SeasAGI/SeasAGI-Client/internal/network"
 	"github.com/SeasAGI/SeasAGI-Client/internal/oauth"
 	"github.com/SeasAGI/SeasAGI-Client/internal/optimizer"
@@ -68,6 +70,7 @@ type App struct {
 	sessionsSvc     *sessions.Service
 	configioSvc     *configio.Service
 	localTokenStore *localtoken.Store
+	mitmMgr         *mitm.Manager
 	oauthFlowMu     stdsync.Mutex
 	oauthFlows      map[string]*pendingOAuthFlow
 }
@@ -141,6 +144,85 @@ func (a *App) SelectDirectory() string {
 		return ""
 	}
 	return result
+}
+
+// TestMITMDomain 测试指定域名通过 MITM 代理后的连通性。
+// 返回状态码、延迟(ms)、是否被拦截、错误信息。
+func (a *App) TestMITMDomain(domain string) map[string]any {
+	result := map[string]any{
+		"domain":      domain,
+		"reachable":   false,
+		"intercepted": false,
+		"status_code": 0,
+		"latency_ms":  0,
+		"error":       "",
+	}
+
+	if a.mitmMgr == nil {
+		result["error"] = "MITM manager not initialized"
+		return result
+	}
+
+	status := a.mitmMgr.GetStatus()
+	if status.State != mitm.StateRunning {
+		result["error"] = "MITM proxy not running"
+		return result
+	}
+
+	// 检查域名是否在拦截规则中
+	intercepted := a.mitmMgr.GetRules()
+	isIntercepted := false
+	for _, d := range intercepted {
+		if d == domain {
+			isIntercepted = true
+			break
+		}
+	}
+	result["intercepted"] = isIntercepted
+
+	// 通过本地代理发起 HTTPS 请求测试连通性
+	proxyURL, _ := url.Parse(fmt.Sprintf("http://127.0.0.1:%d", status.ProxyPort))
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+		Transport: &http.Transport{
+			Proxy: http.ProxyURL(proxyURL),
+		},
+	}
+
+	targetURL := fmt.Sprintf("https://%s/", domain)
+	start := time.Now()
+	resp, err := client.Get(targetURL)
+	latency := time.Since(start).Milliseconds()
+	result["latency_ms"] = latency
+
+	if err != nil {
+		result["error"] = err.Error()
+		return result
+	}
+	defer resp.Body.Close()
+	_, _ = io.Copy(io.Discard, resp.Body)
+
+	result["reachable"] = true
+	result["status_code"] = resp.StatusCode
+	return result
+}
+
+// GetMITMEnvHint 返回当前 Shell 环境下的代理环境变量设置/取消命令。
+func (a *App) GetMITMEnvHint() map[string]string {
+	if a.mitmMgr == nil {
+		return nil
+	}
+	port := a.mitmMgr.GetStatus().ProxyPort
+	if port == 0 {
+		port = 8080
+	}
+	proxyAddr := fmt.Sprintf("http://127.0.0.1:%d", port)
+	hint := mitm.DetectShellEnv(proxyAddr)
+	return map[string]string{
+		"shell":       hint.Shell,
+		"export_cmds": hint.ExportCmds,
+		"unset_cmds":  hint.UnsetCmds,
+	}
 }
 
 func (a *App) CopyToClipboard(text string) {
@@ -2029,4 +2111,94 @@ func (a *App) SetOptimizationConfig(cfg map[string]any) error {
 		parsed.DefaultPreset, _ = v.(string)
 	}
 	return a.configSvc.SetOptimizationConfig(parsed)
+}
+
+// SetMITMManager 注入 MITM Manager 实例。
+func (a *App) SetMITMManager(mgr *mitm.Manager) {
+	a.mitmMgr = mgr
+}
+
+// StartMITM 启动 MITM 透明代理。
+func (a *App) StartMITM() error {
+	if a.mitmMgr == nil {
+		return fmt.Errorf("MITM manager not initialized")
+	}
+	return a.mitmMgr.Start(a.ctx)
+}
+
+// StopMITM 停止 MITM 透明代理。
+func (a *App) StopMITM() error {
+	if a.mitmMgr == nil {
+		return nil
+	}
+	return a.mitmMgr.Stop()
+}
+
+// IsMITMRunning 检查 MITM 是否正在运行。
+func (a *App) IsMITMRunning() bool {
+	if a.mitmMgr == nil {
+		return false
+	}
+	return a.mitmMgr.GetStatus().State == mitm.StateRunning
+}
+
+// GetMITMStatus 返回 MITM 运行状态。
+func (a *App) GetMITMStatus() map[string]any {
+	if a.mitmMgr == nil {
+		return map[string]any{"state": "stopped", "error": "not initialized"}
+	}
+	s := a.mitmMgr.GetStatus()
+	return map[string]any{
+		"state":        string(s.State),
+		"proxy_port":   s.ProxyPort,
+		"ca_installed": s.CAInstalled,
+		"rules_count":  s.RulesCount,
+		"system_proxy": s.SystemProxy,
+		"last_error":   s.LastError,
+	}
+}
+
+// GetMITMRules 返回当前拦截域名列表。
+func (a *App) GetMITMRules() []string {
+	if a.mitmMgr == nil {
+		return []string{}
+	}
+	return a.mitmMgr.GetRules()
+}
+
+// AddMITMRule 动态新增拦截域名。
+func (a *App) AddMITMRule(domain string) error {
+	if a.mitmMgr == nil {
+		return fmt.Errorf("MITM manager not initialized")
+	}
+	return a.mitmMgr.AddRule(domain)
+}
+
+// RemoveMITMRule 动态移除拦截域名。
+func (a *App) RemoveMITMRule(domain string) error {
+	if a.mitmMgr == nil {
+		return fmt.Errorf("MITM manager not initialized")
+	}
+	return a.mitmMgr.RemoveRule(domain)
+}
+
+// GetMITMRecentIntercepts 返回最近 n 条拦截日志。
+func (a *App) GetMITMRecentIntercepts(n int) []map[string]any {
+	if a.mitmMgr == nil {
+		return nil
+	}
+	entries := a.mitmMgr.GetRecentIntercepts(n)
+	result := make([]map[string]any, 0, len(entries))
+	for _, e := range entries {
+		result = append(result, map[string]any{
+			"time":        e.Time,
+			"method":      e.Method,
+			"host":        e.Host,
+			"path":        e.Path,
+			"status":      e.Status,
+			"intercepted": e.Intercepted,
+			"duration_ms": e.DurationMs,
+		})
+	}
+	return result
 }

@@ -11,8 +11,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/database"
+	"github.com/gin-gonic/gin"
 )
 
 // BackupRecord represents a database backup record.
@@ -77,7 +77,7 @@ func CreateBackup(c *gin.Context) {
 	expiry := time.Now().Add(time.Duration(retentionDays) * 24 * time.Hour)
 
 	_, err = database.DB.Exec(
-		`INSERT INTO sqlite_backups (backup_id, filename, file_path, file_size, sha256_checksum, status, triggered_by, expires_at)
+		`INSERT INTO seasagi_backups (backup_id, filename, file_path, file_size, sha256_checksum, status, triggered_by, expires_at)
 		 VALUES (?,?,?,?,?, 'completed', 'admin', ?)`,
 		backupID, filename, backupPath, fileSize, checksum, expiry.Format("2006-01-02 15:04:05"),
 	)
@@ -94,7 +94,7 @@ func CreateBackup(c *gin.Context) {
 func ListBackups(c *gin.Context) {
 	rows, err := database.DB.Query(
 		`SELECT backup_id, filename, file_path, file_size, sha256_checksum, status, triggered_by, created_at, expires_at, restored_at
-		 FROM sqlite_backups ORDER BY created_at DESC`,
+		 FROM seasagi_backups ORDER BY created_at DESC`,
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -144,7 +144,7 @@ func DeleteBackup(c *gin.Context) {
 	os.Remove(record.FilePath)
 
 	// Delete the record
-	_, err = database.DB.Exec(`DELETE FROM sqlite_backups WHERE backup_id = ?`, backupID)
+	_, err = database.DB.Exec(`DELETE FROM seasagi_backups WHERE backup_id = ?`, backupID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -193,7 +193,7 @@ func RestoreBackup(c *gin.Context) {
 	}
 
 	// Update restored_at timestamp
-	database.DB.Exec(`UPDATE sqlite_backups SET restored_at = CURRENT_TIMESTAMP WHERE backup_id = ?`, backupID)
+	database.DB.Exec(`UPDATE seasagi_backups SET restored_at = CURRENT_TIMESTAMP WHERE backup_id = ?`, backupID)
 
 	c.JSON(http.StatusOK, gin.H{"restored": true, "backup_id": backupID, "note": "database restored, restart recommended"})
 }
@@ -229,7 +229,7 @@ func fetchBackup(backupID string) (BackupRecord, error) {
 	var expiresAt, restoredAt sql.NullString
 	err := database.DB.QueryRow(
 		`SELECT backup_id, filename, file_path, file_size, sha256_checksum, status, triggered_by, created_at, expires_at, restored_at
-		 FROM sqlite_backups WHERE backup_id = ?`,
+		 FROM seasagi_backups WHERE backup_id = ?`,
 		backupID,
 	).Scan(&b.BackupID, &b.Filename, &b.FilePath, &b.FileSize, &b.SHA256, &b.Status, &b.TriggeredBy, &b.CreatedAt, &expiresAt, &restoredAt)
 	if err != nil {

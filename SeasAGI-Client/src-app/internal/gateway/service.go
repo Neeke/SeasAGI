@@ -525,8 +525,6 @@ func (s *Service) forwardRequest(ctx context.Context, candidates []routing.PlanS
 
 	if optCfg.PenaltyEnabled {
 		sorted = s.sortCandidatesByPenalty(sorted)
-	} else {
-		sorted = sorted
 	}
 
 	// Track step roles for within-step fallback detection

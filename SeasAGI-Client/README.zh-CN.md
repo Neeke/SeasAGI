@@ -118,6 +118,19 @@ SeasAGI-Client/
 - 隧道远程访问（Cloudflare Tunnel + Tailscale Funnel）
 - OAuth 2.0 PKCE（4 Provider + Token 自动刷新）
 
+### MITM 代理 — 一键接管 AI API 流量
+
+- **一键开关**：设置页 → MITM 标签页，一键启停，无需手动配置证书
+- **自动 CA 信任**：自动生成根 CA 并安装到 macOS/Linux/Windows 系统信任链，按域名动态签发证书（23h TTL 缓存）
+- **系统代理集成**：自动设置操作系统级 HTTP/HTTPS 代理，透明拦截所有匹配流量
+- **域名白名单**：可配置需要接管的 API 域名（默认：OpenAI、Anthropic、Gemini、DeepSeek、Grok、OpenRouter），运行时动态增删
+- **连通性检查**：内置域名级「测试」按钮，一键验证接管状态、可达性和延迟
+- **本地网关路由**：被接管的 HTTPS 流量透明转发到本地 SeasAGI 网关，统一路由、优化和可观测
+- **实时拦截日志**：最近 20 条拦截请求的实时表格（方法、域名、路径、状态码、延迟），每 3 秒自动刷新
+- **CLI 兼容提示**：自动检测用户 Shell（bash/zsh/fish/PowerShell/cmd），提供可复制的 `export` / `unset` 命令，终端工具也能轻松接管
+- **崩溃恢复**：重启时自动清理残留系统代理，健康探针 goroutine 检测代理异常后自动停止
+- **透传安全**：未匹配域名透明隧道转发，60 秒超时保护，不影响正常上网
+
 ### 体验
 
 - Playground 即时测试页面
