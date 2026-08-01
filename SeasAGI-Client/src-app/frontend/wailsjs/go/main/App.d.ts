@@ -11,6 +11,9 @@ import {logs} from '../models';
 import {mcp} from '../models';
 import {prompts} from '../models';
 import {skills} from '../models';
+import {mitm} from '../models';
+
+export function AddMITMRule(arg1:string):Promise<void>;
 
 export function ApplyComboOptimization(arg1:string,arg2:string,arg3:boolean):Promise<void>;
 
@@ -84,6 +87,14 @@ export function GetLocalAccessToken():Promise<string>;
 
 export function GetLocale():Promise<string>;
 
+export function GetMITMEnvHint():Promise<{[key: string]: string}>;
+
+export function GetMITMRecentIntercepts(arg1:number):Promise<Array<{[key: string]: any}>>;
+
+export function GetMITMRules():Promise<Array<string>>;
+
+export function GetMITMStatus():Promise<{[key: string]: any}>;
+
 export function GetOAuthConnections():Promise<Array<{[key: string]: any}>>;
 
 export function GetOAuthProviders():Promise<Array<{[key: string]: any}>>;
@@ -146,6 +157,8 @@ export function InstallSkillFromGitHub(arg1:string,arg2:string):Promise<void>;
 
 export function InstallSkillFromLocal(arg1:string,arg2:string):Promise<void>;
 
+export function IsMITMRunning():Promise<boolean>;
+
 export function IsTunnelRunning():Promise<boolean>;
 
 export function ListChannels():Promise<Array<config.Channel>>;
@@ -190,6 +203,8 @@ export function RecordUsage(arg1:string,arg2:string,arg3:string,arg4:number,arg5
 
 export function Register(arg1:string,arg2:string,arg3:string):Promise<void>;
 
+export function RemoveMITMRule(arg1:string):Promise<void>;
+
 export function RenameComboTemplate(arg1:string,arg2:string):Promise<void>;
 
 export function ReorderChannels(arg1:Array<string>):Promise<void>;
@@ -226,6 +241,8 @@ export function SetDefaultComboName(arg1:string):Promise<void>;
 
 export function SetLocale(arg1:string):Promise<void>;
 
+export function SetMITMManager(arg1:mitm.Manager):Promise<void>;
+
 export function SetOptimizationConfig(arg1:{[key: string]: any}):Promise<void>;
 
 export function SetPlatformAPIBaseURL(arg1:string):Promise<void>;
@@ -234,11 +251,15 @@ export function ShowMessage(arg1:string,arg2:string):Promise<void>;
 
 export function StartLocalGateway():Promise<void>;
 
+export function StartMITM():Promise<void>;
+
 export function StartOAuthFlow(arg1:string,arg2:string,arg3:string,arg4:string):Promise<string>;
 
 export function StartTunnel(arg1:string):Promise<void>;
 
 export function StopLocalGateway():Promise<void>;
+
+export function StopMITM():Promise<void>;
 
 export function StopTunnel():Promise<void>;
 
@@ -259,6 +280,8 @@ export function SyncPush():Promise<void>;
 export function TestChannelDirect(arg1:string):Promise<{[key: string]: any}>;
 
 export function TestCustomChannel(arg1:string):Promise<{[key: string]: any}>;
+
+export function TestMITMDomain(arg1:string):Promise<{[key: string]: any}>;
 
 export function TestRelayGateway(arg1:string):Promise<{[key: string]: any}>;
 

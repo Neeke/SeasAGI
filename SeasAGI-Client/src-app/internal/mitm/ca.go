@@ -31,11 +31,11 @@ type cachedCert struct {
 }
 
 const (
-	caMaxAge      = 10 * 365 * 24 * time.Hour // CA 证书有效期 10 年
-	leafMaxAge    = 23 * time.Hour            // 叶子证书缓存 TTL 23 小时
-	caKeyBits     = 2048
-	caCommonName  = "SeasAGI MITM CA"
-	caOrgName     = "SeasAGI"
+	caMaxAge     = 10 * 365 * 24 * time.Hour // CA 证书有效期 10 年
+	leafMaxAge   = 23 * time.Hour            // 叶子证书缓存 TTL 23 小时
+	caKeyBits    = 2048
+	caCommonName = "SeasAGI MITM CA"
+	caOrgName    = "SeasAGI"
 )
 
 // NewCA 创建 CertificateAuthority 实例。certDir 通常为 ~/.seasagi/mitm/。
@@ -225,6 +225,21 @@ func (ca *CertificateAuthority) PEMBytes() ([]byte, error) {
 		return nil, fmt.Errorf("CA not initialized")
 	}
 	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: ca.caCert.Raw}), nil
+}
+
+// CACert 返回 CA 证书对象（用于构建 TLS 信任池）。
+func (ca *CertificateAuthority) CACert() *x509.Certificate {
+	return ca.caCert
+}
+
+// CertPool 返回包含 MITM CA 的证书池，用于客户端验证 MITM 签发的叶子证书。
+func (ca *CertificateAuthority) CertPool() *x509.CertPool {
+	if ca.caCert == nil {
+		return nil
+	}
+	pool := x509.NewCertPool()
+	pool.AddCert(ca.caCert)
+	return pool
 }
 
 // Cleanup 清理证书缓存。

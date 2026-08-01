@@ -150,6 +150,18 @@ func runDesktop() {
 			gatewaySvc.Stop()
 		})
 	}
+		defer shutdownDeps()
+
+		// 兜底处理桌面进程退出信号，确保 MITM 接管在进程结束时回滚为未接管状态。
+		desktopSigCh := make(chan os.Signal, 1)
+		signal.Notify(desktopSigCh, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)
+		defer signal.Stop(desktopSigCh)
+		go func() {
+			<-desktopSigCh
+			atomic.StoreInt32(&quitting, 1)
+			shutdownDeps()
+			os.Exit(0)
+		}()
 
 	appMenu := buildAppMenu(app, gatewaySvc)
 

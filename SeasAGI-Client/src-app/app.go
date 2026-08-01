@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -181,11 +182,19 @@ func (a *App) TestMITMDomain(domain string) map[string]any {
 	result["intercepted"] = isIntercepted
 
 	// 通过本地代理发起 HTTPS 请求测试连通性
+	// 使用 MITM CA 证书池验证 TLS，避免 "tls: failed to verify certificate" 错误
 	proxyURL, _ := url.Parse(fmt.Sprintf("http://127.0.0.1:%d", status.ProxyPort))
+
+	tlsConfig := &tls.Config{}
+	if caPool := a.mitmMgr.CertPool(); caPool != nil {
+		tlsConfig.RootCAs = caPool
+	}
+
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
-			Proxy: http.ProxyURL(proxyURL),
+			Proxy:           http.ProxyURL(proxyURL),
+			TLSClientConfig: tlsConfig,
 		},
 	}
 
@@ -2145,16 +2154,30 @@ func (a *App) IsMITMRunning() bool {
 // GetMITMStatus 返回 MITM 运行状态。
 func (a *App) GetMITMStatus() map[string]any {
 	if a.mitmMgr == nil {
-		return map[string]any{"state": "stopped", "error": "not initialized"}
+		return map[string]any{
+			"state":                 "stopped",
+			"error":                 "not initialized",
+			"system_proxy":          false,
+			"system_proxy_active":   false,
+			"residual_system_proxy": false,
+		}
 	}
 	s := a.mitmMgr.GetStatus()
+	systemProxyActive := s.SystemProxy
+	if setter := network.NewSystemProxySetter(); setter != nil {
+		if active, err := setter.IsActive(); err == nil {
+			systemProxyActive = active
+		}
+	}
 	return map[string]any{
-		"state":        string(s.State),
-		"proxy_port":   s.ProxyPort,
-		"ca_installed": s.CAInstalled,
-		"rules_count":  s.RulesCount,
-		"system_proxy": s.SystemProxy,
-		"last_error":   s.LastError,
+		"state":                 string(s.State),
+		"proxy_port":            s.ProxyPort,
+		"ca_installed":          s.CAInstalled,
+		"rules_count":           s.RulesCount,
+		"system_proxy":          s.SystemProxy,
+		"system_proxy_active":   systemProxyActive,
+		"residual_system_proxy": systemProxyActive && s.State != mitm.StateRunning,
+		"last_error":            s.LastError,
 	}
 }
 

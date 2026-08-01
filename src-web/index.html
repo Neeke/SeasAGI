@@ -258,6 +258,8 @@ body.show-en .lang-en-i { display:inline; }
 <div class="card"><div class="card-icon">☁️</div><h3 class="lang-zh">Open Core 云端</h3><h3 class="lang-en">Open-Core Cloud</h3><p class="lang-zh">Server 拆分为社区版（AGPL 3.0，基础控制面 + 基础中继）与企业版（闭源，计费、治理、Admin Dashboard、企业协同）。客户端可独立运行，云端能力按版本增强。</p><p class="lang-en">The server is split into Community (AGPL 3.0, basic control plane + relay) and Enterprise (closed-source, billing, governance, admin dashboard, collaboration). The client runs independently, while cloud capabilities scale by edition.</p></div>
 <div class="card"><div class="card-icon">🛒</div><h3 class="lang-zh">Token 市场</h3><h3 class="lang-en">Token Market</h3><p class="lang-zh">用户间 API Key 交易市场：闲置 Key 一键上架（一口价 / 折扣），扫码交易，平台 10% 佣金，卖家收益透明，管理后台风控审计。</p><p class="lang-en">Peer-to-peer API Key marketplace: list unused keys at fixed price or discount, QR code scan trading, 10% platform commission, transparent seller earnings, admin risk control & audit.</p></div>
 <div class="card"><div class="card-icon">🛡️</div><h3 class="lang-zh">MITM 一键接管</h3><h3 class="lang-en">One-Click MITM Proxy</h3><p class="lang-zh">设置页一键开启 MITM 代理，自动安装 CA 证书 + 设置系统代理，透明接管 OpenAI/Anthropic/Gemini 等 AI API 流量并路由到本地网关。无需手动配置证书，支持域名级连通性测试、实时拦截日志、CLI 环境变量提示，终端工具也能轻松接管。</p><p class="lang-en">One-click MITM proxy from Settings. Auto-installs CA certificate + sets system proxy, transparently intercepts AI API traffic (OpenAI/Anthropic/Gemini) and routes to local gateway. No manual cert setup. Per-domain connectivity test, live intercept log, CLI env hints — even terminal tools are covered.</p></div>
+<div class="card"><div class="card-icon">🗜️</div><h3 class="lang-zh">Token 压缩 + 语义缓存</h3><h3 class="lang-en">Token Compression + Semantic Cache</h3><p class="lang-zh">新增 RTK / Caveman 压缩管线与语义缓存，减少冗余 token、截断低价值上下文，并为幂等请求提供更高命中率，适合长上下文、工具调用和高频重复场景。</p><p class="lang-en">RTK/Caveman compression plus semantic cache reduces redundant tokens, trims low-value context, and raises idempotent hit rates for long-context, tool-calling, and repetitive workloads.</p></div>
+<div class="card"><div class="card-icon">🧭</div><h3 class="lang-zh">Fusion 路由 + 协议翻译</h3><h3 class="lang-en">Fusion Routing + Protocol Translation</h3><p class="lang-zh">支持 Fusion 并发候选、模型族回退、Reasoning Replay，以及 Chat Completions / Responses API 协议双向转换，让复杂路由与异构接口接入都能被同一网关吸收。</p><p class="lang-en">Fusion fan-out, model-family fallback, reasoning replay, and bidirectional Chat Completions / Responses API translation let one gateway absorb both advanced routing and heterogeneous API formats.</p></div>
 </div></div></section>
 
 <section class="cmp-section" id="compare">
@@ -285,6 +287,10 @@ body.show-en .lang-en-i { display:inline; }
 <li><span class="adv-mark">✓</span> Token 市场（API Key 交易 + 佣金 + 风控）</li>
 <li><span class="adv-mark">✓</span> Playground + Combo 拖拽排序 + Zod 校验</li>
 <li><span class="adv-mark">✓</span> MITM 一键接管 AI API 流量（自动 CA + 系统代理 + 连通性测试）</li>
+<li><span class="adv-mark">✓</span> RTK / Caveman Token 压缩 + 语义缓存</li>
+<li><span class="adv-mark">✓</span> Fusion 路由 + 模型族回退 + Reasoning Replay</li>
+<li><span class="adv-mark">✓</span> Responses API 翻译 + Translator 调试面板</li>
+<li><span class="adv-mark">✓</span> A2A、per-key USD 配额、CLI 一键配置、WebSocket / Docker / 安全增强</li>
 <li><span class="adv-mark">✓</span> 审计/风控/告警 + i18n 四语言</li>
 </ul>
 </div>
@@ -305,6 +311,10 @@ body.show-en .lang-en-i { display:inline; }
 <li><span class="adv-mark">✓</span> Token Market (API Key trading + commission + risk control)</li>
 <li><span class="adv-mark">✓</span> Playground + combo drag-sort + Zod validation</li>
 <li><span class="adv-mark">✓</span> One-click MITM proxy (auto CA + system proxy + connectivity test)</li>
+<li><span class="adv-mark">✓</span> RTK / Caveman token compression + semantic cache</li>
+<li><span class="adv-mark">✓</span> Fusion routing + model-family fallback + reasoning replay</li>
+<li><span class="adv-mark">✓</span> Responses API translation + translator debug panel</li>
+<li><span class="adv-mark">✓</span> A2A, per-key USD quota, one-click CLI setup, WebSocket / Docker / security hardening</li>
 <li><span class="adv-mark">✓</span> Audit/risk/alert + 4-language i18n</li>
 </ul>
 </div>
@@ -411,6 +421,10 @@ body.show-en .lang-en-i { display:inline; }
 <tr><td><span class="lang-zh">Playground</span><span class="lang-en">Playground</span></td><td class="cmp-yes">✓</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-yes">✓</td></tr>
 <tr><td><span class="lang-zh">Combo 拖拽排序</span><span class="lang-en">Combo Drag Sort</span></td><td class="cmp-yes">✓ @dnd-kit</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-yes">✓ @dnd-kit</td></tr>
 <tr><td><span class="lang-zh">Token 市场</span><span class="lang-en">Token Market</span></td><td class="cmp-yes">✓ 佣金+风控</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
+<tr><td><span class="lang-zh">Token 压缩 / 语义缓存</span><span class="lang-en">Token Compression / Semantic Cache</span></td><td class="cmp-yes">✓ RTK + Caveman + Cache</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
+<tr><td><span class="lang-zh">Fusion 路由 / 模型族回退</span><span class="lang-en">Fusion Routing / Family Fallback</span></td><td class="cmp-yes">✓</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
+<tr><td><span class="lang-zh">Responses API 翻译</span><span class="lang-en">Responses API Translation</span></td><td class="cmp-yes">✓ 双向转换</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
+<tr><td><span class="lang-zh">A2A / per-key 配额 / CLI 接入</span><span class="lang-en">A2A / Per-key Quota / CLI Setup</span></td><td class="cmp-yes">✓</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
 <tr><td><span class="lang-zh">审计/风控/告警</span><span class="lang-en">Audit/Risk/Alert</span></td><td class="cmp-yes">✓</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
 <tr><td><span class="lang-zh">i18n</span><span class="lang-en">Internationalization</span></td><td class="cmp-yes">✓ 4 语言</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
 </tbody></table></div>

@@ -2,6 +2,7 @@ package mitm
 
 import (
 	"context"
+	"crypto/x509"
 	"fmt"
 	"log"
 	"sync"
@@ -215,6 +216,14 @@ func (m *Manager) GetRecentIntercepts(n int) []InterceptEntry {
 		return nil
 	}
 	return m.interceptLog.Recent(n)
+}
+
+// CertPool 返回 MITM CA 的证书池，用于客户端验证 MITM 签发的叶子证书。
+func (m *Manager) CertPool() *x509.CertPool {
+	if m.ca == nil {
+		return nil
+	}
+	return m.ca.CertPool()
 }
 
 // failWith 记录错误并设置状态为 error。

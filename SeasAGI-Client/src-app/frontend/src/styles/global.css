@@ -951,6 +951,21 @@ select { cursor: pointer; }
   color: var(--green);
 }
 
+.badge-blue {
+  background: rgba(59,130,246,0.15);
+  color: var(--accent);
+}
+
+.badge-yellow {
+  background: rgba(245,158,11,0.16);
+  color: #d97706;
+}
+
+.badge-red {
+  background: rgba(239,68,68,0.14);
+  color: var(--red);
+}
+
 .test-result {
   font-size: 12px;
   padding: 4px 8px;
@@ -1151,6 +1166,36 @@ select { cursor: pointer; }
 }
 .section-card-inline > div:first-child { flex: 1; }
 .section-card-inline select { width: auto; min-width: 200px; }
+
+.advanced-capability-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.advanced-capability-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.advanced-capability-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.advanced-capability-tags,
+.advanced-capability-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 
 .channel-group {
   margin-bottom: 20px;
@@ -2467,6 +2512,7 @@ select { cursor: pointer; }
   .sidebar .user-avatar { width: 24px; height: 24px; font-size: 10px; }
 
   .home-status-grid { grid-template-columns: 1fr; }
+  .advanced-capability-grid { grid-template-columns: 1fr; }
   .hero-metrics { width: 100%; }
   .hero-metric-card { flex: 1; }
   .rec-main, .combo-card-main { flex-direction: column; }

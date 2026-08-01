@@ -362,5 +362,7 @@ export interface MITMStatus {
   ca_installed: boolean;
   rules_count: number;
   system_proxy: boolean;
+  system_proxy_active: boolean;
+  residual_system_proxy: boolean;
   last_error?: string;
 }

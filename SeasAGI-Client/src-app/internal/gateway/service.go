@@ -43,6 +43,8 @@ type Service struct {
 	// Combo metrics tracking
 	comboMetrics map[string]*ComboRouteMetrics
 	metricsMu    sync.RWMutex
+	// WebSocket bridge
+	wsBridge *WSBridge
 }
 
 // ComboRouteMetrics tracks route-level metrics per combo
@@ -143,6 +145,12 @@ func (s *Service) Start(ctx context.Context) error {
 	mux.HandleFunc("/v1/images/generations", s.handleImageGenerations)
 	mux.HandleFunc("/v1/audio/speech", s.handleTTS)
 	mux.HandleFunc("/v1/audio/transcriptions", s.handleSTT)
+
+	// WebSocket bridge
+	if s.wsBridge == nil {
+		s.wsBridge = NewWSBridge()
+	}
+	mux.HandleFunc("/v1/ws", s.wsBridge.HandleWS)
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf("127.0.0.1:%d", s.listenPort),

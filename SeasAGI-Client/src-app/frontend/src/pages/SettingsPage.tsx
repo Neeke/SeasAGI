@@ -14,7 +14,7 @@ export function SettingsPage() {
   const setAppConfig = useAppStore((s) => s.setAppConfig);
   const { t, locale, setLocale } = useTranslation();
 
-  const [activeTab, setActiveTab] = useState<"account" | "routing" | "mitm">("account");
+  const [activeTab, setActiveTab] = useState<"account" | "routing" | "rtk" | "caveman" | "mitm">("account");
   const [routingStrategy, setRoutingStrategy] = useState(appConfig?.routing_strategy || "fallback");
   const [stickyUses, setStickyUses] = useState(appConfig?.sticky_channel_use || 3);
   const [platformApiURL, setPlatformApiURL] = useState("");
@@ -69,6 +69,14 @@ export function SettingsPage() {
     void loadOAuthState();
     void loadMITMState();
   }, []);
+
+  useEffect(() => {
+    if (activeTab !== "mitm") return undefined;
+    const timer = window.setInterval(() => {
+      void loadMITMState();
+    }, 3000);
+    return () => window.clearInterval(timer);
+  }, [activeTab]);
 
   useEffect(() => {
     void (async () => {
@@ -147,6 +155,8 @@ export function SettingsPage() {
       <div className="tab-bar settings-tab-bar">
         <button className={activeTab === "account" ? "active" : ""} onClick={() => setActiveTab("account")}>{t("settings.account")}</button>
         <button className={activeTab === "routing" ? "active" : ""} onClick={() => setActiveTab("routing")}>{t("settings.routing")}</button>
+        <button className={activeTab === "rtk" ? "active" : ""} onClick={() => setActiveTab("rtk")}>{t("settings.rtkTab")}</button>
+        <button className={activeTab === "caveman" ? "active" : ""} onClick={() => setActiveTab("caveman")}>{t("settings.cavemanTab")}</button>
         <button className={activeTab === "mitm" ? "active" : ""} onClick={() => setActiveTab("mitm")}>MITM</button>
       </div>
 
@@ -166,75 +176,6 @@ export function SettingsPage() {
               </select>
             </div>
 
-            <div
-              className={`settings-toggle-card settings-toggle-card-selectable${rtkEnabled ? " is-active" : ""}`}
-              role="checkbox"
-              aria-checked={rtkEnabled}
-              tabIndex={0}
-              onClick={toggleRtkEnabled}
-              onKeyDown={(event) => handleToggleCardKeyDown(event, toggleRtkEnabled)}
-            >
-              <div>
-                <div className="settings-toggle-title">{t("settings.rtkEnabled")}</div>
-                <div className="hint">{t("settings.rtkHint")}</div>
-              </div>
-              <div className="form-checkbox" style={{ marginBottom: 0 }}>
-                <input
-                  type="checkbox"
-                  id="rtkEnabled"
-                  checked={rtkEnabled}
-                  onClick={(event) => event.stopPropagation()}
-                  onChange={(e) => {
-                    if (appConfig) setAppConfig({ ...appConfig, rtk_enabled: e.target.checked });
-                  }}
-                />
-                <label htmlFor="rtkEnabled" onClick={(event) => event.stopPropagation()}>{t("settings.enable")}</label>
-              </div>
-            </div>
-
-            <div
-              className={`settings-toggle-card settings-toggle-card-selectable${cavemanEnabled ? " is-active" : ""}`}
-              role="checkbox"
-              aria-checked={cavemanEnabled}
-              tabIndex={0}
-              onClick={toggleCavemanEnabled}
-              onKeyDown={(event) => handleToggleCardKeyDown(event, toggleCavemanEnabled)}
-            >
-              <div>
-                <div className="settings-toggle-title">{t("settings.cavemanEnabled")}</div>
-                <div className="hint">{t("settings.cavemanHint")}</div>
-              </div>
-              <div className="form-row">
-                <div className="form-checkbox" style={{ marginBottom: 0 }}>
-                  <input
-                    type="checkbox"
-                    id="cavemanEnabled"
-                    checked={cavemanEnabled}
-                    onClick={(event) => event.stopPropagation()}
-                    onChange={(e) => {
-                      if (appConfig) setAppConfig({ ...appConfig, caveman_enabled: e.target.checked });
-                    }}
-                  />
-                  <label htmlFor="cavemanEnabled" onClick={(event) => event.stopPropagation()}>{t("settings.enable")}</label>
-                </div>
-                {cavemanEnabled && (
-                  <div className="form-group settings-inline-select" style={{ marginBottom: 0 }}>
-                    <select
-                      value={appConfig?.caveman_style ?? "concise"}
-                      onClick={(event) => event.stopPropagation()}
-                      onChange={(e) => {
-                        if (appConfig) setAppConfig({ ...appConfig, caveman_style: e.target.value });
-                      }}
-                    >
-                      <option value="concise">{t("settings.cavemanStyleConcise")}</option>
-                      <option value="brief">{t("settings.cavemanStyleBrief")}</option>
-                      <option value="minimal">{t("settings.cavemanStyleMinimal")}</option>
-                      <option value="terse">{t("settings.cavemanStyleTerse")}</option>
-                    </select>
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
 
           <div className="tab-content section-card">
@@ -389,6 +330,104 @@ export function SettingsPage() {
         </div>
       )}
 
+      {activeTab === "rtk" && (
+        <div className="settings-stack">
+          <div className="tab-content section-card">
+            <div className="section-heading">
+              <h2>{t("settings.rtkEnabled")}</h2>
+              <p className="hint">{t("settings.rtkSectionHint")}</p>
+            </div>
+            <div
+              className={`settings-toggle-card settings-toggle-card-selectable${rtkEnabled ? " is-active" : ""}`}
+              role="checkbox"
+              aria-checked={rtkEnabled}
+              tabIndex={0}
+              onClick={toggleRtkEnabled}
+              onKeyDown={(event) => handleToggleCardKeyDown(event, toggleRtkEnabled)}
+            >
+              <div>
+                <div className="settings-toggle-title">{t("settings.rtkEnabled")}</div>
+                <div className="hint">{t("settings.rtkHint")}</div>
+                <div style={{ marginTop: 8, display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  <span className="badge badge-blue">{t("settings.rtkBadgeCompression")}</span>
+                  <span className="badge badge-green">{t("settings.rtkBadgeRuntime")}</span>
+                </div>
+              </div>
+              <div className="form-checkbox" style={{ marginBottom: 0 }}>
+                <input
+                  type="checkbox"
+                  id="rtkEnabled"
+                  checked={rtkEnabled}
+                  onClick={(event) => event.stopPropagation()}
+                  onChange={(e) => {
+                    if (appConfig) setAppConfig({ ...appConfig, rtk_enabled: e.target.checked });
+                  }}
+                />
+                <label htmlFor="rtkEnabled" onClick={(event) => event.stopPropagation()}>{t("settings.enable")}</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "caveman" && (
+        <div className="settings-stack">
+          <div className="tab-content section-card">
+            <div className="section-heading">
+              <h2>{t("settings.cavemanEnabled")}</h2>
+              <p className="hint">{t("settings.cavemanSectionHint")}</p>
+            </div>
+            <div
+              className={`settings-toggle-card settings-toggle-card-selectable${cavemanEnabled ? " is-active" : ""}`}
+              role="checkbox"
+              aria-checked={cavemanEnabled}
+              tabIndex={0}
+              onClick={toggleCavemanEnabled}
+              onKeyDown={(event) => handleToggleCardKeyDown(event, toggleCavemanEnabled)}
+            >
+              <div>
+                <div className="settings-toggle-title">{t("settings.cavemanEnabled")}</div>
+                <div className="hint">{t("settings.cavemanHint")}</div>
+                <div style={{ marginTop: 8, display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  <span className="badge badge-blue">{t("settings.cavemanBadgeOutput")}</span>
+                  <span className="badge badge-yellow">{t("settings.cavemanBadgeStyle")}</span>
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-checkbox" style={{ marginBottom: 0 }}>
+                  <input
+                    type="checkbox"
+                    id="cavemanEnabled"
+                    checked={cavemanEnabled}
+                    onClick={(event) => event.stopPropagation()}
+                    onChange={(e) => {
+                      if (appConfig) setAppConfig({ ...appConfig, caveman_enabled: e.target.checked });
+                    }}
+                  />
+                  <label htmlFor="cavemanEnabled" onClick={(event) => event.stopPropagation()}>{t("settings.enable")}</label>
+                </div>
+                {cavemanEnabled && (
+                  <div className="form-group settings-inline-select" style={{ marginBottom: 0 }}>
+                    <select
+                      value={appConfig?.caveman_style ?? "concise"}
+                      onClick={(event) => event.stopPropagation()}
+                      onChange={(e) => {
+                        if (appConfig) setAppConfig({ ...appConfig, caveman_style: e.target.value });
+                      }}
+                    >
+                      <option value="concise">{t("settings.cavemanStyleConcise")}</option>
+                      <option value="brief">{t("settings.cavemanStyleBrief")}</option>
+                      <option value="minimal">{t("settings.cavemanStyleMinimal")}</option>
+                      <option value="terse">{t("settings.cavemanStyleTerse")}</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {activeTab === "routing" && (
         <div className="settings-stack">
           <div className="tab-content section-card">
@@ -496,6 +535,14 @@ export function SettingsPage() {
                   {mitmStatus?.state === "running"
                     ? `代理端口 ${mitmStatus.proxy_port} · CA ${mitmStatus.ca_installed ? "已安装" : "未安装"} · 系统代理 ${mitmStatus.system_proxy ? "已设置" : "未设置"}`
                     : "点击开启一键接管 AI API 流量"}
+                </div>
+                <div style={{ marginTop: 8, display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  <span className={`badge ${mitmStatus?.system_proxy_active ? "badge-green" : "badge-red"}`}>
+                    {mitmStatus?.system_proxy_active ? t("settings.mitmProxyActive") : t("settings.mitmProxyInactive")}
+                  </span>
+                  {mitmStatus?.residual_system_proxy && (
+                    <span className="badge badge-yellow">{t("settings.mitmResidualProxy")}</span>
+                  )}
                 </div>
                 {mitmStatus?.last_error && (
                   <div className="error-msg" style={{ marginTop: 8 }}>{mitmStatus.last_error}</div>
