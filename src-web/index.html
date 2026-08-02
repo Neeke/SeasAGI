@@ -260,6 +260,11 @@ body.show-en .lang-en-i { display:inline; }
 <div class="card"><div class="card-icon">🛡️</div><h3 class="lang-zh">MITM 一键接管</h3><h3 class="lang-en">One-Click MITM Proxy</h3><p class="lang-zh">设置页一键开启 MITM 代理，自动安装 CA 证书 + 设置系统代理，透明接管 OpenAI/Anthropic/Gemini 等 AI API 流量并路由到本地网关。无需手动配置证书，支持域名级连通性测试、实时拦截日志、CLI 环境变量提示，终端工具也能轻松接管。</p><p class="lang-en">One-click MITM proxy from Settings. Auto-installs CA certificate + sets system proxy, transparently intercepts AI API traffic (OpenAI/Anthropic/Gemini) and routes to local gateway. No manual cert setup. Per-domain connectivity test, live intercept log, CLI env hints — even terminal tools are covered.</p></div>
 <div class="card"><div class="card-icon">🗜️</div><h3 class="lang-zh">Token 压缩 + 语义缓存</h3><h3 class="lang-en">Token Compression + Semantic Cache</h3><p class="lang-zh">新增 RTK / Caveman 压缩管线与语义缓存，减少冗余 token、截断低价值上下文，并为幂等请求提供更高命中率，适合长上下文、工具调用和高频重复场景。</p><p class="lang-en">RTK/Caveman compression plus semantic cache reduces redundant tokens, trims low-value context, and raises idempotent hit rates for long-context, tool-calling, and repetitive workloads.</p></div>
 <div class="card"><div class="card-icon">🧭</div><h3 class="lang-zh">Fusion 路由 + 协议翻译</h3><h3 class="lang-en">Fusion Routing + Protocol Translation</h3><p class="lang-zh">支持 Fusion 并发候选、模型族回退、Reasoning Replay，以及 Chat Completions / Responses API 协议双向转换，让复杂路由与异构接口接入都能被同一网关吸收。</p><p class="lang-en">Fusion fan-out, model-family fallback, reasoning replay, and bidirectional Chat Completions / Responses API translation let one gateway absorb both advanced routing and heterogeneous API formats.</p></div>
+<div class="card"><div class="card-icon">🩺</div><h3 class="lang-zh">系统诊断中心</h3><h3 class="lang-en">Diagnostics Center</h3><p class="lang-zh">把端口、连通性、证书、代理残留、出口 IP 和 TLS 状态放到一个面板里，问题更快发现，也更快修复。</p><p class="lang-en">One panel for ports, connectivity, certificates, residual proxy, egress IP, and TLS status — spot issues faster and fix them sooner.</p></div>
+<div class="card"><div class="card-icon">🔬</div><h3 class="lang-zh">TLS 指纹伪装 + 智能熔断</h3><h3 class="lang-en">TLS Fingerprint + Smart Breaker</h3><p class="lang-zh">自动适配更接近真实客户端的 TLS 指纹，异常时自动熔断与恢复，让通道更稳，不靠手工盯盘。</p><p class="lang-en">Use more realistic TLS fingerprints with automatic breaker and recovery, so channels stay stable without manual babysitting.</p></div>
+<div class="card"><div class="card-icon">📊</div><h3 class="lang-zh">Eval 评估 + 性能审计</h3><h3 class="lang-en">Eval + Performance Audit</h3><p class="lang-zh">上线前先量化效果，运行中持续看延迟和瓶颈，让路由决策不只靠经验，而是有数据支撑。</p><p class="lang-en">Measure quality before rollout and keep latency and bottlenecks visible in production, so routing decisions stay data-backed.</p></div>
+<div class="card"><div class="card-icon">🧩</div><h3 class="lang-zh">Plugin Hook + MCP Gateway</h3><h3 class="lang-en">Plugin Hook + MCP Gateway</h3><p class="lang-zh">把路由、拦截和自动化能力开放出来，让团队可以按自己的业务流程继续扩展，而不是被产品边界锁死。</p><p class="lang-en">Open routing, interception, and automation for extension, so your team can build around its own workflow instead of product limits.</p></div>
+<div class="card"><div class="card-icon">📚</div><h3 class="lang-zh">Notion/Obsidian 知识库集成</h3><h3 class="lang-en">Notion/Obsidian Integration</h3><p class="lang-zh">把 AI 结果直接沉淀进团队知识库，减少复制粘贴和信息散落，让对话真正进入生产流程。</p><p class="lang-en">Send AI output straight into your team knowledge base, reduce copy-paste, and turn conversations into usable workflow assets.</p></div>
 </div></div></section>
 
 <section class="cmp-section" id="compare">
@@ -292,6 +297,11 @@ body.show-en .lang-en-i { display:inline; }
 <li><span class="adv-mark">✓</span> Responses API 翻译 + Translator 调试面板</li>
 <li><span class="adv-mark">✓</span> A2A、per-key USD 配额、CLI 一键配置、WebSocket / Docker / 安全增强</li>
 <li><span class="adv-mark">✓</span> 审计/风控/告警 + i18n 四语言</li>
+<li><span class="adv-mark">✓</span> 一站式诊断中心，问题定位更快</li>
+<li><span class="adv-mark">✓</span> TLS 指纹伪装 + 智能熔断，通道更稳</li>
+<li><span class="adv-mark">✓</span> Eval + 性能审计，让优化有数据依据</li>
+<li><span class="adv-mark">✓</span> Plugin Hook + MCP Gateway，扩展能力更强</li>
+<li><span class="adv-mark">✓</span> Notion / Obsidian 集成，知识沉淀更顺手</li>
 </ul>
 </div>
 <div class="lang-en cmp-card" data-featured>
@@ -316,6 +326,11 @@ body.show-en .lang-en-i { display:inline; }
 <li><span class="adv-mark">✓</span> Responses API translation + translator debug panel</li>
 <li><span class="adv-mark">✓</span> A2A, per-key USD quota, one-click CLI setup, WebSocket / Docker / security hardening</li>
 <li><span class="adv-mark">✓</span> Audit/risk/alert + 4-language i18n</li>
+<li><span class="adv-mark">✓</span> Unified diagnostics center for faster issue resolution</li>
+<li><span class="adv-mark">✓</span> TLS fingerprinting + smart breaker for more stable channels</li>
+<li><span class="adv-mark">✓</span> Eval + performance audit for data-backed optimization</li>
+<li><span class="adv-mark">✓</span> Plugin Hook + MCP Gateway for stronger extensibility</li>
+<li><span class="adv-mark">✓</span> Notion / Obsidian integration for smoother knowledge capture</li>
 </ul>
 </div>
 
@@ -426,6 +441,11 @@ body.show-en .lang-en-i { display:inline; }
 <tr><td><span class="lang-zh">Responses API 翻译</span><span class="lang-en">Responses API Translation</span></td><td class="cmp-yes">✓ 双向转换</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
 <tr><td><span class="lang-zh">A2A / per-key 配额 / CLI 接入</span><span class="lang-en">A2A / Per-key Quota / CLI Setup</span></td><td class="cmp-yes">✓</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
 <tr><td><span class="lang-zh">审计/风控/告警</span><span class="lang-en">Audit/Risk/Alert</span></td><td class="cmp-yes">✓</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
+<tr><td><span class="lang-zh">诊断中心 / 代理体检</span><span class="lang-en">Diagnostics / Proxy Health</span></td><td class="cmp-yes">✓ 端口/CA/代理/IP/TLS</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
+<tr><td><span class="lang-zh">TLS 指纹伪装 / 智能熔断</span><span class="lang-en">TLS Fingerprint / Smart Breaker</span></td><td class="cmp-yes">✓ Chrome/Firefox + Breaker</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
+<tr><td><span class="lang-zh">Eval 评估 / 性能审计</span><span class="lang-en">Eval / Performance Audit</span></td><td class="cmp-yes">✓</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
+<tr><td><span class="lang-zh">Plugin Hook / MCP Gateway</span><span class="lang-en">Plugin Hook / MCP Gateway</span></td><td class="cmp-yes">✓ 14 Hooks + 20 Tools</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
+<tr><td><span class="lang-zh">Notion / Obsidian 集成</span><span class="lang-en">Notion / Obsidian Integration</span></td><td class="cmp-yes">✓</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
 <tr><td><span class="lang-zh">i18n</span><span class="lang-en">Internationalization</span></td><td class="cmp-yes">✓ 4 语言</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
 </tbody></table></div>
 

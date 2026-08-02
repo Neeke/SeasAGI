@@ -34,6 +34,10 @@ export function FetchCloudUsage() {
   return window['go']['auth']['Service']['FetchCloudUsage']();
 }
 
+export function FetchFreeChannels(arg1) {
+  return window['go']['auth']['Service']['FetchFreeChannels'](arg1);
+}
+
 export function FetchOfficialComboTemplates(arg1) {
   return window['go']['auth']['Service']['FetchOfficialComboTemplates'](arg1);
 }

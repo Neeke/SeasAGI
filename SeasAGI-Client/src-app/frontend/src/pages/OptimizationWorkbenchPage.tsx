@@ -3,17 +3,19 @@ import { useSearchParams } from "react-router-dom";
 import { ComboPage } from "./ComboPage";
 import { OptimizationPage } from "./OptimizationPage";
 import { ExecAnalysisPage } from "./ExecAnalysisPage";
+import { EvalPage } from "./EvalPage";
 import { useAppStore } from "../stores/appStore";
 import * as cmd from "../utils/commands";
 import { useTranslation } from "../i18n";
 
-type WorkbenchTab = "combos" | "optimization" | "templates" | "analysis";
+type WorkbenchTab = "combos" | "optimization" | "templates" | "analysis" | "eval";
 
 const TAB_LABEL_KEYS: Record<WorkbenchTab, string> = {
   combos: "workbench.tab.combos",
   optimization: "workbench.tab.optimization",
   templates: "workbench.tab.templates",
   analysis: "workbench.tab.analysis",
+  eval: "workbench.tab.eval",
 };
 
 type TaskType = "general_chat" | "tool_calling" | "structured_output" | "long_context" | "vision";
@@ -40,13 +42,13 @@ export function OptimizationWorkbenchPage() {
   const { t } = useTranslation();
   const initialTab = (searchParams.get("tab") as WorkbenchTab) || "combos";
   const [activeTab, setActiveTab] = useState<WorkbenchTab>(
-    ["combos", "optimization", "templates", "analysis"].includes(initialTab) ? initialTab : "combos"
+    ["combos", "optimization", "templates", "analysis", "eval"].includes(initialTab) ? initialTab : "combos"
   );
   const [activeTaskType, setActiveTaskType] = useState<TaskType>("general_chat");
 
   useEffect(() => {
     const tab = searchParams.get("tab") as WorkbenchTab;
-    if (tab && ["combos", "optimization", "templates", "analysis"].includes(tab) && tab !== activeTab) {
+    if (tab && ["combos", "optimization", "templates", "analysis", "eval"].includes(tab) && tab !== activeTab) {
       setActiveTab(tab);
     }
   }, [searchParams]);
@@ -76,7 +78,7 @@ export function OptimizationWorkbenchPage() {
       </div>
 
       <div className="tab-bar">
-        {(["combos", "optimization", "templates", "analysis"] as WorkbenchTab[]).map((tab) => (
+        {(["combos", "optimization", "templates", "analysis", "eval"] as WorkbenchTab[]).map((tab) => (
           <button
             key={tab}
             className={activeTab === tab ? "active" : ""}
@@ -110,6 +112,7 @@ export function OptimizationWorkbenchPage() {
         {activeTab === "optimization" && <OptimizationPage embedded taskType={activeTaskType} />}
         {activeTab === "templates" && <ComboPage embedded showTemplatesTab />}
         {activeTab === "analysis" && <ExecAnalysisPage />}
+        {activeTab === "eval" && <EvalPage />}
       </div>
     </div>
   );

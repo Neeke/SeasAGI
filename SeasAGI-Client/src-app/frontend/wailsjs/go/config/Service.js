@@ -58,6 +58,10 @@ export function GetPlatformAPIBaseURL() {
   return window['go']['config']['Service']['GetPlatformAPIBaseURL']();
 }
 
+export function GetRateLimitConfig() {
+  return window['go']['config']['Service']['GetRateLimitConfig']();
+}
+
 export function GetSetting(arg1) {
   return window['go']['config']['Service']['GetSetting'](arg1);
 }
@@ -132,6 +136,10 @@ export function SetOptimizationConfig(arg1) {
 
 export function SetPlatformAPIBaseURL(arg1) {
   return window['go']['config']['Service']['SetPlatformAPIBaseURL'](arg1);
+}
+
+export function SetRateLimitConfig(arg1) {
+  return window['go']['config']['Service']['SetRateLimitConfig'](arg1);
 }
 
 export function SetSelectedRelayGateway(arg1) {

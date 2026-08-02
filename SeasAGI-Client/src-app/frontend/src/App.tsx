@@ -19,6 +19,8 @@ import { TokenScanTradePage } from "./pages/TokenScanTradePage";
 import { TokenMyOrdersPage } from "./pages/TokenMyOrdersPage";
 import { TokenMySettlementsPage } from "./pages/TokenMySettlementsPage";
 import { TranslatorPage } from "./pages/TranslatorPage";
+import { DiagnosticsPage } from "./pages/DiagnosticsPage";
+import { PluginsPage } from "./pages/PluginsPage";
 import { Layout } from "./components/Layout";
 
 export default function App() {
@@ -49,6 +51,8 @@ export default function App() {
             <Route path="/token-market/my-orders" element={<TokenMyOrdersPage />} />
             <Route path="/token-market/my-settlements" element={<TokenMySettlementsPage />} />
             <Route path="/translator" element={<TranslatorPage />} />
+            <Route path="/diagnostics" element={<DiagnosticsPage />} />
+            <Route path="/plugins" element={<PluginsPage />} />
           </Routes>
         </Layout>
       </BrowserRouter>

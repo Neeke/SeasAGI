@@ -50,6 +50,10 @@ export function CreateCheckoutSession(arg1, arg2) {
   return window['go']['main']['App']['CreateCheckoutSession'](arg1, arg2);
 }
 
+export function CreateEvalSuite(arg1) {
+  return window['go']['main']['App']['CreateEvalSuite'](arg1);
+}
+
 export function DeleteCloudCombo(arg1) {
   return window['go']['main']['App']['DeleteCloudCombo'](arg1);
 }
@@ -94,6 +98,10 @@ export function FetchCloudCombos() {
   return window['go']['main']['App']['FetchCloudCombos']();
 }
 
+export function FetchFreeChannels() {
+  return window['go']['main']['App']['FetchFreeChannels']();
+}
+
 export function FetchModelStats() {
   return window['go']['main']['App']['FetchModelStats']();
 }
@@ -122,6 +130,10 @@ export function GetCloudBilling() {
   return window['go']['main']['App']['GetCloudBilling']();
 }
 
+export function GetCloudSyncStatus() {
+  return window['go']['main']['App']['GetCloudSyncStatus']();
+}
+
 export function GetCloudUsage() {
   return window['go']['main']['App']['GetCloudUsage']();
 }
@@ -142,12 +154,28 @@ export function GetDefaultComboName() {
   return window['go']['main']['App']['GetDefaultComboName']();
 }
 
+export function GetEvalScorecard(arg1) {
+  return window['go']['main']['App']['GetEvalScorecard'](arg1);
+}
+
 export function GetLocalAccessToken() {
   return window['go']['main']['App']['GetLocalAccessToken']();
 }
 
 export function GetLocale() {
   return window['go']['main']['App']['GetLocale']();
+}
+
+export function GetLogRotationConfig() {
+  return window['go']['main']['App']['GetLogRotationConfig']();
+}
+
+export function GetMCPAuditLog() {
+  return window['go']['main']['App']['GetMCPAuditLog']();
+}
+
+export function GetMCPGatewayTools() {
+  return window['go']['main']['App']['GetMCPGatewayTools']();
 }
 
 export function GetMITMEnvHint() {
@@ -164,6 +192,10 @@ export function GetMITMRules() {
 
 export function GetMITMStatus() {
   return window['go']['main']['App']['GetMITMStatus']();
+}
+
+export function GetMITMTargets() {
+  return window['go']['main']['App']['GetMITMTargets']();
 }
 
 export function GetOAuthConnections() {
@@ -190,6 +222,10 @@ export function GetOptimizationPlan(arg1, arg2) {
   return window['go']['main']['App']['GetOptimizationPlan'](arg1, arg2);
 }
 
+export function GetPerfAuditReport() {
+  return window['go']['main']['App']['GetPerfAuditReport']();
+}
+
 export function GetPlans() {
   return window['go']['main']['App']['GetPlans']();
 }
@@ -202,8 +238,20 @@ export function GetPlatformToken() {
   return window['go']['main']['App']['GetPlatformToken']();
 }
 
+export function GetPluginAuditLog() {
+  return window['go']['main']['App']['GetPluginAuditLog']();
+}
+
+export function GetPluginHooks() {
+  return window['go']['main']['App']['GetPluginHooks']();
+}
+
 export function GetPresetByName(arg1) {
   return window['go']['main']['App']['GetPresetByName'](arg1);
+}
+
+export function GetPricingSyncStatus() {
+  return window['go']['main']['App']['GetPricingSyncStatus']();
 }
 
 export function GetProviderHealthMetrics(arg1) {
@@ -216,6 +264,10 @@ export function GetProviderHealthSummary() {
 
 export function GetQuickStrategies() {
   return window['go']['main']['App']['GetQuickStrategies']();
+}
+
+export function GetRateLimitConfig() {
+  return window['go']['main']['App']['GetRateLimitConfig']();
 }
 
 export function GetRecommendedCombos() {
@@ -306,6 +358,10 @@ export function ListComboTemplates() {
   return window['go']['main']['App']['ListComboTemplates']();
 }
 
+export function ListEvalSuites() {
+  return window['go']['main']['App']['ListEvalSuites']();
+}
+
 export function ListLogs(arg1, arg2) {
   return window['go']['main']['App']['ListLogs'](arg1, arg2);
 }
@@ -324,6 +380,10 @@ export function ListModelCombos() {
 
 export function ListModelPricing() {
   return window['go']['main']['App']['ListModelPricing']();
+}
+
+export function ListPlugins() {
+  return window['go']['main']['App']['ListPlugins']();
 }
 
 export function ListPresetsByCategory(arg1) {
@@ -402,6 +462,14 @@ export function RevokeOAuthToken(arg1) {
   return window['go']['main']['App']['RevokeOAuthToken'](arg1);
 }
 
+export function RunDiagnostics() {
+  return window['go']['main']['App']['RunDiagnostics']();
+}
+
+export function RunEvalSuite(arg1) {
+  return window['go']['main']['App']['RunEvalSuite'](arg1);
+}
+
 export function SaveComboTemplate(arg1) {
   return window['go']['main']['App']['SaveComboTemplate'](arg1);
 }
@@ -434,6 +502,14 @@ export function ScanSkillsDir() {
   return window['go']['main']['App']['ScanSkillsDir']();
 }
 
+export function SearchNotion(arg1, arg2) {
+  return window['go']['main']['App']['SearchNotion'](arg1, arg2);
+}
+
+export function SearchObsidian(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SearchObsidian'](arg1, arg2, arg3);
+}
+
 export function SearchSessions(arg1, arg2, arg3) {
   return window['go']['main']['App']['SearchSessions'](arg1, arg2, arg3);
 }
@@ -458,6 +534,10 @@ export function SetLocale(arg1) {
   return window['go']['main']['App']['SetLocale'](arg1);
 }
 
+export function SetLogRotationConfig(arg1) {
+  return window['go']['main']['App']['SetLogRotationConfig'](arg1);
+}
+
 export function SetMITMManager(arg1) {
   return window['go']['main']['App']['SetMITMManager'](arg1);
 }
@@ -468,6 +548,10 @@ export function SetOptimizationConfig(arg1) {
 
 export function SetPlatformAPIBaseURL(arg1) {
   return window['go']['main']['App']['SetPlatformAPIBaseURL'](arg1);
+}
+
+export function SetRateLimitConfig(arg1) {
+  return window['go']['main']['App']['SetRateLimitConfig'](arg1);
 }
 
 export function ShowMessage(arg1, arg2) {
@@ -550,8 +634,16 @@ export function ToggleMCPServer(arg1, arg2) {
   return window['go']['main']['App']['ToggleMCPServer'](arg1, arg2);
 }
 
+export function TogglePlugin(arg1, arg2) {
+  return window['go']['main']['App']['TogglePlugin'](arg1, arg2);
+}
+
 export function ToggleSkill(arg1, arg2) {
   return window['go']['main']['App']['ToggleSkill'](arg1, arg2);
+}
+
+export function TriggerPricingSync() {
+  return window['go']['main']['App']['TriggerPricingSync']();
 }
 
 export function UninstallSkill(arg1) {

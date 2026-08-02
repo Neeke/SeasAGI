@@ -178,6 +178,46 @@ func (s *Service) FetchPlatformChannels(ctx context.Context) ([]map[string]inter
 	return result.Data, nil
 }
 
+// FetchFreeChannels 从平台 API 拉取免费通道种子列表。
+func (s *Service) FetchFreeChannels(ctx context.Context) ([]map[string]interface{}, error) {
+	if !s.IsLoggedIn() {
+		return nil, nil
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	reqCtx, cancel := context.WithTimeout(ctx, 8*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, platformAPIBaseURL()+"/free-channels", nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+s.GetPlatformToken())
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		Data  []map[string]interface{} `json:"data"`
+		Error string                   `json:"error"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	if resp.StatusCode >= 400 {
+		if result.Error == "" {
+			result.Error = "fetch free channels failed"
+		}
+		return nil, errors.New(result.Error)
+	}
+	return result.Data, nil
+}
+
 func platformAPIBaseURL() string {
 	if value := os.Getenv("PLATFORM_API_BASE_URL"); value != "" {
 		return value

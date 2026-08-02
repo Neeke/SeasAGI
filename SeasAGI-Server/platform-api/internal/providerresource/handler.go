@@ -9,33 +9,33 @@ import (
 
 	"crypto/rand"
 
-	"github.com/gin-gonic/gin"
 	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/database"
 	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/secure"
+	"github.com/gin-gonic/gin"
 )
 
 // ProviderResource represents a single API key/region/environment under a channel.
 type ProviderResource struct {
-	ResourceID       string     `json:"resource_id"`
-	ChannelID        string     `json:"channel_id"`
-	ResourceName     string     `json:"resource_name"`
-	APIKey           string     `json:"api_key,omitempty"`
-	EncryptedAPIKey  string     `json:"encrypted_api_key,omitempty"`
-	Region           string     `json:"region"`
-	Environment      string     `json:"environment"`
-	Enabled          bool       `json:"enabled"`
-	Weight           int        `json:"weight"`
-	Priority         int        `json:"priority"`
-	RateLimitRPM     int        `json:"rate_limit_rpm"`
-	MaxConcurrency   int        `json:"max_concurrency"`
-	Healthy          bool       `json:"healthy"`
-	StatusCode       int        `json:"status_code,omitempty"`
-	ErrorMessage     string     `json:"error_message,omitempty"`
-	ConsecFailures   int        `json:"consec_failures,omitempty"`
-	CooldownUntil    *time.Time `json:"cooldown_until,omitempty"`
-	LastCheck        *time.Time `json:"last_check,omitempty"`
-	CreatedAt        string     `json:"created_at,omitempty"`
-	UpdatedAt        string     `json:"updated_at,omitempty"`
+	ResourceID      string     `json:"resource_id"`
+	ChannelID       string     `json:"channel_id"`
+	ResourceName    string     `json:"resource_name"`
+	APIKey          string     `json:"api_key,omitempty"`
+	EncryptedAPIKey string     `json:"encrypted_api_key,omitempty"`
+	Region          string     `json:"region"`
+	Environment     string     `json:"environment"`
+	Enabled         bool       `json:"enabled"`
+	Weight          int        `json:"weight"`
+	Priority        int        `json:"priority"`
+	RateLimitRPM    int        `json:"rate_limit_rpm"`
+	MaxConcurrency  int        `json:"max_concurrency"`
+	Healthy         bool       `json:"healthy"`
+	StatusCode      int        `json:"status_code,omitempty"`
+	ErrorMessage    string     `json:"error_message,omitempty"`
+	ConsecFailures  int        `json:"consec_failures,omitempty"`
+	CooldownUntil   *time.Time `json:"cooldown_until,omitempty"`
+	LastCheck       *time.Time `json:"last_check,omitempty"`
+	CreatedAt       string     `json:"created_at,omitempty"`
+	UpdatedAt       string     `json:"updated_at,omitempty"`
 }
 
 // CreateResourceRequest is the payload for creating a new resource.
@@ -58,7 +58,7 @@ func generateID() string {
 
 // ListResources returns all resources for a channel.
 func ListResources(c *gin.Context) {
-	channelID := c.Param("channel_id")
+	channelID := c.Param("id")
 	rows, err := database.DB.Query(
 		`SELECT resource_id, channel_id, resource_name, encrypted_api_key, region, environment,
 			enabled, weight, priority, rate_limit_rpm, max_concurrency, healthy, status_code,
@@ -85,7 +85,7 @@ func ListResources(c *gin.Context) {
 
 // GetResource returns a single resource by ID.
 func GetResource(c *gin.Context) {
-	channelID := c.Param("channel_id")
+	channelID := c.Param("id")
 	resourceID := c.Param("resource_id")
 	r, err := fetchResource(channelID, resourceID)
 	if err != nil {
@@ -97,7 +97,7 @@ func GetResource(c *gin.Context) {
 
 // CreateResource creates a new resource under a channel.
 func CreateResource(c *gin.Context) {
-	channelID := c.Param("channel_id")
+	channelID := c.Param("id")
 	var req CreateResourceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -143,7 +143,7 @@ func CreateResource(c *gin.Context) {
 
 // UpdateResource updates an existing resource.
 func UpdateResource(c *gin.Context) {
-	channelID := c.Param("channel_id")
+	channelID := c.Param("id")
 	resourceID := c.Param("resource_id")
 	existing, err := fetchResource(channelID, resourceID)
 	if err != nil {
@@ -194,7 +194,7 @@ func UpdateResource(c *gin.Context) {
 
 // DeleteResource deletes a resource by ID.
 func DeleteResource(c *gin.Context) {
-	channelID := c.Param("channel_id")
+	channelID := c.Param("id")
 	resourceID := c.Param("resource_id")
 	_, err := database.DB.Exec(
 		`DELETE FROM provider_resources WHERE resource_id=? AND channel_id=?`,
@@ -209,7 +209,7 @@ func DeleteResource(c *gin.Context) {
 
 // ResolveResource picks the best available resource for a channel.
 func ResolveResource(c *gin.Context) {
-	channelID := c.Param("channel_id")
+	channelID := c.Param("id")
 	row := database.DB.QueryRow(
 		`SELECT resource_id, channel_id, resource_name, encrypted_api_key, region, environment,
 				enabled, weight, priority, rate_limit_rpm, max_concurrency, healthy, status_code,

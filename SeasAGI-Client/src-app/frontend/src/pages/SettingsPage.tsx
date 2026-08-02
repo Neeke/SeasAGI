@@ -14,7 +14,7 @@ export function SettingsPage() {
   const setAppConfig = useAppStore((s) => s.setAppConfig);
   const { t, locale, setLocale } = useTranslation();
 
-  const [activeTab, setActiveTab] = useState<"account" | "routing" | "rtk" | "caveman" | "mitm">("account");
+  const [activeTab, setActiveTab] = useState<"account" | "routing" | "rtk" | "caveman" | "mitm" | "rate-limit" | "performance" | "mcp-gateway" | "advanced">("account");
   const [routingStrategy, setRoutingStrategy] = useState(appConfig?.routing_strategy || "fallback");
   const [stickyUses, setStickyUses] = useState(appConfig?.sticky_channel_use || 3);
   const [platformApiURL, setPlatformApiURL] = useState("");
@@ -158,6 +158,10 @@ export function SettingsPage() {
         <button className={activeTab === "rtk" ? "active" : ""} onClick={() => setActiveTab("rtk")}>{t("settings.rtkTab")}</button>
         <button className={activeTab === "caveman" ? "active" : ""} onClick={() => setActiveTab("caveman")}>{t("settings.cavemanTab")}</button>
         <button className={activeTab === "mitm" ? "active" : ""} onClick={() => setActiveTab("mitm")}>MITM</button>
+        <button className={activeTab === "rate-limit" ? "active" : ""} onClick={() => setActiveTab("rate-limit")}>{t("settings.rateLimit")}</button>
+        <button className={activeTab === "performance" ? "active" : ""} onClick={() => setActiveTab("performance")}>{t("settings.performance")}</button>
+        <button className={activeTab === "mcp-gateway" ? "active" : ""} onClick={() => setActiveTab("mcp-gateway")}>{t("settings.mcpGateway")}</button>
+        <button className={activeTab === "advanced" ? "active" : ""} onClick={() => setActiveTab("advanced")}>{t("settings.advanced")}</button>
       </div>
 
       {activeTab === "account" && (
@@ -673,6 +677,468 @@ export function SettingsPage() {
             <MITMEnvHint running={mitmStatus?.state === "running"} />
           </div>
         </div>
+      )}
+
+      {activeTab === "rate-limit" && (
+        <div className="settings-stack">
+          <RateLimitPanel />
+        </div>
+      )}
+
+      {activeTab === "performance" && (
+        <div className="settings-stack">
+          <PerfAuditPanel />
+        </div>
+      )}
+
+      {activeTab === "mcp-gateway" && (
+        <div className="settings-stack">
+          <MCPGatewayPanel />
+        </div>
+      )}
+
+      {activeTab === "advanced" && (
+        <div className="settings-stack">
+          <LogRotationPanel />
+          <PricingSyncPanel />
+          <CloudSyncPanel />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RateLimitPanel() {
+  const { t } = useTranslation();
+  const [config, setConfig] = useState<Record<string, any> | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  const loadConfig = async () => {
+    setLoading(true);
+    try {
+      const cfg = await cmd.getRateLimitConfig();
+      setConfig(cfg);
+    } catch {
+      setError("Failed to load rate limit config");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadConfig(); }, []);
+
+  const handleSave = async () => {
+    if (!config) return;
+    setSaving(true);
+    setError("");
+    setSuccess(false);
+    try {
+      await cmd.setRateLimitConfig(config);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to save rate limit config"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const update = (key: string, value: any) => {
+    setConfig(prev => prev ? { ...prev, [key]: value } : prev);
+  };
+
+  if (loading) return <div className="loading-state">{t("common.loading")}</div>;
+
+  return (
+    <div className="tab-content section-card">
+      <div className="section-heading">
+        <h2>{t("settings.rateLimit")}</h2>
+        <p className="hint">{t("rateLimit.subtitle")}</p>
+      </div>
+
+      {error && <div className="form-error">{error}</div>}
+      {success && <div className="form-success">{t("rateLimit.saved")}</div>}
+
+      <div className="settings-toggle-card" style={{ marginBottom: 16 }}>
+        <div>
+          <strong>{t("rateLimit.enable")}</strong>
+          <p className="hint" style={{ marginTop: 4 }}>{t("rateLimit.enableHint")}</p>
+        </div>
+        <label className="toggle-switch">
+          <input type="checkbox" checked={!!config?.enabled} onChange={(e) => update("enabled", e.target.checked)} />
+          <span className="toggle-slider" />
+        </label>
+      </div>
+
+      <div className="form-grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <div className="form-group">
+          <label className="form-label">{t("rateLimit.defaultRPM")}</label>
+          <input
+            type="number"
+            className="form-input"
+            value={config?.default_rpm ?? 0}
+            onChange={(e) => update("default_rpm", parseInt(e.target.value) || 0)}
+            placeholder="0 = unlimited"
+          />
+          <p className="hint">{t("rateLimit.defaultRPMHint")}</p>
+        </div>
+        <div className="form-group">
+          <label className="form-label">{t("rateLimit.defaultTPM")}</label>
+          <input
+            type="number"
+            className="form-input"
+            value={config?.default_tpm ?? 0}
+            onChange={(e) => update("default_tpm", parseInt(e.target.value) || 0)}
+            placeholder="0 = unlimited"
+          />
+          <p className="hint">{t("rateLimit.defaultTPMHint")}</p>
+        </div>
+        <div className="form-group">
+          <label className="form-label">{t("rateLimit.minInterval")}</label>
+          <input
+            type="number"
+            className="form-input"
+            value={config?.min_interval_ms ?? 0}
+            onChange={(e) => update("min_interval_ms", parseInt(e.target.value) || 0)}
+            placeholder="0 = no minimum"
+          />
+          <p className="hint">{t("rateLimit.minIntervalHint")}</p>
+        </div>
+        <div className="form-group">
+          <label className="form-label">{t("rateLimit.maxConcurrent")}</label>
+          <input
+            type="number"
+            className="form-input"
+            value={config?.max_concurrent ?? 0}
+            onChange={(e) => update("max_concurrent", parseInt(e.target.value) || 0)}
+            placeholder="0 = unlimited"
+          />
+          <p className="hint">{t("rateLimit.maxConcurrentHint")}</p>
+        </div>
+        <div className="form-group" style={{ gridColumn: "span 2" }}>
+          <label className="form-label">{t("rateLimit.maxWait")}</label>
+          <input
+            type="number"
+            className="form-input"
+            value={config?.max_wait_ms ?? 15000}
+            onChange={(e) => update("max_wait_ms", parseInt(e.target.value) || 0)}
+            placeholder="15000"
+          />
+          <p className="hint">{t("rateLimit.maxWaitHint")}</p>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 16, display: "flex", gap: 12 }}>
+        <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+          {saving ? t("common.submitting") : t("common.save")}
+        </button>
+        <button className="btn btn-secondary" onClick={loadConfig}>
+          {t("common.reset")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PerfAuditPanel() {
+  const { t } = useTranslation();
+  const [report, setReport] = useState<Record<string, any> | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const loadReport = async () => {
+    setLoading(true);
+    try {
+      const r = await cmd.getPerfAuditReport();
+      setReport(r);
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadReport(); }, []);
+
+  return (
+    <div className="tab-content section-card">
+      <div className="section-heading">
+        <h2>{t('settings.performance')}</h2>
+        <p className="hint">{t('perf.subtitle')}</p>
+        <button className="btn btn-primary btn-sm" onClick={loadReport} disabled={loading} style={{ marginTop: 8 }}>
+          {loading ? t('diagnostics.running') : t('perf.refresh')}
+        </button>
+      </div>
+      {report && (
+        <div className="diag-grid">
+          <div className="diag-card">
+            <span className="diag-label">{t('perf.totalFindings')}</span>
+            <span className="diag-value">{report.total_findings || 0}</span>
+          </div>
+          <div className="diag-card">
+            <span className="diag-label">{t('perf.slowQueries')}</span>
+            <span className="badge-red">{report.slow_queries || 0}</span>
+          </div>
+          <div className="diag-card">
+            <span className="diag-label">{t('perf.totalDbQueries')}</span>
+            <span className="diag-value">{report.total_db_queries || 0}</span>
+          </div>
+        </div>
+      )}
+      {report?.findings && Array.isArray(report.findings) && report.findings.length > 0 && (
+        <table className="diag-table" style={{ marginTop: 16 }}>
+          <thead>
+            <tr>
+              <th>{t('perf.category')}</th>
+              <th>{t('perf.title')}</th>
+              <th>{t('perf.effort')}</th>
+              <th>{t('perf.impact')}</th>
+              <th>{t('perf.score')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(report.findings as any[]).map((f, i) => (
+              <tr key={i}>
+                <td>{f.category}</td>
+                <td>{f.title}</td>
+                <td>{f.effort}</td>
+                <td>{f.impact}</td>
+                <td><span className="badge-blue">{f.score?.toFixed(1)}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
+function MCPGatewayPanel() {
+  const { t } = useTranslation();
+  const [tools, setTools] = useState<Record<string, any>[]>([]);
+  const [auditLog, setAuditLog] = useState<Record<string, any>[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const tl = await cmd.getMCPGatewayTools();
+        setTools(tl || []);
+        const al = await cmd.getMCPAuditLog();
+        setAuditLog(al || []);
+      } catch {
+        // ignore
+      }
+    })();
+  }, []);
+
+  return (
+    <div className="tab-content section-card">
+      <div className="section-heading">
+        <h2>{t('settings.mcpGateway')}</h2>
+        <p className="hint">{t('mcp.subtitle')}</p>
+      </div>
+      <h4>{t('mcp.tools')} ({tools.length})</h4>
+      <table className="diag-table" style={{ marginTop: 8 }}>
+        <thead>
+          <tr><th>{t('mcp.toolName')}</th><th>{t('mcp.description')}</th></tr>
+        </thead>
+        <tbody>
+          {tools.map((tool, i) => (
+            <tr key={i}>
+              <td><span className="badge-blue">{tool.name}</span></td>
+              <td>{tool.description}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {auditLog.length > 0 && (
+        <>
+          <h4 style={{ marginTop: 16 }}>{t('mcp.auditLog')}</h4>
+          <table className="diag-table" style={{ marginTop: 8 }}>
+            <thead>
+              <tr><th>{t('mcp.toolName')}</th><th>{t('mcp.success')}</th><th>{t('mcp.timestamp')}</th></tr>
+            </thead>
+            <tbody>
+              {auditLog.map((log, i) => (
+                <tr key={i}>
+                  <td>{log.tool_name}</td>
+                  <td><span className={log.success ? "badge-green" : "badge-red"}>{log.success ? "OK" : "FAIL"}</span></td>
+                  <td>{log.timestamp}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+    </div>
+  );
+}
+
+function LogRotationPanel() {
+  const { t } = useTranslation();
+  const [config, setConfig] = useState<Record<string, any> | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const c = await cmd.getLogRotationConfig();
+        setConfig(c);
+      } catch {
+        // ignore
+      }
+    })();
+  }, []);
+
+  return (
+    <div className="tab-content section-card">
+      <div className="section-heading">
+        <h2>{t('logRotation.title')}</h2>
+        <p className="hint">{t('logRotation.subtitle')}</p>
+      </div>
+      {config && (
+        <div className="diag-grid">
+          <div className="diag-card">
+            <span className="diag-label">{t('logRotation.maxFileSize')}</span>
+            <span className="diag-value">{config.max_file_size_mb} MB</span>
+          </div>
+          <div className="diag-card">
+            <span className="diag-label">{t('logRotation.retentionDays')}</span>
+            <span className="diag-value">{config.retention_days} {t('logRotation.days')}</span>
+          </div>
+          <div className="diag-card">
+            <span className="diag-label">{t('logRotation.maxFiles')}</span>
+            <span className="diag-value">{config.max_files}</span>
+          </div>
+          <div className="diag-card">
+            <span className="diag-label">{t('logRotation.currentSize')}</span>
+            <span className="diag-value">{config.current_size_mb} MB</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PricingSyncPanel() {
+  const { t } = useTranslation();
+  const [status, setStatus] = useState<Record<string, any> | null>(null);
+  const [syncing, setSyncing] = useState(false);
+
+  const loadStatus = async () => {
+    try {
+      const s = await cmd.getPricingSyncStatus();
+      setStatus(s);
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => { loadStatus(); }, []);
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      await cmd.triggerPricingSync();
+      await loadStatus();
+    } catch {
+      // ignore
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  return (
+    <div className="tab-content section-card">
+      <div className="section-heading">
+        <h2>{t('pricingSync.title')}</h2>
+        <p className="hint">{t('pricingSync.subtitle')}</p>
+        <button className="btn btn-primary btn-sm" onClick={handleSync} disabled={syncing} style={{ marginTop: 8 }}>
+          {syncing ? t('diagnostics.running') : t('pricingSync.syncNow')}
+        </button>
+      </div>
+      {status && (
+        <div className="diag-grid">
+          <div className="diag-card">
+            <span className="diag-label">{t('pricingSync.lastSync')}</span>
+            <span className="diag-value">{status.last_sync || '-'}</span>
+          </div>
+          <div className="diag-card">
+            <span className="diag-label">{t('pricingSync.status')}</span>
+            <span className="badge-blue">{status.status || 'idle'}</span>
+          </div>
+          <div className="diag-card">
+            <span className="diag-label">{t('pricingSync.modelsCount')}</span>
+            <span className="diag-value">{status.models_count || 0}</span>
+          </div>
+          <div className="diag-card">
+            <span className="diag-label">{t('pricingSync.autoSync')}</span>
+            <span className={status.auto_sync ? "badge-green" : "badge-red"}>{status.auto_sync ? 'ON' : 'OFF'}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CloudSyncPanel() {
+  const { t } = useTranslation();
+  const [status, setStatus] = useState<Record<string, any> | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const s = await cmd.getCloudSyncStatus();
+        setStatus(s);
+      } catch {
+        // ignore
+      }
+    })();
+  }, []);
+
+  return (
+    <div className="tab-content section-card">
+      <div className="section-heading">
+        <h2>{t('cloudSync.title')}</h2>
+        <p className="hint">{t('cloudSync.subtitle')}</p>
+      </div>
+      {status && (
+        <>
+          <div className="diag-grid">
+            <div className="diag-card">
+              <span className="diag-label">{t('cloudSync.hmacEnabled')}</span>
+              <span className={status.hmac_enabled ? "badge-green" : "badge-red"}>{status.hmac_enabled ? 'ON' : 'OFF'}</span>
+            </div>
+            <div className="diag-card">
+              <span className="diag-label">{t('cloudSync.versionHash')}</span>
+              <span className="diag-value" style={{ fontFamily: 'monospace', fontSize: 11 }}>{(status.version_hash || '').slice(0, 16) || '-'}</span>
+            </div>
+            <div className="diag-card">
+              <span className="diag-label">{t('cloudSync.lastSync')}</span>
+              <span className="diag-value">{status.last_sync || '-'}</span>
+            </div>
+            <div className="diag-card">
+              <span className="diag-label">{t('cloudSync.conflicts')}</span>
+              <span className={status.conflict_count > 0 ? "badge-red" : "badge-green"}>{status.conflict_count || 0}</span>
+            </div>
+          </div>
+          {status.conflicts && Array.isArray(status.conflicts) && status.conflicts.length > 0 && (
+            <table className="diag-table" style={{ marginTop: 16 }}>
+              <thead>
+                <tr><th>{t('cloudSync.conflictType')}</th><th>{t('cloudSync.conflictDetail')}</th></tr>
+              </thead>
+              <tbody>
+                {(status.conflicts as any[]).map((c, i) => (
+                  <tr key={i}>
+                    <td>{c.type}</td>
+                    <td>{c.detail}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </>
       )}
     </div>
   );

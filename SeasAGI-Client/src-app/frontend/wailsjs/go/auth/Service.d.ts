@@ -19,6 +19,8 @@ export function FetchCloudOptimizationConfig():Promise<string>;
 
 export function FetchCloudUsage():Promise<auth.CloudUsage>;
 
+export function FetchFreeChannels(arg1:context.Context):Promise<Array<{[key: string]: any}>>;
+
 export function FetchOfficialComboTemplates(arg1:context.Context):Promise<Array<auth.CloudComboTemplate>>;
 
 export function FetchPlans():Promise<Array<auth.CloudPlan>>;

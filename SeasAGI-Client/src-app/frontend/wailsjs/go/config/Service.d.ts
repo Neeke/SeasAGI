@@ -30,6 +30,8 @@ export function GetOptimizationConfig():Promise<config.OptimizationConfig>;
 
 export function GetPlatformAPIBaseURL():Promise<string>;
 
+export function GetRateLimitConfig():Promise<config.RateLimitConfig>;
+
 export function GetSetting(arg1:string):Promise<string>;
 
 export function ListChannels():Promise<Array<config.Channel>>;
@@ -67,6 +69,8 @@ export function SetDefaultModel(arg1:string,arg2:string):Promise<void>;
 export function SetOptimizationConfig(arg1:config.OptimizationConfig):Promise<void>;
 
 export function SetPlatformAPIBaseURL(arg1:string):Promise<void>;
+
+export function SetRateLimitConfig(arg1:config.RateLimitConfig):Promise<void>;
 
 export function SetSelectedRelayGateway(arg1:string):Promise<void>;
 

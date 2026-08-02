@@ -1197,6 +1197,187 @@ select { cursor: pointer; }
   flex-wrap: wrap;
 }
 
+/* === 诊断中心页面 === */
+.diagnostics-results {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 20px;
+}
+.diag-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+}
+.diag-section h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text-primary);
+}
+.diag-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+.diag-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--bg-input);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  gap: 12px;
+}
+.diag-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.diag-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.diag-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.diag-table th {
+  text-align: left;
+  padding: 8px 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  border-bottom: 1px solid var(--border-color);
+}
+.diag-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+.diag-empty {
+  color: var(--text-secondary);
+  font-size: 13px;
+  padding: 8px 0;
+}
+.diag-timestamp {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  text-align: right;
+  padding-top: 8px;
+}
+
+/* === Eval 评估页面 === */
+.eval-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.eval-create-form {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.eval-create-form h3,
+.eval-create-form h4 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 4px 0;
+}
+.eval-create-form .form-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.eval-create-form .form-row label {
+  min-width: 100px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.eval-create-form .form-row input,
+.eval-create-form .form-row select {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 13px;
+}
+.eval-case-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr 2fr 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+.eval-case-row input,
+.eval-case-row select {
+  padding: 6px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 13px;
+}
+.form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.eval-suites-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.eval-suite-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.eval-suite-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.eval-suite-header h4 {
+  font-size: 15px;
+  font-weight: 600;
+}
+.eval-suite-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.eval-suite-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  align-items: center;
+}
+.eval-run-result,
+.eval-scorecard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+}
+.eval-run-result h3,
+.eval-scorecard h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
 .channel-group {
   margin-bottom: 20px;
 }

@@ -302,6 +302,48 @@ export namespace auth {
 
 export namespace config {
 	
+	export class ChannelRateLimit {
+	    rpm: number;
+	    tpm: number;
+	    min_interval_ms: number;
+	    max_concurrent: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new ChannelRateLimit(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.rpm = source["rpm"];
+	        this.tpm = source["tpm"];
+	        this.min_interval_ms = source["min_interval_ms"];
+	        this.max_concurrent = source["max_concurrent"];
+	    }
+	}
+	export class RateLimitConfig {
+	    enabled: boolean;
+	    default_rpm: number;
+	    default_tpm: number;
+	    min_interval_ms: number;
+	    max_concurrent: number;
+	    max_wait_ms: number;
+	    channel_overrides?: {[key: string]: ChannelRateLimit};
+	
+	    static createFrom(source: any = {}) {
+	        return new RateLimitConfig(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.enabled = source["enabled"];
+	        this.default_rpm = source["default_rpm"];
+	        this.default_tpm = source["default_tpm"];
+	        this.min_interval_ms = source["min_interval_ms"];
+	        this.max_concurrent = source["max_concurrent"];
+	        this.max_wait_ms = source["max_wait_ms"];
+	        this.channel_overrides = source["channel_overrides"];
+	    }
+	}
 	export class OptimizationConfig {
 	    mode: string;
 	    penalty_enabled: boolean;
@@ -494,6 +536,7 @@ export namespace config {
 	    optimizations?: OptimizationConfig;
 	    platform_api_base_url?: string;
 	    default_combo_name?: string;
+	    rate_limit?: RateLimitConfig;
 	
 	    static createFrom(source: any = {}) {
 	        return new AppConfig(source);
@@ -522,6 +565,7 @@ export namespace config {
 	        this.optimizations = this.convertValues(source["optimizations"], OptimizationConfig);
 	        this.platform_api_base_url = source["platform_api_base_url"];
 	        this.default_combo_name = source["default_combo_name"];
+	        this.rate_limit = this.convertValues(source["rate_limit"], RateLimitConfig);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
@@ -617,6 +661,7 @@ export namespace config {
 		    return a;
 		}
 	}
+	
 	
 	
 	

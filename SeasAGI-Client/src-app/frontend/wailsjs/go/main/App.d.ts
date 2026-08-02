@@ -37,6 +37,8 @@ export function CopyToClipboard(arg1:string):Promise<void>;
 
 export function CreateCheckoutSession(arg1:string,arg2:Array<number>):Promise<{[key: string]: any}>;
 
+export function CreateEvalSuite(arg1:{[key: string]: any}):Promise<{[key: string]: any}>;
+
 export function DeleteCloudCombo(arg1:string):Promise<void>;
 
 export function DeleteComboTemplate(arg1:string):Promise<void>;
@@ -59,6 +61,8 @@ export function ExportConfig():Promise<string>;
 
 export function FetchCloudCombos():Promise<Array<{[key: string]: any}>>;
 
+export function FetchFreeChannels():Promise<Array<{[key: string]: any}>>;
+
 export function FetchModelStats():Promise<Array<{[key: string]: any}>>;
 
 export function FetchModelsFromURL(arg1:string,arg2:string):Promise<{[key: string]: any}>;
@@ -73,6 +77,8 @@ export function GetByokPolicies():Promise<Array<{[key: string]: any}>>;
 
 export function GetCloudBilling():Promise<{[key: string]: any}>;
 
+export function GetCloudSyncStatus():Promise<{[key: string]: any}>;
+
 export function GetCloudUsage():Promise<{[key: string]: any}>;
 
 export function GetComboByName(arg1:string):Promise<config.ModelCombo>;
@@ -83,9 +89,17 @@ export function GetDailyUsage(arg1:number):Promise<Array<usage.DailyUsage>>;
 
 export function GetDefaultComboName():Promise<string>;
 
+export function GetEvalScorecard(arg1:string):Promise<{[key: string]: any}>;
+
 export function GetLocalAccessToken():Promise<string>;
 
 export function GetLocale():Promise<string>;
+
+export function GetLogRotationConfig():Promise<{[key: string]: any}>;
+
+export function GetMCPAuditLog():Promise<Array<{[key: string]: any}>>;
+
+export function GetMCPGatewayTools():Promise<Array<{[key: string]: any}>>;
 
 export function GetMITMEnvHint():Promise<{[key: string]: string}>;
 
@@ -94,6 +108,8 @@ export function GetMITMRecentIntercepts(arg1:number):Promise<Array<{[key: string
 export function GetMITMRules():Promise<Array<string>>;
 
 export function GetMITMStatus():Promise<{[key: string]: any}>;
+
+export function GetMITMTargets():Promise<Array<{[key: string]: any}>>;
 
 export function GetOAuthConnections():Promise<Array<{[key: string]: any}>>;
 
@@ -107,19 +123,29 @@ export function GetOptimizationConfig():Promise<{[key: string]: any}>;
 
 export function GetOptimizationPlan(arg1:string,arg2:string):Promise<{[key: string]: any}>;
 
+export function GetPerfAuditReport():Promise<{[key: string]: any}>;
+
 export function GetPlans():Promise<Array<{[key: string]: any}>>;
 
 export function GetPlatformAPIBaseURL():Promise<string>;
 
 export function GetPlatformToken():Promise<string>;
 
+export function GetPluginAuditLog():Promise<Array<{[key: string]: any}>>;
+
+export function GetPluginHooks():Promise<Array<{[key: string]: any}>>;
+
 export function GetPresetByName(arg1:string):Promise<presets.ProviderPreset>;
+
+export function GetPricingSyncStatus():Promise<{[key: string]: any}>;
 
 export function GetProviderHealthMetrics(arg1:string):Promise<Array<{[key: string]: any}>>;
 
 export function GetProviderHealthSummary():Promise<Array<{[key: string]: any}>>;
 
 export function GetQuickStrategies():Promise<Array<{[key: string]: any}>>;
+
+export function GetRateLimitConfig():Promise<{[key: string]: any}>;
 
 export function GetRecommendedCombos():Promise<Array<{[key: string]: any}>>;
 
@@ -165,6 +191,8 @@ export function ListChannels():Promise<Array<config.Channel>>;
 
 export function ListComboTemplates():Promise<Array<config.ModelCombo>>;
 
+export function ListEvalSuites():Promise<Array<{[key: string]: any}>>;
+
 export function ListLogs(arg1:number,arg2:number):Promise<Array<logs.RequestLog>>;
 
 export function ListLogsFiltered(arg1:number,arg2:number,arg3:string,arg4:string,arg5:string,arg6:string,arg7:string):Promise<Array<logs.RequestLog>>;
@@ -174,6 +202,8 @@ export function ListMCPServers():Promise<Array<mcp.MCPServer>>;
 export function ListModelCombos():Promise<Array<config.ModelCombo>>;
 
 export function ListModelPricing():Promise<Array<usage.ModelPricing>>;
+
+export function ListPlugins():Promise<Array<{[key: string]: any}>>;
 
 export function ListPresetsByCategory(arg1:string):Promise<Array<presets.ProviderPreset>>;
 
@@ -213,6 +243,10 @@ export function ResetLocalAccessToken():Promise<string>;
 
 export function RevokeOAuthToken(arg1:string):Promise<void>;
 
+export function RunDiagnostics():Promise<{[key: string]: any}>;
+
+export function RunEvalSuite(arg1:string):Promise<{[key: string]: any}>;
+
 export function SaveComboTemplate(arg1:config.ModelCombo):Promise<void>;
 
 export function SaveCustomChannel(arg1:config.Channel):Promise<string>;
@@ -229,6 +263,10 @@ export function SaveRelayGateway(arg1:string):Promise<void>;
 
 export function ScanSkillsDir():Promise<Array<skills.Skill>>;
 
+export function SearchNotion(arg1:string,arg2:string):Promise<{[key: string]: any}>;
+
+export function SearchObsidian(arg1:string,arg2:string,arg3:string):Promise<Array<{[key: string]: any}>>;
+
 export function SearchSessions(arg1:string,arg2:string,arg3:number):Promise<Array<sessions.Session>>;
 
 export function SelectDirectory():Promise<string>;
@@ -241,11 +279,15 @@ export function SetDefaultComboName(arg1:string):Promise<void>;
 
 export function SetLocale(arg1:string):Promise<void>;
 
+export function SetLogRotationConfig(arg1:{[key: string]: any}):Promise<void>;
+
 export function SetMITMManager(arg1:mitm.Manager):Promise<void>;
 
 export function SetOptimizationConfig(arg1:{[key: string]: any}):Promise<void>;
 
 export function SetPlatformAPIBaseURL(arg1:string):Promise<void>;
+
+export function SetRateLimitConfig(arg1:{[key: string]: any}):Promise<void>;
 
 export function ShowMessage(arg1:string,arg2:string):Promise<void>;
 
@@ -287,7 +329,11 @@ export function TestRelayGateway(arg1:string):Promise<{[key: string]: any}>;
 
 export function ToggleMCPServer(arg1:string,arg2:boolean):Promise<void>;
 
+export function TogglePlugin(arg1:string,arg2:boolean):Promise<boolean>;
+
 export function ToggleSkill(arg1:string,arg2:boolean):Promise<void>;
+
+export function TriggerPricingSync():Promise<void>;
 
 export function UninstallSkill(arg1:string):Promise<void>;
 

@@ -99,6 +99,29 @@ type WailsAppApi = {
   GetMITMRecentIntercepts(n: number): Promise<Record<string, any>[]>;
   GetMITMEnvHint(): Promise<Record<string, string>>;
   TestMITMDomain(domain: string): Promise<Record<string, any>>;
+  RunDiagnostics(): Promise<Record<string, any>>;
+  ListEvalSuites(): Promise<Record<string, any>[]>;
+  CreateEvalSuite(suite: Record<string, any>): Promise<Record<string, any>>;
+  RunEvalSuite(suiteID: string): Promise<Record<string, any>>;
+  GetEvalScorecard(suiteID: string): Promise<Record<string, any>>;
+  ListPlugins(): Promise<Record<string, any>[]>;
+  TogglePlugin(pluginName: string, enabled: boolean): Promise<boolean>;
+  GetPluginHooks(): Promise<Record<string, any>[]>;
+  GetPluginAuditLog(): Promise<Record<string, any>[]>;
+  GetMITMTargets(): Promise<Record<string, any>[]>;
+  SearchNotion(apiKey: string, query: string): Promise<Record<string, any>>;
+  SearchObsidian(apiKey: string, baseURL: string, query: string): Promise<Record<string, any>[]>;
+  GetPerfAuditReport(): Promise<Record<string, any>>;
+  GetMCPGatewayTools(): Promise<Record<string, any>[]>;
+  GetMCPAuditLog(): Promise<Record<string, any>[]>;
+  GetLogRotationConfig(): Promise<Record<string, any>>;
+  SetLogRotationConfig(config: Record<string, any>): Promise<void>;
+  GetPricingSyncStatus(): Promise<Record<string, any>>;
+  TriggerPricingSync(): Promise<void>;
+  GetCloudSyncStatus(): Promise<Record<string, any>>;
+  FetchFreeChannels(): Promise<Record<string, any>[]>;
+  GetRateLimitConfig(): Promise<Record<string, any>>;
+  SetRateLimitConfig(config: Record<string, any>): Promise<void>;
 };
 
 function getAppApi(): WailsAppApi {
@@ -532,4 +555,96 @@ export async function getMITMEnvHint(): Promise<Record<string, string>> {
 
 export async function testMITMDomain(domain: string): Promise<Record<string, any>> {
   return getAppApi().TestMITMDomain(domain);
+}
+
+export async function runDiagnostics(): Promise<Record<string, any>> {
+  return getAppApi().RunDiagnostics();
+}
+
+export async function listEvalSuites(): Promise<Record<string, any>[]> {
+  return getAppApi().ListEvalSuites();
+}
+
+export async function createEvalSuite(suite: Record<string, any>): Promise<Record<string, any>> {
+  return getAppApi().CreateEvalSuite(suite);
+}
+
+export async function runEvalSuite(suiteID: string): Promise<Record<string, any>> {
+  return getAppApi().RunEvalSuite(suiteID);
+}
+
+export async function getEvalScorecard(suiteID: string): Promise<Record<string, any>> {
+  return getAppApi().GetEvalScorecard(suiteID);
+}
+
+export async function listPlugins(): Promise<Record<string, any>[]> {
+  return getAppApi().ListPlugins();
+}
+
+export async function togglePlugin(pluginName: string, enabled: boolean): Promise<boolean> {
+  return getAppApi().TogglePlugin(pluginName, enabled);
+}
+
+export async function getPluginHooks(): Promise<Record<string, any>[]> {
+  return getAppApi().GetPluginHooks();
+}
+
+export async function getPluginAuditLog(): Promise<Record<string, any>[]> {
+  return getAppApi().GetPluginAuditLog();
+}
+
+export async function getMITMTargets(): Promise<Record<string, any>[]> {
+  return getAppApi().GetMITMTargets();
+}
+
+export async function searchNotion(apiKey: string, query: string): Promise<Record<string, any>> {
+  return getAppApi().SearchNotion(apiKey, query);
+}
+
+export async function searchObsidian(apiKey: string, baseURL: string, query: string): Promise<Record<string, any>[]> {
+  return getAppApi().SearchObsidian(apiKey, baseURL, query);
+}
+
+export async function getPerfAuditReport(): Promise<Record<string, any>> {
+  return getAppApi().GetPerfAuditReport();
+}
+
+export async function getMCPGatewayTools(): Promise<Record<string, any>[]> {
+  return getAppApi().GetMCPGatewayTools();
+}
+
+export async function getMCPAuditLog(): Promise<Record<string, any>[]> {
+  return getAppApi().GetMCPAuditLog();
+}
+
+export async function getLogRotationConfig(): Promise<Record<string, any>> {
+  return getAppApi().GetLogRotationConfig();
+}
+
+export async function setLogRotationConfig(config: Record<string, any>): Promise<void> {
+  return getAppApi().SetLogRotationConfig(config);
+}
+
+export async function getPricingSyncStatus(): Promise<Record<string, any>> {
+  return getAppApi().GetPricingSyncStatus();
+}
+
+export async function triggerPricingSync(): Promise<void> {
+  return getAppApi().TriggerPricingSync();
+}
+
+export async function getCloudSyncStatus(): Promise<Record<string, any>> {
+  return getAppApi().GetCloudSyncStatus();
+}
+
+export async function fetchFreeChannels(): Promise<Record<string, any>[]> {
+  return getAppApi().FetchFreeChannels();
+}
+
+export async function getRateLimitConfig(): Promise<Record<string, any>> {
+  return getAppApi().GetRateLimitConfig();
+}
+
+export async function setRateLimitConfig(config: Record<string, any>): Promise<void> {
+  return getAppApi().SetRateLimitConfig(config);
 }

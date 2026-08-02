@@ -36,6 +36,26 @@ type AppConfig struct {
 	Optimizations        *OptimizationConfig   `json:"optimizations,omitempty"`
 	PlatformAPIBaseURL   string                `json:"platform_api_base_url,omitempty"`
 	DefaultComboName     string                `json:"default_combo_name,omitempty"`
+	RateLimit            *RateLimitConfig      `json:"rate_limit,omitempty"`
+}
+
+// RateLimitConfig 全局速率限制配置，借鉴 OmniRoute per-connection rateLimitOverrides。
+type RateLimitConfig struct {
+	Enabled         bool                `json:"enabled"`
+	DefaultRPM      int                 `json:"default_rpm"`       // 每分钟请求数，0=不限
+	DefaultTPM      int                 `json:"default_tpm"`       // 每分钟 token 数，0=不限
+	MinIntervalMs   int                 `json:"min_interval_ms"`   // 请求间最小间隔（毫秒），0=不限
+	MaxConcurrent   int                 `json:"max_concurrent"`    // 最大并发数，0=不限
+	MaxWaitMs       int                 `json:"max_wait_ms"`       // 队列最大等待（毫秒），默认 15000
+	ChannelOverrides map[string]*ChannelRateLimit `json:"channel_overrides,omitempty"` // per-channel 覆盖
+}
+
+// ChannelRateLimit 单个 Channel 的速率限制覆盖。
+type ChannelRateLimit struct {
+	RPM           int `json:"rpm"`            // 0=使用全局默认
+	TPM           int `json:"tpm"`            // 0=使用全局默认
+	MinIntervalMs int `json:"min_interval_ms"` // 0=使用全局默认
+	MaxConcurrent int `json:"max_concurrent"`  // 0=使用全局默认
 }
 
 type OptimizationConfig struct {
@@ -345,6 +365,28 @@ func (s *Service) SetOptimizationConfig(cfg OptimizationConfig) error {
 		cfg.Mode = "value_first"
 	}
 	s.config.Optimizations = &cfg
+	return s.saveLocked()
+}
+
+func (s *Service) GetRateLimitConfig() RateLimitConfig {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if s.config.RateLimit == nil {
+		return RateLimitConfig{
+			Enabled:       false,
+			DefaultRPM:    60,
+			MinIntervalMs: 350,
+			MaxConcurrent: 6,
+			MaxWaitMs:     15000,
+		}
+	}
+	return *s.config.RateLimit
+}
+
+func (s *Service) SetRateLimitConfig(cfg RateLimitConfig) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.config.RateLimit = &cfg
 	return s.saveLocked()
 }
 

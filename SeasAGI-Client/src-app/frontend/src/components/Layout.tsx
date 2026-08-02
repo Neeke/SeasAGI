@@ -22,7 +22,9 @@ type AppIconName =
   | "sun"
   | "lock"
   | "layers"
-  | "store";
+  | "store"
+  | "diagnostics"
+  | "plugin";
 
 const navItems: Array<{ to: string; label: string; icon: AppIconName; cloudOnly?: boolean }> = [
   { to: "/", label: "nav.home", icon: "home" as AppIconName },
@@ -34,6 +36,8 @@ const navItems: Array<{ to: string; label: string; icon: AppIconName; cloudOnly?
   { to: "/usage", label: "nav.usage", icon: "usage" as AppIconName },
   { to: "/token-market", label: "nav.tokenMarket", icon: "store" as AppIconName, cloudOnly: true },
   { to: "/logs", label: "nav.logs", icon: "logs" as AppIconName },
+  { to: "/diagnostics", label: "nav.diagnostics", icon: "diagnostics" as AppIconName },
+  { to: "/plugins", label: "nav.plugins", icon: "plugin" as AppIconName },
   { to: "/settings", label: "nav.settings", icon: "settings" as AppIconName },
 ];
 
@@ -93,6 +97,10 @@ function AppIcon({ name, className = "" }: { name: AppIconName; className?: stri
       return <svg {...props}><polygon points="12 2 22 7 12 12 2 7 12 2" /><polyline points="2 12 12 17 22 12" /><polyline points="2 17 12 22 22 17" /></svg>;
     case "store":
       return <svg {...props}><path d="M3 9l1.5-5h15L21 9" /><path d="M3 9v11h18V9" /><path d="M9 20v-6h6v6" /></svg>;
+    case "diagnostics":
+      return <svg {...props}><path d="M12 2a10 10 0 100 20 10 10 0 000-20z" /><path d="M12 6v6l4 2" /></svg>;
+    case "plugin":
+      return <svg {...props}><path d="M9 3v4M15 3v4M7 7h10v4a3 3 0 01-3 3h-4a3 3 0 01-3-3V7z" /><path d="M12 14v4M10 21h4" /></svg>;
     default:
       return null;
   }

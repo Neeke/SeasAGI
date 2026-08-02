@@ -1,6 +1,8 @@
 package secpolicy
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"log"
 	"os"
 	"strings"
@@ -20,10 +22,34 @@ var weakPatterns = []string{
 // minSecretLength is the minimum acceptable length for production secrets.
 const minSecretLength = 16
 
+// ensureSecrets ensures JWT_SECRET and JWT_REFRESH_SECRET are set.
+// If they are empty, auto-generates secure random values so the build artifact
+// can start without a .env file. A warning is logged to encourage setting
+// explicit secrets in production.
+func ensureSecrets() {
+	secrets := []string{"JWT_SECRET", "JWT_REFRESH_SECRET"}
+	for _, name := range secrets {
+		if os.Getenv(name) == "" {
+			b := make([]byte, 32)
+			if _, err := rand.Read(b); err != nil {
+				log.Printf("WARNING: failed to auto-generate %s: %v", name, err)
+				continue
+			}
+			val := hex.EncodeToString(b)
+			os.Setenv(name, val)
+			log.Printf("WARNING: %s not set — auto-generated a random secret. Set it explicitly in production via .env.", name)
+		}
+	}
+}
+
 // ValidateStartup checks configured secrets for weak/default values.
 // In production mode (GIN_MODE != "debug"), it logs a fatal error and exits
 // if any weak secret is detected. In debug mode, it only logs warnings.
+// If secrets are empty, auto-generates secure random defaults so the build
+// artifact can start without a .env file.
 func ValidateStartup() {
+	ensureSecrets()
+
 	secrets := []string{
 		"JWT_SECRET",
 		"JWT_REFRESH_SECRET",

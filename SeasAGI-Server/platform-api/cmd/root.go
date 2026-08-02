@@ -89,16 +89,17 @@ func Execute() error {
 
 			authenticated.GET("/channels", channel.ListChannels)
 			authenticated.GET("/channels/:id", channel.GetChannel)
+			authenticated.GET("/free-channels", channel.ListFreeChannels)
 			authenticated.POST("/channels", channel.CreateChannel)
 			authenticated.PUT("/channels/:id", channel.UpdateChannel)
 			authenticated.DELETE("/channels/:id", channel.DeleteChannel)
 
-			authenticated.GET("/channels/:channel_id/resources", providerresource.ListResources)
-			authenticated.GET("/channels/:channel_id/resources/:resource_id", providerresource.GetResource)
-			authenticated.POST("/channels/:channel_id/resources", providerresource.CreateResource)
-			authenticated.PUT("/channels/:channel_id/resources/:resource_id", providerresource.UpdateResource)
-			authenticated.DELETE("/channels/:channel_id/resources/:resource_id", providerresource.DeleteResource)
-			authenticated.GET("/channels/:channel_id/resources/resolve", providerresource.ResolveResource)
+			authenticated.GET("/channels/:id/resources", providerresource.ListResources)
+			authenticated.GET("/channels/:id/resources/:resource_id", providerresource.GetResource)
+			authenticated.POST("/channels/:id/resources", providerresource.CreateResource)
+			authenticated.PUT("/channels/:id/resources/:resource_id", providerresource.UpdateResource)
+			authenticated.DELETE("/channels/:id/resources/:resource_id", providerresource.DeleteResource)
+			authenticated.GET("/channels/:id/resources/resolve", providerresource.ResolveResource)
 
 			authenticated.GET("/models", modelcatalog.ListModels)
 			authenticated.GET("/models/:name", modelcatalog.GetModel)

@@ -1,8 +1,19 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getPlatformAPIBaseURL, getPlatformToken } from "../utils/commands";
+import { getPlatformAPIBaseURL, getPlatformToken, fetchFreeChannels } from "../utils/commands";
 import { useTranslation } from "../i18n";
 import { useMarketStore } from "../stores/marketStore";
+
+interface FreeChannel {
+  provider_id: string;
+  display_name: string;
+  auth_type: string;
+  base_url: string;
+  free_type: string;
+  monthly_tokens: string;
+  models: Array<{ model_id: string; model_name: string; capability: string }>;
+  description: string;
+}
 
 export function TokenMarketPage() {
   const { t } = useTranslation();
@@ -15,6 +26,7 @@ export function TokenMarketPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [freeChannels, setFreeChannels] = useState<FreeChannel[]>([]);
 
   const fetchListings = async (pageNum: number, append: boolean) => {
     if (append) {
@@ -48,6 +60,14 @@ export function TokenMarketPage() {
 
   useEffect(() => {
     fetchListings(1, false);
+    (async () => {
+      try {
+        const data = await fetchFreeChannels();
+        setFreeChannels(data as FreeChannel[]);
+      } catch {
+        setFreeChannels([]);
+      }
+    })();
   }, []);
 
   const handleLoadMore = () => {
@@ -70,6 +90,49 @@ export function TokenMarketPage() {
           </button>
         </div>
       </div>
+
+      {freeChannels.length > 0 && (
+        <div className="free-channels-section" style={{ marginBottom: 32 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>
+            {t("tokenMarket.freeChannels")}
+          </h2>
+          <div className="card-grid">
+            {freeChannels.map((ch) => (
+              <div key={ch.provider_id} className="listing-card free-channel-card">
+                <div className="listing-card-header">
+                  <span className="listing-label">{ch.display_name}</span>
+                  <span className={`status-badge auth-${ch.auth_type}`}>
+                    {ch.auth_type === "noauth" ? t("tokenMarket.authNoauth") :
+                     ch.auth_type === "oauth" ? t("tokenMarket.authOauth") :
+                     ch.auth_type === "apikey" ? t("tokenMarket.authApikey") :
+                     t("tokenMarket.authWebCookie")}
+                  </span>
+                </div>
+                <div className="listing-card-body">
+                  <div className="listing-row">
+                    <span className="listing-key">{t("tokenMarket.freeType")}</span>
+                    <span className="listing-value">{ch.free_type}</span>
+                  </div>
+                  <div className="listing-row">
+                    <span className="listing-key">{t("tokenMarket.monthlyTokens")}</span>
+                    <span className="listing-value">{ch.monthly_tokens}</span>
+                  </div>
+                  {ch.models.length > 0 && (
+                    <div className="listing-row">
+                      <span className="listing-key">{t("tokenMarket.models")}</span>
+                      <span className="listing-value">{ch.models.map(m => m.model_name).join(", ")}</span>
+                    </div>
+                  )}
+                  <div className="listing-row">
+                    <span className="listing-key">{t("tokenMarket.description")}</span>
+                    <span className="listing-value" style={{ fontSize: 12, color: "var(--text-muted)" }}>{ch.description}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {loading && <div className="loading-state">{t("common.loading")}</div>}
       {error && <div className="form-error">{error}</div>}
