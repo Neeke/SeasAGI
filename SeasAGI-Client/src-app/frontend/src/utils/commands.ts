@@ -116,8 +116,6 @@ type WailsAppApi = {
   GetMCPAuditLog(): Promise<Record<string, any>[]>;
   GetLogRotationConfig(): Promise<Record<string, any>>;
   SetLogRotationConfig(config: Record<string, any>): Promise<void>;
-  GetPricingSyncStatus(): Promise<Record<string, any>>;
-  TriggerPricingSync(): Promise<void>;
   GetCloudSyncStatus(): Promise<Record<string, any>>;
   FetchFreeChannels(): Promise<Record<string, any>[]>;
   GetRateLimitConfig(): Promise<Record<string, any>>;
@@ -623,14 +621,6 @@ export async function getLogRotationConfig(): Promise<Record<string, any>> {
 
 export async function setLogRotationConfig(config: Record<string, any>): Promise<void> {
   return getAppApi().SetLogRotationConfig(config);
-}
-
-export async function getPricingSyncStatus(): Promise<Record<string, any>> {
-  return getAppApi().GetPricingSyncStatus();
-}
-
-export async function triggerPricingSync(): Promise<void> {
-  return getAppApi().TriggerPricingSync();
 }
 
 export async function getCloudSyncStatus(): Promise<Record<string, any>> {

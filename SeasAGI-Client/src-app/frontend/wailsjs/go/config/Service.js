@@ -82,6 +82,10 @@ export function ListOAuthProviderConfigs() {
   return window['go']['config']['Service']['ListOAuthProviderConfigs']();
 }
 
+export function NormalizeChannelWeights() {
+  return window['go']['config']['Service']['NormalizeChannelWeights']();
+}
+
 export function RenameComboTemplate(arg1, arg2) {
   return window['go']['config']['Service']['RenameComboTemplate'](arg1, arg2);
 }
@@ -164,4 +168,8 @@ export function UpdateSetting(arg1, arg2) {
 
 export function UpsertPlatformChannels(arg1) {
   return window['go']['config']['Service']['UpsertPlatformChannels'](arg1);
+}
+
+export function ValidateChannelWeights() {
+  return window['go']['config']['Service']['ValidateChannelWeights']();
 }

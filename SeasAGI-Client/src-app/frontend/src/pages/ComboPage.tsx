@@ -437,14 +437,31 @@ export function ComboPage({ embedded, showTemplatesTab }: { embedded?: boolean; 
   return (
     <div className={embedded ? "combo-page-embedded" : "page combo-page"}>
       {!embedded && (
-        <div className="page-header">
-          <div>
-            <h1>{t("combo.title")}</h1>
-            <p className="page-subtitle">{t("combo.subtitle")}</p>
+        <div className="page-header page-hero">
+          <div className="page-hero-head">
+            <div className="page-hero-copy">
+              <h1>{t("combo.title")}</h1>
+              <p className="page-subtitle">{t("combo.subtitle")}</p>
+            </div>
+            <div className="page-hero-actions">
+              <button onClick={() => setActiveTab("templates")} className="btn-secondary">
+                {t("settings.templates")}
+              </button>
+              <button onClick={openCreate} className="btn-primary">
+                {t("combo.createCombo")}
+              </button>
+            </div>
           </div>
-          <button onClick={openCreate} className="btn-primary">
-            {t("combo.createCombo")}
-          </button>
+          <div className="hero-metrics">
+            <div className="hero-metric-card">
+              <span className="hero-metric-label">{t("settings.combos")}</span>
+              <strong className="hero-metric-value">{allCombos.length}</strong>
+            </div>
+            <div className="hero-metric-card">
+              <span className="hero-metric-label">{t("settings.templates")}</span>
+              <strong className="hero-metric-value">{templates.length}</strong>
+            </div>
+          </div>
         </div>
       )}
 

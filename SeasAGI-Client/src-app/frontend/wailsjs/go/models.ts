@@ -620,6 +620,13 @@ export namespace config {
 	    api_key?: string;
 	    api_keys?: string[];
 	    retry_config?: RetryConfig;
+	    weight?: number;
+	    priority?: number;
+	    max_concurrent?: number;
+	    oauth_refresh_token?: string;
+	    oauth_client_id?: string;
+	    oauth_client_secret?: string;
+	    oauth_token_url?: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Channel(source);
@@ -641,6 +648,13 @@ export namespace config {
 	        this.api_key = source["api_key"];
 	        this.api_keys = source["api_keys"];
 	        this.retry_config = this.convertValues(source["retry_config"], RetryConfig);
+	        this.weight = source["weight"];
+	        this.priority = source["priority"];
+	        this.max_concurrent = source["max_concurrent"];
+	        this.oauth_refresh_token = source["oauth_refresh_token"];
+	        this.oauth_client_id = source["oauth_client_id"];
+	        this.oauth_client_secret = source["oauth_client_secret"];
+	        this.oauth_token_url = source["oauth_token_url"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
@@ -1154,6 +1168,50 @@ export namespace usage {
 	        this.error_rate = source["error_rate"];
 	    }
 	}
+	export class UsageDetail {
+	    ChannelID: string;
+	    ChannelName: string;
+	    Model: string;
+	    InputTokens: number;
+	    OutputTokens: number;
+	    CacheReadTokens: number;
+	    CacheWriteTokens: number;
+	    UncachedInputTokens: number;
+	    ReasoningTokens: number;
+	    NonReasoningOutput: number;
+	    UnclassifiedTokens: number;
+	    TTFTMs: number;
+	    LatencyMs: number;
+	    ServiceTier: string;
+	    RateLimitRemaining: number;
+	    RateLimitLimit: number;
+	    RateLimitReset: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new UsageDetail(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.ChannelID = source["ChannelID"];
+	        this.ChannelName = source["ChannelName"];
+	        this.Model = source["Model"];
+	        this.InputTokens = source["InputTokens"];
+	        this.OutputTokens = source["OutputTokens"];
+	        this.CacheReadTokens = source["CacheReadTokens"];
+	        this.CacheWriteTokens = source["CacheWriteTokens"];
+	        this.UncachedInputTokens = source["UncachedInputTokens"];
+	        this.ReasoningTokens = source["ReasoningTokens"];
+	        this.NonReasoningOutput = source["NonReasoningOutput"];
+	        this.UnclassifiedTokens = source["UnclassifiedTokens"];
+	        this.TTFTMs = source["TTFTMs"];
+	        this.LatencyMs = source["LatencyMs"];
+	        this.ServiceTier = source["ServiceTier"];
+	        this.RateLimitRemaining = source["RateLimitRemaining"];
+	        this.RateLimitLimit = source["RateLimitLimit"];
+	        this.RateLimitReset = source["RateLimitReset"];
+	    }
+	}
 	export class UsageRecord {
 	    timestamp: string;
 	    channel_id: string;
@@ -1163,6 +1221,19 @@ export namespace usage {
 	    input_tokens: number;
 	    output_tokens: number;
 	    cost_usd: number;
+	    cache_read_tokens?: number;
+	    cache_write_tokens?: number;
+	    uncached_input_tokens?: number;
+	    reasoning_tokens?: number;
+	    non_reasoning_output?: number;
+	    unclassified_tokens?: number;
+	    token_quality?: string;
+	    ttft_ms?: number;
+	    latency_ms?: number;
+	    service_tier?: string;
+	    rate_limit_remaining?: number;
+	    rate_limit_limit?: number;
+	    rate_limit_reset?: number;
 	
 	    static createFrom(source: any = {}) {
 	        return new UsageRecord(source);
@@ -1178,6 +1249,19 @@ export namespace usage {
 	        this.input_tokens = source["input_tokens"];
 	        this.output_tokens = source["output_tokens"];
 	        this.cost_usd = source["cost_usd"];
+	        this.cache_read_tokens = source["cache_read_tokens"];
+	        this.cache_write_tokens = source["cache_write_tokens"];
+	        this.uncached_input_tokens = source["uncached_input_tokens"];
+	        this.reasoning_tokens = source["reasoning_tokens"];
+	        this.non_reasoning_output = source["non_reasoning_output"];
+	        this.unclassified_tokens = source["unclassified_tokens"];
+	        this.token_quality = source["token_quality"];
+	        this.ttft_ms = source["ttft_ms"];
+	        this.latency_ms = source["latency_ms"];
+	        this.service_tier = source["service_tier"];
+	        this.rate_limit_remaining = source["rate_limit_remaining"];
+	        this.rate_limit_limit = source["rate_limit_limit"];
+	        this.rate_limit_reset = source["rate_limit_reset"];
 	    }
 	}
 	export class UsageSummary {

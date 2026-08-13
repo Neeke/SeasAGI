@@ -97,7 +97,7 @@ export function SubscriptionPage() {
 
   return (
     <div className="page subscription-page">
-      <div className="page-header">
+      <div className="page-header page-hero">
         <div>
           <h1>{t("subscription.title")}</h1>
           <p className="page-subtitle">{t("subscription.pageSubtitle")}</p>

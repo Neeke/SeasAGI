@@ -25,6 +25,8 @@ type Resolver struct {
 	state     map[string]rotationState
 	sessions  map[string]sessionEntry
 	configSvc *config.Service
+	wrrState  *smoothWRRState
+	fillFirst *fillFirstState
 }
 
 type PlanStep struct {
@@ -53,6 +55,8 @@ func NewResolver(configSvc *config.Service) *Resolver {
 		state:     map[string]rotationState{},
 		sessions:  map[string]sessionEntry{},
 		configSvc: configSvc,
+		wrrState:  newSmoothWRRState(),
+		fillFirst: newFillFirstState(),
 	}
 	go r.cleanupLoop()
 	return r
@@ -168,10 +172,32 @@ func (r *Resolver) ResolveChatPlan(model string, taskType string) (string, []Pla
 		if strategy == "" {
 			strategy = r.configSvc.GetConfig().RoutingStrategy
 		}
-		if strategy != "round_robin" || len(steps) <= 1 {
+
+		// Apply routing strategy
+		switch strategy {
+		case "round_robin":
+			if len(steps) <= 1 {
+				return combo.Name, steps, nil
+			}
+			return combo.Name, r.rotateSteps(combo.Name, steps, combo.StickyUses), nil
+		case "weighted_round_robin":
+			if len(steps) <= 1 {
+				return combo.Name, steps, nil
+			}
+			return combo.Name, r.wrrState.reorderForWRR(combo.Name, steps), nil
+		case "fill_first":
+			if len(steps) <= 1 {
+				return combo.Name, steps, nil
+			}
+			return combo.Name, r.fillFirst.reorder(combo.Name, steps), nil
+		case "priority":
+			if len(steps) <= 1 {
+				return combo.Name, steps, nil
+			}
+			return combo.Name, r.reorderWithPriorityBuckets(combo.Name, steps, r.wrrState), nil
+		default: // fallback or unknown
 			return combo.Name, steps, nil
 		}
-		return combo.Name, r.rotateSteps(combo.Name, steps, combo.StickyUses), nil
 	}
 
 	candidates, normalizedModel := r.configSvc.ResolveChannelsForModel(model)
@@ -194,11 +220,35 @@ func (r *Resolver) ResolveChatPlan(model string, taskType string) (string, []Pla
 	steps = r.sortByTaskType(steps, taskType)
 
 	cfg := r.configSvc.GetConfig()
-	if cfg.RoutingStrategy != "round_robin" || len(steps) <= 1 {
-		return normalizedModel, steps, nil
+	strategy := cfg.RoutingStrategy
+	if strategy == "" {
+		strategy = "fallback"
 	}
 
-	return normalizedModel, r.rotateSteps(normalizedModel, steps, cfg.StickyChannelUse), nil
+	switch strategy {
+	case "round_robin":
+		if len(steps) <= 1 {
+			return normalizedModel, steps, nil
+		}
+		return normalizedModel, r.rotateSteps(normalizedModel, steps, cfg.StickyChannelUse), nil
+	case "weighted_round_robin":
+		if len(steps) <= 1 {
+			return normalizedModel, steps, nil
+		}
+		return normalizedModel, r.wrrState.reorderForWRR(normalizedModel, steps), nil
+	case "fill_first":
+		if len(steps) <= 1 {
+			return normalizedModel, steps, nil
+		}
+		return normalizedModel, r.fillFirst.reorder(normalizedModel, steps), nil
+	case "priority":
+		if len(steps) <= 1 {
+			return normalizedModel, steps, nil
+		}
+		return normalizedModel, r.reorderWithPriorityBuckets(normalizedModel, steps, r.wrrState), nil
+	default: // fallback or unknown
+		return normalizedModel, steps, nil
+	}
 }
 
 func (r *Resolver) resolveComboSteps(combo config.ModelCombo) []PlanStep {

@@ -18,6 +18,8 @@ export function PurgeBefore(arg1:number):Promise<number>;
 
 export function RecordUsage(arg1:string,arg2:string,arg3:string,arg4:number,arg5:number):Promise<void>;
 
+export function RecordUsageV2(arg1:usage.UsageDetail):Promise<void>;
+
 export function SavePricing(arg1:Array<usage.ModelPricing>):Promise<void>;
 
 export function SetModelStatsFromCloud(arg1:Array<usage.ModelStatsEntry>):Promise<void>;

@@ -250,10 +250,6 @@ export function GetPresetByName(arg1) {
   return window['go']['main']['App']['GetPresetByName'](arg1);
 }
 
-export function GetPricingSyncStatus() {
-  return window['go']['main']['App']['GetPricingSyncStatus']();
-}
-
 export function GetProviderHealthMetrics(arg1) {
   return window['go']['main']['App']['GetProviderHealthMetrics'](arg1);
 }
@@ -640,10 +636,6 @@ export function TogglePlugin(arg1, arg2) {
 
 export function ToggleSkill(arg1, arg2) {
   return window['go']['main']['App']['ToggleSkill'](arg1, arg2);
-}
-
-export function TriggerPricingSync() {
-  return window['go']['main']['App']['TriggerPricingSync']();
 }
 
 export function UninstallSkill(arg1) {

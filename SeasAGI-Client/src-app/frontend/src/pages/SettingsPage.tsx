@@ -135,7 +135,7 @@ export function SettingsPage() {
 
   return (
     <div className="page settings-page">
-      <div className="page-header">
+      <div className="page-header page-hero">
         <div>
           <h1>{t("settings.title")}</h1>
           <p className="page-subtitle">{t("settings.subtitle")}</p>
@@ -445,6 +445,9 @@ export function SettingsPage() {
                 <select value={routingStrategy} onChange={(e) => setRoutingStrategy(e.target.value)}>
                   <option value="fallback">{t("settings.fallback")}</option>
                   <option value="round_robin">{t("settings.roundRobin")}</option>
+                  <option value="weighted_round_robin">{t("settings.weightedRoundRobin")}</option>
+                  <option value="fill_first">{t("settings.fillFirst")}</option>
+                  <option value="priority">{t("settings.priority")}</option>
                 </select>
               </div>
               {routingStrategy === "round_robin" && (
@@ -454,7 +457,14 @@ export function SettingsPage() {
                 </div>
               )}
             </div>
-            <p className="hint">{routingStrategy === "fallback" ? t("settings.fallbackHint") : t("settings.roundRobinHint")}</p>
+            <p className="hint">
+              {routingStrategy === "fallback" ? t("settings.fallbackHint") :
+               routingStrategy === "round_robin" ? t("settings.roundRobinHint") :
+               routingStrategy === "weighted_round_robin" ? t("settings.weightedRRHint") :
+               routingStrategy === "fill_first" ? t("settings.fillFirstHint") :
+               routingStrategy === "priority" ? t("settings.priorityHint") :
+               t("settings.routingHint")}
+            </p>
           </div>
 
           <div className="tab-content section-card">
@@ -700,7 +710,6 @@ export function SettingsPage() {
       {activeTab === "advanced" && (
         <div className="settings-stack">
           <LogRotationPanel />
-          <PricingSyncPanel />
           <CloudSyncPanel />
         </div>
       )}
@@ -1014,67 +1023,6 @@ function LogRotationPanel() {
           <div className="diag-card">
             <span className="diag-label">{t('logRotation.currentSize')}</span>
             <span className="diag-value">{config.current_size_mb} MB</span>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function PricingSyncPanel() {
-  const { t } = useTranslation();
-  const [status, setStatus] = useState<Record<string, any> | null>(null);
-  const [syncing, setSyncing] = useState(false);
-
-  const loadStatus = async () => {
-    try {
-      const s = await cmd.getPricingSyncStatus();
-      setStatus(s);
-    } catch {
-      // ignore
-    }
-  };
-
-  useEffect(() => { loadStatus(); }, []);
-
-  const handleSync = async () => {
-    setSyncing(true);
-    try {
-      await cmd.triggerPricingSync();
-      await loadStatus();
-    } catch {
-      // ignore
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-  return (
-    <div className="tab-content section-card">
-      <div className="section-heading">
-        <h2>{t('pricingSync.title')}</h2>
-        <p className="hint">{t('pricingSync.subtitle')}</p>
-        <button className="btn btn-primary btn-sm" onClick={handleSync} disabled={syncing} style={{ marginTop: 8 }}>
-          {syncing ? t('diagnostics.running') : t('pricingSync.syncNow')}
-        </button>
-      </div>
-      {status && (
-        <div className="diag-grid">
-          <div className="diag-card">
-            <span className="diag-label">{t('pricingSync.lastSync')}</span>
-            <span className="diag-value">{status.last_sync || '-'}</span>
-          </div>
-          <div className="diag-card">
-            <span className="diag-label">{t('pricingSync.status')}</span>
-            <span className="badge-blue">{status.status || 'idle'}</span>
-          </div>
-          <div className="diag-card">
-            <span className="diag-label">{t('pricingSync.modelsCount')}</span>
-            <span className="diag-value">{status.models_count || 0}</span>
-          </div>
-          <div className="diag-card">
-            <span className="diag-label">{t('pricingSync.autoSync')}</span>
-            <span className={status.auto_sync ? "badge-green" : "badge-red"}>{status.auto_sync ? 'ON' : 'OFF'}</span>
           </div>
         </div>
       )}

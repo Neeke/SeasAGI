@@ -219,10 +219,33 @@ export function ChannelPage() {
 
   return (
     <div className="page channel-page">
-      <div className="page-header-row">
-        <div>
-          <h1>{t("channel.title")}</h1>
-          <p className="page-subtitle">{t("channel.pageSubtitle")}</p>
+      <div className="page-header-row page-hero">
+        <div className="page-hero-head">
+          <div className="page-hero-copy">
+            <h1>{t("channel.title")}</h1>
+            <p className="page-subtitle">{t("channel.pageSubtitle")}</p>
+          </div>
+          <div className="page-hero-actions">
+            {auth.is_logged_in && (
+              <button onClick={handleSync} disabled={syncing} className="btn-secondary">
+                {syncing ? t("channel.syncing") : t("channel.syncPlatform")}
+              </button>
+            )}
+            {auth.is_logged_in && (
+              <button onClick={handleSyncCustomToCloud} disabled={syncingCustom} className="btn-secondary">
+                {syncingCustom ? t("channel.syncing") : t("channel.syncCustomToCloud")}
+              </button>
+            )}
+            <button
+              onClick={() => {
+                setEditing({ channel_id: "", channel_type: "custom", provider_type: "openai", display_name: "", base_url: "", api_key: "", enabled: true, models: [], health_status: "unknown", provider_specific_config: {} });
+                setIsNew(true);
+              }}
+              className="btn-primary"
+            >
+              {t("channel.addChannel")}
+            </button>
+          </div>
         </div>
         <div className="hero-metrics">
           <div className="hero-metric-card">
@@ -233,16 +256,6 @@ export function ChannelPage() {
             <span className="hero-metric-label">{t("channel.customChannels")}</span>
             <strong className="hero-metric-value">{customChannels.length}</strong>
           </div>
-          {auth.is_logged_in && (
-            <button onClick={handleSync} disabled={syncing} className="btn-primary">
-              {syncing ? t("channel.syncing") : t("channel.syncPlatform")}
-            </button>
-          )}
-          {auth.is_logged_in && (
-            <button onClick={handleSyncCustomToCloud} disabled={syncingCustom} className="btn-secondary">
-              {syncingCustom ? t("channel.syncing") : t("channel.syncCustomToCloud")}
-            </button>
-          )}
         </div>
       </div>
 
@@ -257,14 +270,9 @@ export function ChannelPage() {
       )}
 
       <div className="channel-group section-card">
-        <div className="section-heading-row">
-          <div className="section-heading">
-            <h2>{t("channel.customChannels")}</h2>
-            <p className="hint">{t("channel.customHint")}</p>
-          </div>
-          <button onClick={() => { setEditing({ channel_id: "", channel_type: "custom", provider_type: "openai", display_name: "", base_url: "", api_key: "", enabled: true, models: [], health_status: "unknown", provider_specific_config: {} }); setIsNew(true); }} className="btn-primary">
-            {t("channel.addChannel")}
-          </button>
+        <div className="section-heading">
+          <h2>{t("channel.customChannels")}</h2>
+          <p className="hint">{t("channel.customHint")}</p>
         </div>
         {customChannels.length === 0 && <p className="empty-hint">{t("channel.noCustom")}</p>}
         {customChannels.map(renderChannelItem)}

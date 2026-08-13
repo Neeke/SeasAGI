@@ -45,6 +45,13 @@ type Service struct {
 	metricsMu    sync.RWMutex
 	// WebSocket bridge
 	wsBridge *WSBridge
+	// State persistence
+	stateStore   *providers.StateStore
+	stopAutoSave func()
+	// OAuth token refresh (P2-21)
+	oauthRefresher *providers.OAuthTokenRefresher
+	// Per-channel concurrency limiter (P2-23)
+	concurrencyLimiter *providers.ConcurrencyLimiter
 }
 
 // ComboRouteMetrics tracks route-level metrics per combo
@@ -111,7 +118,20 @@ func NewService(
 	healthChecker.SetCheckInterval(healthInterval)
 	healthChecker.SetMaxFailures(maxFailures)
 
-	return &Service{
+	cooldownMgr := providers.NewCooldownManager(cooldownDur)
+
+	// Initialize state persistence (PenaltyManager + CooldownManager)
+	stateStore, err := providers.NewStateStore("")
+	if err != nil {
+		// Non-fatal: continue without persistence
+		fmt.Printf("warning: state store init failed: %v\n", err)
+	} else {
+		if err := stateStore.LoadAll(penaltyMgr, cooldownMgr); err != nil {
+			fmt.Printf("warning: state restore failed: %v\n", err)
+		}
+	}
+
+	svc := &Service{
 		listenPort:      listenPort,
 		accessToken:     accessToken,
 		configSvc:       configSvc,
@@ -122,12 +142,37 @@ func NewService(
 		circuitBreakers: make(map[string]*providers.CircuitBreaker),
 		keyRotators:     make(map[string]*providers.KeyRotator),
 		penaltyMgr:      penaltyMgr,
-		cooldownMgr:     providers.NewCooldownManager(cooldownDur),
+		cooldownMgr:     cooldownMgr,
 		healthChecker:   healthChecker,
 		healthCtx:       nil,
 		healthCancel:    nil,
 		comboMetrics:    make(map[string]*ComboRouteMetrics),
+		stateStore:      stateStore,
 	}
+
+	// Start auto-save if state store is available
+	if stateStore != nil {
+		svc.stopAutoSave = stateStore.StartAutoSave(penaltyMgr, cooldownMgr, 30*time.Second)
+	}
+
+	// Initialize OAuth token refresher (P2-21)
+	svc.oauthRefresher = providers.NewOAuthTokenRefresher(60 * time.Second)
+
+	// Initialize per-channel concurrency limiter (P2-23)
+	svc.concurrencyLimiter = providers.NewConcurrencyLimiter()
+	// Populate limits from existing channels
+	if channels, err := configSvc.ListChannels(); err == nil {
+		for _, ch := range channels {
+			if ch.MaxConcurrent > 0 {
+				svc.concurrencyLimiter.SetLimit(ch.ChannelID, ch.MaxConcurrent)
+			}
+		}
+	}
+
+	// Normalize channel weights (P2-22)
+	_ = configSvc.NormalizeChannelWeights()
+
+	return svc
 }
 
 func (s *Service) Start(ctx context.Context) error {
@@ -188,6 +233,21 @@ func (s *Service) Stop() {
 	}
 	if s.healthCancel != nil {
 		s.healthCancel()
+	}
+	// Stop auto-save and persist final state
+	if s.stopAutoSave != nil {
+		s.stopAutoSave()
+	}
+	if s.stateStore != nil {
+		_ = s.stateStore.SaveAll(s.penaltyMgr, s.cooldownMgr)
+		_ = s.stateStore.Close()
+	}
+	if s.cooldownMgr != nil {
+		s.cooldownMgr.Stop()
+	}
+	// Clean up OAuth token cache (P2-21)
+	if s.oauthRefresher != nil {
+		// Nothing to persist — tokens are runtime-only
 	}
 	s.running = false
 }
@@ -578,6 +638,15 @@ func (s *Service) forwardRequest(ctx context.Context, candidates []routing.PlanS
 			}
 		}
 
+		// Per-channel concurrency limit (P2-23)
+		if !s.concurrencyLimiter.Acquire(step.Channel.ChannelID) {
+			attempt.Status = "concurrency_limit"
+			attempt.Error = "channel at max concurrent requests"
+			attempts = append(attempts, attempt)
+			lastErr = fmt.Errorf("channel %s at concurrency limit", step.Channel.ChannelID)
+			continue
+		}
+
 		executor := providers.ResolveExecutor(providerCfg)
 		upstreamResp, err := executor.ChatCompletions(ctx, providerCfg, &providers.UpstreamRequest{
 			Model:    step.UpstreamModel,
@@ -585,6 +654,8 @@ func (s *Service) forwardRequest(ctx context.Context, candidates []routing.PlanS
 			Stream:   req.Stream,
 			Extra:    req.Extra,
 		})
+		s.concurrencyLimiter.Release(step.Channel.ChannelID)
+
 		if err == nil {
 			cb.RecordSuccess()
 			s.recordPenaltySuccess(step)
@@ -714,6 +785,20 @@ func (s *Service) providerConfigForChannel(channel config.Channel) (*providers.P
 		apiKey, err = keychain.GetChannelKey(channel.ChannelID)
 		if err != nil {
 			return nil, err
+		}
+	}
+
+	// OAuth token refresh (P2-21): if channel has OAuth config, ensure valid token
+	if channel.OAuthRefreshToken != "" && channel.OAuthTokenURL != "" {
+		token, err := s.oauthRefresher.EnsureValidToken(
+			channel.ChannelID,
+			channel.OAuthRefreshToken,
+			channel.OAuthClientID,
+			channel.OAuthClientSecret,
+			channel.OAuthTokenURL,
+		)
+		if err == nil && token != "" {
+			apiKey = token
 		}
 	}
 
@@ -875,6 +960,20 @@ func (s *Service) ResetComboRouteMetrics() {
 	s.metricsMu.Lock()
 	defer s.metricsMu.Unlock()
 	s.comboMetrics = make(map[string]*ComboRouteMetrics)
+}
+
+// SyncChannelConcurrencyLimits updates the concurrency limiter with the latest
+// channel MaxConcurrent settings. Call this after channel configuration changes.
+func (s *Service) SyncChannelConcurrencyLimits() {
+	channels, _ := s.configSvc.ListChannels()
+	for _, ch := range channels {
+		s.concurrencyLimiter.SetLimit(ch.ChannelID, ch.MaxConcurrent)
+	}
+}
+
+// GetConcurrencyInflight returns the current in-flight count for a channel.
+func (s *Service) GetConcurrencyInflight(channelID string) int {
+	return s.concurrencyLimiter.Inflight(channelID)
 }
 
 func flattenMessagesContent(messages []map[string]any) []map[string]any {

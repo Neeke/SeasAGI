@@ -130,7 +130,7 @@ export function UsagePage() {
 
   return (
     <div className="page usage-page">
-      <div className="page-header">
+      <div className="page-header page-hero">
         <div>
           <h1>{t("usage.title")}</h1>
           <p className="page-subtitle">{t("usage.subtitle")}</p>

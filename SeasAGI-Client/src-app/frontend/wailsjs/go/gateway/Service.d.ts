@@ -5,6 +5,8 @@ import {context} from '../models';
 
 export function GetComboRouteMetrics():Promise<Array<gateway.ComboRouteMetrics>>;
 
+export function GetConcurrencyInflight(arg1:string):Promise<number>;
+
 export function GetListenPort():Promise<number>;
 
 export function IsRunning():Promise<boolean>;
@@ -16,3 +18,5 @@ export function SetAccessToken(arg1:string):Promise<void>;
 export function Start(arg1:context.Context):Promise<void>;
 
 export function Stop():Promise<void>;
+
+export function SyncChannelConcurrencyLimits():Promise<void>;

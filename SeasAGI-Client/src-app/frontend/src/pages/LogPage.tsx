@@ -155,28 +155,36 @@ export function LogPage() {
 
   return (
     <div className="page log-page">
-      <div className="page-header">
+      <div className="page-header log-page-header">
         <div>
           <h1>{t("log.title")}</h1>
           <p className="page-subtitle">{t("log.subtitle")}</p>
         </div>
-        <div className="hero-metrics">
-          <div className="hero-metric-card">
-            <span className="hero-metric-label">{t("log.totalRecords")}</span>
-            <strong className="hero-metric-value">{filtered.length}</strong>
+        <div className="log-summary-inline">
+          <div className="log-summary-chip">
+            <span className="log-summary-label">{t("log.totalRecords")}</span>
+            <strong>{filtered.length}</strong>
           </div>
-          <div className="hero-metric-card">
-            <span className="hero-metric-label">{t("log.avgDuration")}</span>
-            <strong className="hero-metric-value">{formatDuration(avgDuration)}</strong>
+          <div className="log-summary-chip">
+            <span className="log-summary-label">{t("log.avgDuration")}</span>
+            <strong>{formatDuration(avgDuration)}</strong>
+          </div>
+          <div className="log-summary-chip success">
+            <span className="log-summary-label">{t("log.successCount")}</span>
+            <strong>{successCount}</strong>
+          </div>
+          <div className="log-summary-chip danger">
+            <span className="log-summary-label">{t("log.failureCount")}</span>
+            <strong>{failureCount}</strong>
           </div>
         </div>
       </div>
 
       <div className="tab-content log-panel section-card">
-        <div className="section-heading">
-          <h2>{t("log.filterSection")}</h2>
-          <p className="hint">{t("log.filterHint")}</p>
-        </div>
+          <div className="section-heading">
+            <h2>{t("log.filterSection")}</h2>
+            <p className="hint">{t("log.listItemHint")}</p>
+          </div>
         <div className="form-row log-filter-grid">
           <div className="form-group log-search-group">
             <label>{t("log.searchLabel")}</label>
@@ -298,7 +306,7 @@ export function LogPage() {
 
       <div className="section section-card">
         <div className="section-heading">
-          <h2>{t("log.overview")}</h2>
+          <h2>{t("log.summary")}</h2>
           <p className="hint">{t("log.overviewHint")}</p>
         </div>
         <div className="stats-grid">
@@ -335,74 +343,49 @@ export function LogPage() {
           <div className="log-list">
             {filtered.map((log) => {
               const isExpanded = expandedRoute === log.request_id;
+              const channelType = getChannelType(log);
               return (
-                <div key={log.request_id} className="log-card">
-                  <div className="log-card-head">
-                    <div className="log-card-main">
-                      <div className="log-card-title">{log.logical_model_name || "-"}</div>
-                      <div className="log-card-subtitle">
-                        <span>{formatDateTime(log.created_at)}</span>
-                        <span className="log-channel-badge" style={{ color: channelTypeColors[getChannelType(log)], borderColor: channelTypeColors[getChannelType(log)] }}>
-                          {getChannelTypeLabel(getChannelType(log))}
+                <div key={log.request_id} className={`log-list-item${isExpanded ? " is-expanded" : ""}`}>
+                  <div className="log-list-row">
+                    <div className="log-list-primary">
+                      <div className="log-list-title-row">
+                        <div className="log-card-title">{log.logical_model_name || "-"}</div>
+                        <span className={`badge ${log.status === "success" ? "badge-green" : "badge-red"}`}>
+                          {log.status === "success" ? t("log.success") : t("log.failure")}
                         </span>
+                        <span className="log-channel-badge" style={{ color: channelTypeColors[channelType], borderColor: channelTypeColors[channelType] }}>
+                          {getChannelTypeLabel(channelType)}
+                        </span>
+                      </div>
+                      <div className="log-list-meta">
+                        <span>{formatDateTime(log.created_at)}</span>
                         <span>{log.channel_id || "-"}</span>
                         <span>{log.upstream_model || "-"}</span>
+                        <code>{log.route_trace || "-"}</code>
                       </div>
+                      {log.error_message && <div className="log-inline-error">{log.error_message}</div>}
                     </div>
-                    <div className="log-card-side">
-                      <span className={`badge ${log.status === "success" ? "badge-green" : "badge-red"}`}>
-                        {log.status === "success" ? t("log.success") : t("log.failure")}
-                      </span>
+                    <div className="log-list-side">
                       <span className="log-duration-pill">{formatDuration(log.duration_ms)}</span>
-                    </div>
-                  </div>
-
-                  <div className="log-meta-grid">
-                    <div className="log-meta-item">
-                      <span className="log-meta-label">{t("log.time")}</span>
-                      <span className="log-meta-value">{formatDateTime(log.created_at)}</span>
-                    </div>
-                    <div className="log-meta-item">
-                      <span className="log-meta-label">{t("log.channel")}</span>
-                      <span className="log-meta-value">{log.channel_id || "-"}</span>
-                    </div>
-                    <div className="log-meta-item">
-                      <span className="log-meta-label">{t("log.upstreamModel")}</span>
-                      <span className="log-meta-value">{log.upstream_model || "-"}</span>
-                    </div>
-                    <div className="log-meta-item">
-                      <span className="log-meta-label">{t("log.routeTrace")}</span>
-                      <span className="log-meta-code">{log.route_trace || "-"}</span>
-                    </div>
-                  </div>
-
-                  {log.error_message && (
-                    <div className="log-error-box">
-                      <div className="log-error-title">
-                        {t("log.error")}
-                        {log.error_code ? ` (${log.error_code})` : ""}
+                      <div className="log-card-actions">
+                        <button onClick={() => setExpandedRoute(isExpanded ? null : log.request_id)} className="btn-secondary btn-sm">
+                          {isExpanded ? t("log.hideRoute") : t("log.route")}
+                        </button>
+                        {log.error_message && (
+                          <>
+                            <button onClick={() => handleCopyError(log, "text")} className="btn-secondary btn-sm">
+                              {t("channel.copy")}
+                            </button>
+                            <button onClick={() => handleCopyError(log, "json")} className="btn-secondary btn-sm">
+                              JSON
+                            </button>
+                            <button onClick={() => handleCopyError(log, "markdown")} className="btn-secondary btn-sm">
+                              MD
+                            </button>
+                          </>
+                        )}
                       </div>
-                      <div className="log-error-message">{log.error_message}</div>
                     </div>
-                  )}
-
-                  <div className="log-card-actions">
-                    <button onClick={() => setExpandedRoute(isExpanded ? null : log.request_id)} className="btn-secondary btn-sm">
-                      {isExpanded ? t("log.hideRoute") : t("log.route")}
-                    </button>
-                    {log.error_message && (
-                      <>
-                        <button onClick={() => handleCopyError(log, "text")} className="btn-secondary btn-sm">
-                          {t("channel.copy")}
-                        </button>
-                        <button onClick={() => handleCopyError(log, "json")} className="btn-secondary btn-sm">
-                          JSON
-                        </button>
-                        <button onClick={() => handleCopyError(log, "markdown")} className="btn-secondary btn-sm">
-                          MD
-                        </button>
-                      </>
-                    )}
                   </div>
 
                   {isExpanded && (

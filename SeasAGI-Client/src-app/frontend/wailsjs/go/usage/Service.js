@@ -34,6 +34,10 @@ export function RecordUsage(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['usage']['Service']['RecordUsage'](arg1, arg2, arg3, arg4, arg5);
 }
 
+export function RecordUsageV2(arg1) {
+  return window['go']['usage']['Service']['RecordUsageV2'](arg1);
+}
+
 export function SavePricing(arg1) {
   return window['go']['usage']['Service']['SavePricing'](arg1);
 }

@@ -127,12 +127,6 @@ func (s *GatewayServer) registerBuiltinTools() {
 			InputSchema: map[string]interface{}{"type": "object"},
 			Handler:     toolDBHealthCheck,
 		},
-		{
-			Name:        "sync_pricing",
-			Description: "同步模型定价数据",
-			InputSchema: map[string]interface{}{"type": "object"},
-			Handler:     toolSyncPricing,
-		},
 	}
 
 	for _, tool := range tools {
@@ -239,8 +233,4 @@ func toolGetSessionSnapshot(args map[string]interface{}) (interface{}, error) {
 
 func toolDBHealthCheck(args map[string]interface{}) (interface{}, error) {
 	return map[string]interface{}{"db_status": "healthy", "size_bytes": 1048576}, nil
-}
-
-func toolSyncPricing(args map[string]interface{}) (interface{}, error) {
-	return map[string]interface{}{"synced": true, "models_updated": 50}, nil
 }

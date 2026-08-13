@@ -70,8 +70,8 @@ func TestMCPServerSSE(t *testing.T) {
 		t.Fatal("应包含 tools 列表")
 	}
 
-	if len(tools) < 20 {
-		t.Fatalf("应至少有 20 个 tool，实际 %d", len(tools))
+	if len(tools) < 19 {
+		t.Fatalf("应至少有 19 个 tool，实际 %d", len(tools))
 	}
 }
 
@@ -135,24 +135,6 @@ func TestMCPToolCache(t *testing.T) {
 	}
 }
 
-func TestMCPToolCompress(t *testing.T) {
-	server := NewGatewayServer()
-
-	// 测试 sync_pricing（与压缩/优化相关的 tool）
-	result, err := server.CallTool("sync_pricing", map[string]interface{}{})
-	if err != nil {
-		t.Fatalf("sync_pricing 调用失败: %v", err)
-	}
-
-	resultMap, ok := result.(map[string]interface{})
-	if !ok {
-		t.Fatal("结果应为 map")
-	}
-	if resultMap["synced"] != true {
-		t.Fatal("synced 应为 true")
-	}
-}
-
 func TestMCPAuditLog(t *testing.T) {
 	server := NewGatewayServer()
 
@@ -181,12 +163,12 @@ func TestMCPAuditLog(t *testing.T) {
 	}
 }
 
-func TestMCPToolListContains20(t *testing.T) {
+func TestMCPToolListContains19(t *testing.T) {
 	server := NewGatewayServer()
 	tools := server.ListTools()
 
-	if len(tools) != 20 {
-		t.Fatalf("应有 20 个核心 tool，实际 %d", len(tools))
+	if len(tools) != 19 {
+		t.Fatalf("应有 19 个核心 tool，实际 %d", len(tools))
 	}
 
 	// 验证关键 tool 存在

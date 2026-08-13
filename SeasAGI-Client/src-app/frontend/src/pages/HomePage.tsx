@@ -484,7 +484,7 @@ export function HomePage() {
         <TeamCostSnapshot />
       )}
 
-      <div className="page-header">
+      <div className="page-header page-hero">
         <div>
           <h1>{t("home.gatewayStatus")}</h1>
           <p className="page-subtitle">{t("home.pageSubtitle")}</p>

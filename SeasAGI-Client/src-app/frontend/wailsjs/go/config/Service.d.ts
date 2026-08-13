@@ -42,6 +42,8 @@ export function ListModelCombos():Promise<Array<config.ModelCombo>>;
 
 export function ListOAuthProviderConfigs():Promise<Array<config.OAuthProviderConfig>>;
 
+export function NormalizeChannelWeights():Promise<Array<string>>;
+
 export function RenameComboTemplate(arg1:string,arg2:string):Promise<void>;
 
 export function ReorderChannels(arg1:Array<string>):Promise<void>;
@@ -83,3 +85,5 @@ export function UpdateRoutingSettings(arg1:string,arg2:number):Promise<void>;
 export function UpdateSetting(arg1:string,arg2:any):Promise<void>;
 
 export function UpsertPlatformChannels(arg1:Array<config.Channel>):Promise<void>;
+
+export function ValidateChannelWeights():Promise<void>;

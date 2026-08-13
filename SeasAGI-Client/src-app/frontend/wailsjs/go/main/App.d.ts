@@ -137,8 +137,6 @@ export function GetPluginHooks():Promise<Array<{[key: string]: any}>>;
 
 export function GetPresetByName(arg1:string):Promise<presets.ProviderPreset>;
 
-export function GetPricingSyncStatus():Promise<{[key: string]: any}>;
-
 export function GetProviderHealthMetrics(arg1:string):Promise<Array<{[key: string]: any}>>;
 
 export function GetProviderHealthSummary():Promise<Array<{[key: string]: any}>>;
@@ -332,8 +330,6 @@ export function ToggleMCPServer(arg1:string,arg2:boolean):Promise<void>;
 export function TogglePlugin(arg1:string,arg2:boolean):Promise<boolean>;
 
 export function ToggleSkill(arg1:string,arg2:boolean):Promise<void>;
-
-export function TriggerPricingSync():Promise<void>;
 
 export function UninstallSkill(arg1:string):Promise<void>;
 

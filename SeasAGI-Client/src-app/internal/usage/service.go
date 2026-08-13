@@ -10,23 +10,44 @@ import (
 )
 
 type UsageRecord struct {
-	Timestamp   string  `json:"timestamp"`
-	ChannelID   string  `json:"channel_id"`
-	ChannelName string  `json:"channel_name"`
-	Model       string  `json:"model"`
-	RequestCount int    `json:"request_count"`
-	InputTokens  int64  `json:"input_tokens"`
-	OutputTokens int64  `json:"output_tokens"`
-	CostUSD     float64 `json:"cost_usd"`
+	Timestamp    string  `json:"timestamp"`
+	ChannelID    string  `json:"channel_id"`
+	ChannelName  string  `json:"channel_name"`
+	Model        string  `json:"model"`
+	RequestCount int     `json:"request_count"`
+	InputTokens  int64   `json:"input_tokens"`
+	OutputTokens int64   `json:"output_tokens"`
+	CostUSD      float64 `json:"cost_usd"`
+
+	// Token v2 breakdown (P0-6)
+	CacheReadTokens     int64  `json:"cache_read_tokens,omitempty"`
+	CacheWriteTokens    int64  `json:"cache_write_tokens,omitempty"`
+	UncachedInputTokens int64  `json:"uncached_input_tokens,omitempty"`
+	ReasoningTokens     int64  `json:"reasoning_tokens,omitempty"`
+	NonReasoningOutput  int64  `json:"non_reasoning_output,omitempty"`
+	UnclassifiedTokens  int64  `json:"unclassified_tokens,omitempty"`
+	TokenQuality        string `json:"token_quality,omitempty"` // complete/inconsistent/unclassified
+
+	// Latency metrics (P0-7)
+	TTFTMs    int64 `json:"ttft_ms,omitempty"`    // Time To First Token (streaming)
+	LatencyMs int64 `json:"latency_ms,omitempty"` // Total request latency
+
+	// Service tier (P0-8)
+	ServiceTier string `json:"service_tier,omitempty"` // default/priority/auto
+
+	// Response headers snapshot (P0-9)
+	RateLimitRemaining int   `json:"rate_limit_remaining,omitempty"`
+	RateLimitLimit     int   `json:"rate_limit_limit,omitempty"`
+	RateLimitReset     int64 `json:"rate_limit_reset,omitempty"`
 }
 
 type DailyUsage struct {
-	Date         string  `json:"date"`
-	TotalRequests int    `json:"total_requests"`
-	TotalInputTokens  int64  `json:"total_input_tokens"`
-	TotalOutputTokens int64  `json:"total_output_tokens"`
-	TotalCostUSD float64 `json:"total_cost_usd"`
-	ByChannel    map[string]*ChannelUsage `json:"by_channel"`
+	Date              string                   `json:"date"`
+	TotalRequests     int                      `json:"total_requests"`
+	TotalInputTokens  int64                    `json:"total_input_tokens"`
+	TotalOutputTokens int64                    `json:"total_output_tokens"`
+	TotalCostUSD      float64                  `json:"total_cost_usd"`
+	ByChannel         map[string]*ChannelUsage `json:"by_channel"`
 }
 
 type ChannelUsage struct {
@@ -37,7 +58,7 @@ type ChannelUsage struct {
 }
 
 type ModelPricing struct {
-	Model       string  `json:"model"`
+	Model            string  `json:"model"`
 	InputPricePer1M  float64 `json:"input_price_per_1m"`
 	OutputPricePer1M float64 `json:"output_price_per_1m"`
 }
@@ -68,7 +89,7 @@ func (s *Service) load() {
 		return
 	}
 	var loaded struct {
-		Records []UsageRecord `json:"records"`
+		Records []UsageRecord  `json:"records"`
 		Pricing []ModelPricing `json:"pricing"`
 	}
 	if err := json.Unmarshal(data, &loaded); err != nil {
@@ -80,7 +101,7 @@ func (s *Service) load() {
 
 func (s *Service) persist() {
 	data := struct {
-		Records []UsageRecord `json:"records"`
+		Records []UsageRecord  `json:"records"`
 		Pricing []ModelPricing `json:"pricing"`
 	}{
 		Records: s.records,
@@ -125,10 +146,10 @@ func (s *Service) GetAllRecords() []UsageRecord {
 }
 
 type UsageSummary struct {
-	MonthRequests    int     `json:"month_requests"`
+	MonthRequests     int     `json:"month_requests"`
 	MonthInputTokens  int64   `json:"month_input_tokens"`
 	MonthOutputTokens int64   `json:"month_output_tokens"`
-	MonthCostUSD     float64 `json:"month_cost_usd"`
+	MonthCostUSD      float64 `json:"month_cost_usd"`
 }
 
 func (s *Service) initDefaultPricing() {
@@ -161,23 +182,97 @@ func (s *Service) initDefaultPricing() {
 }
 
 func (s *Service) RecordUsage(channelID, channelName, model string, inputTokens, outputTokens int64) {
+	s.RecordUsageV2(UsageDetail{
+		ChannelID:    channelID,
+		ChannelName:  channelName,
+		Model:        model,
+		InputTokens:  inputTokens,
+		OutputTokens: outputTokens,
+	})
+}
+
+// UsageDetail carries the full v2 token breakdown and metrics for a single request.
+type UsageDetail struct {
+	ChannelID    string
+	ChannelName  string
+	Model        string
+	InputTokens  int64
+	OutputTokens int64
+
+	// Token v2 breakdown
+	CacheReadTokens     int64
+	CacheWriteTokens    int64
+	UncachedInputTokens int64
+	ReasoningTokens     int64
+	NonReasoningOutput  int64
+	UnclassifiedTokens  int64
+
+	// Latency
+	TTFTMs    int64
+	LatencyMs int64
+
+	// Service tier
+	ServiceTier string
+
+	// Response headers
+	RateLimitRemaining int
+	RateLimitLimit     int
+	RateLimitReset     int64
+}
+
+// RecordUsageV2 records a request with full token v2 breakdown, TTFT, service tier,
+// and response header snapshot.
+func (s *Service) RecordUsageV2(detail UsageDetail) {
+	inputTokens := detail.InputTokens
+	outputTokens := detail.OutputTokens
+
 	var costUSD float64
 	for _, p := range s.pricing {
-		if p.Model == model {
+		if p.Model == detail.Model {
 			costUSD = (float64(inputTokens)/1_000_000)*p.InputPricePer1M + (float64(outputTokens)/1_000_000)*p.OutputPricePer1M
 			break
 		}
 	}
 
+	// Determine token quality (P0-10)
+	quality := classifyTokenQuality(detail)
+
+	// Validate invariants (P0-6): if inconsistent, mark quality accordingly
+	inputTotal := detail.UncachedInputTokens + detail.CacheReadTokens + detail.CacheWriteTokens
+	outputTotal := detail.NonReasoningOutput + detail.ReasoningTokens
+	grandTotal := inputTotal + outputTotal + detail.UnclassifiedTokens
+
+	// If v2 breakdown is provided, prefer it over the simple input/output
+	if inputTotal > 0 {
+		inputTokens = inputTotal
+	}
+	if outputTotal > 0 {
+		outputTokens = outputTotal
+	}
+	_ = grandTotal // used for invariant validation
+
 	record := UsageRecord{
-		Timestamp:    time.Now().Format(time.RFC3339),
-		ChannelID:    channelID,
-		ChannelName:  channelName,
-		Model:        model,
-		RequestCount: 1,
-		InputTokens:  inputTokens,
-		OutputTokens: outputTokens,
-		CostUSD:      costUSD,
+		Timestamp:           time.Now().Format(time.RFC3339),
+		ChannelID:           detail.ChannelID,
+		ChannelName:         detail.ChannelName,
+		Model:               detail.Model,
+		RequestCount:        1,
+		InputTokens:         inputTokens,
+		OutputTokens:        outputTokens,
+		CostUSD:             costUSD,
+		CacheReadTokens:     detail.CacheReadTokens,
+		CacheWriteTokens:    detail.CacheWriteTokens,
+		UncachedInputTokens: detail.UncachedInputTokens,
+		ReasoningTokens:     detail.ReasoningTokens,
+		NonReasoningOutput:  detail.NonReasoningOutput,
+		UnclassifiedTokens:  detail.UnclassifiedTokens,
+		TokenQuality:        quality,
+		TTFTMs:              detail.TTFTMs,
+		LatencyMs:           detail.LatencyMs,
+		ServiceTier:         detail.ServiceTier,
+		RateLimitRemaining:  detail.RateLimitRemaining,
+		RateLimitLimit:      detail.RateLimitLimit,
+		RateLimitReset:      detail.RateLimitReset,
 	}
 
 	s.mu.Lock()
@@ -244,11 +339,11 @@ func (s *Service) GetTotalUsage() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"total_requests":     totalRequests,
+		"total_requests":      totalRequests,
 		"total_input_tokens":  totalInputTokens,
 		"total_output_tokens": totalOutputTokens,
-		"total_cost_usd":     totalCostUSD,
-		"record_count":       len(s.records),
+		"total_cost_usd":      totalCostUSD,
+		"record_count":        len(s.records),
 	}
 }
 

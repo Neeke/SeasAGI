@@ -13,6 +13,8 @@ func (VertexTranslator) Match(body map[string]any) bool {
 	return hasInstances || hasEndpoint
 }
 
+func (VertexTranslator) SourceFormat() Format { return FormatVertexAI }
+
 func (VertexTranslator) ToCanonical(body map[string]any) (*CanonicalRequest, error) {
 	model, _ := body["model"].(string)
 	if model == "" {

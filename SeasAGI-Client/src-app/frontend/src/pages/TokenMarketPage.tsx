@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getPlatformAPIBaseURL, getPlatformToken, fetchFreeChannels } from "../utils/commands";
 import { useTranslation } from "../i18n";
@@ -15,6 +15,8 @@ interface FreeChannel {
   description: string;
 }
 
+type MarketViewMode = "card" | "list";
+
 export function TokenMarketPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -27,6 +29,7 @@ export function TokenMarketPage() {
   const [total, setTotal] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
   const [freeChannels, setFreeChannels] = useState<FreeChannel[]>([]);
+  const [viewMode, setViewMode] = useState<MarketViewMode>("card");
 
   const fetchListings = async (pageNum: number, append: boolean) => {
     if (append) {
@@ -76,12 +79,25 @@ export function TokenMarketPage() {
     fetchListings(nextPage, true);
   };
 
+  const marketStats = useMemo(() => {
+    const activeCount = marketListings.filter((item) => item.status === "active").length;
+    const fixedCount = marketListings.filter((item) => item.sale_type === "fixed_price").length;
+    const avgPrice =
+      marketListings.length > 0
+        ? marketListings.reduce((sum, item) => sum + (item.sale_type === "fixed_price" ? item.price : 0), 0) /
+          Math.max(fixedCount, 1)
+        : 0;
+    return { activeCount, fixedCount, avgPrice };
+  }, [marketListings]);
+
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <h1>{t("nav.tokenMarket")}</h1>
-        <p className="page-subtitle">{t("tokenMarket.subtitle")}</p>
-        <div className="page-header-actions">
+    <div className="page-container token-market-page">
+      <div className="page-header token-market-header">
+        <div>
+          <h1>{t("nav.tokenMarket")}</h1>
+          <p className="page-subtitle">{t("tokenMarket.subtitle")}</p>
+        </div>
+        <div className="page-header-actions token-market-header-actions">
           <button className="btn btn-primary" onClick={() => navigate("/token-market/create")}>
             {t("tokenMarket.createListing")}
           </button>
@@ -91,43 +107,66 @@ export function TokenMarketPage() {
         </div>
       </div>
 
+      <div className="token-market-hero">
+        <div className="token-market-hero-main">
+          <span className="token-market-kicker">{t("tokenMarket.marketplace")}</span>
+          <h2>{t("tokenMarket.marketTitle")}</h2>
+          <p>{t("tokenMarket.marketDescription")}</p>
+        </div>
+        <div className="token-market-stats">
+          <div className="token-market-stat-card">
+            <span className="token-market-stat-label">{t("tokenMarket.marketActive")}</span>
+            <strong>{marketStats.activeCount}</strong>
+          </div>
+          <div className="token-market-stat-card">
+            <span className="token-market-stat-label">{t("tokenMarket.marketFixedPrice")}</span>
+            <strong>{marketStats.fixedCount}</strong>
+          </div>
+          <div className="token-market-stat-card">
+            <span className="token-market-stat-label">{t("tokenMarket.marketAvgPrice")}</span>
+            <strong>{marketStats.avgPrice > 0 ? marketStats.avgPrice.toFixed(2) : "-"}</strong>
+          </div>
+        </div>
+      </div>
+
       {freeChannels.length > 0 && (
-        <div className="free-channels-section" style={{ marginBottom: 32 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>
-            {t("tokenMarket.freeChannels")}
-          </h2>
-          <div className="card-grid">
+        <div className="token-market-section token-market-free-section">
+          <div className="token-market-section-header">
+            <div>
+              <h2>{t("tokenMarket.freeChannels")}</h2>
+              <p>{t("tokenMarket.freeChannelsHint")}</p>
+            </div>
+          </div>
+          <div className="token-market-free-grid">
             {freeChannels.map((ch) => (
-              <div key={ch.provider_id} className="listing-card free-channel-card">
-                <div className="listing-card-header">
-                  <span className="listing-label">{ch.display_name}</span>
+              <div key={ch.provider_id} className="token-market-free-card">
+                <div className="token-market-free-card-top">
+                  <div>
+                    <div className="token-market-free-title">{ch.display_name}</div>
+                    <div className="token-market-free-url">{ch.base_url}</div>
+                  </div>
                   <span className={`status-badge auth-${ch.auth_type}`}>
-                    {ch.auth_type === "noauth" ? t("tokenMarket.authNoauth") :
-                     ch.auth_type === "oauth" ? t("tokenMarket.authOauth") :
-                     ch.auth_type === "apikey" ? t("tokenMarket.authApikey") :
-                     t("tokenMarket.authWebCookie")}
+                    {ch.auth_type === "noauth"
+                      ? t("tokenMarket.authNoauth")
+                      : ch.auth_type === "oauth"
+                        ? t("tokenMarket.authOauth")
+                        : ch.auth_type === "apikey"
+                          ? t("tokenMarket.authApikey")
+                          : t("tokenMarket.authWebCookie")}
                   </span>
                 </div>
-                <div className="listing-card-body">
-                  <div className="listing-row">
-                    <span className="listing-key">{t("tokenMarket.freeType")}</span>
-                    <span className="listing-value">{ch.free_type}</span>
-                  </div>
-                  <div className="listing-row">
-                    <span className="listing-key">{t("tokenMarket.monthlyTokens")}</span>
-                    <span className="listing-value">{ch.monthly_tokens}</span>
-                  </div>
-                  {ch.models.length > 0 && (
-                    <div className="listing-row">
-                      <span className="listing-key">{t("tokenMarket.models")}</span>
-                      <span className="listing-value">{ch.models.map(m => m.model_name).join(", ")}</span>
-                    </div>
-                  )}
-                  <div className="listing-row">
-                    <span className="listing-key">{t("tokenMarket.description")}</span>
-                    <span className="listing-value" style={{ fontSize: 12, color: "var(--text-muted)" }}>{ch.description}</span>
-                  </div>
+                <div className="token-market-free-meta">
+                  <span>{t("tokenMarket.freeType")}: {ch.free_type}</span>
+                  <span>{t("tokenMarket.monthlyTokens")}: {ch.monthly_tokens}</span>
                 </div>
+                {ch.models.length > 0 && (
+                  <div className="token-market-tags">
+                    {ch.models.map((model) => (
+                      <span key={model.model_id} className="token-market-tag">{model.model_name}</span>
+                    ))}
+                  </div>
+                )}
+                <p className="token-market-free-desc">{ch.description}</p>
               </div>
             ))}
           </div>
@@ -145,47 +184,119 @@ export function TokenMarketPage() {
       )}
 
       {!loading && !error && marketListings.length > 0 && (
-        <>
-          <div className="card-grid">
-            {marketListings.map((listing) => (
-              <div key={listing.listing_id} className="listing-card" onClick={() => navigate(`/token-market/listing/${listing.listing_id}`)} style={{ cursor: "pointer" }}>
-                <div className="listing-card-header">
-                  <span className="listing-label">{listing.token_label}</span>
-                  <span className={`status-badge status-${listing.status}`}>
-                    {listing.status === "active" ? t("tokenMarket.statusActive") : listing.status}
-                  </span>
-                </div>
-                <div className="listing-card-body">
-                  <div className="listing-row">
-                    <span className="listing-key">{t("tokenMarket.seller")}</span>
-                    <span className="listing-value">{listing.seller_username}</span>
-                  </div>
-                  <div className="listing-row">
-                    <span className="listing-key">{t("tokenMarket.price")}</span>
-                    <span className="listing-value price-value">
-                      {listing.sale_type === "fixed_price"
-                        ? `${listing.price} ${listing.currency}`
-                        : `${(listing.discount_rate * 100).toFixed(0)}% ${t("tokenMarket.off")}`}
+        <div className="token-market-section">
+          <div className="token-market-section-header">
+            <div>
+              <h2>{t("tokenMarket.listingsTitle")}</h2>
+              <p>{t("tokenMarket.listingsSubtitle", { count: total || marketListings.length })}</p>
+            </div>
+            <div className="token-market-view-switch" role="tablist" aria-label={t("tokenMarket.viewMode")}>
+              <button
+                type="button"
+                className={`token-market-view-btn${viewMode === "card" ? " is-active" : ""}`}
+                onClick={() => setViewMode("card")}
+              >
+                {t("tokenMarket.cardView")}
+              </button>
+              <button
+                type="button"
+                className={`token-market-view-btn${viewMode === "list" ? " is-active" : ""}`}
+                onClick={() => setViewMode("list")}
+              >
+                {t("tokenMarket.listView")}
+              </button>
+            </div>
+          </div>
+
+          {viewMode === "card" ? (
+            <div className="token-market-card-grid">
+              {marketListings.map((listing) => (
+                <div
+                  key={listing.listing_id}
+                  className="token-market-listing-card"
+                  onClick={() => navigate(`/token-market/listing/${listing.listing_id}`)}
+                >
+                  <div className="token-market-listing-top">
+                    <div>
+                      <div className="token-market-listing-title">{listing.token_label}</div>
+                      <div className="token-market-listing-subtitle">{listing.seller_username}</div>
+                    </div>
+                    <span className={`status-badge status-${listing.status}`}>
+                      {listing.status === "active" ? t("tokenMarket.statusActive") : listing.status}
                     </span>
                   </div>
-                  {listing.available_quota > 0 && (
-                    <div className="listing-row">
-                      <span className="listing-key">{t("tokenMarket.availableQuota")}</span>
-                      <span className="listing-value">{listing.available_quota}</span>
+
+                  <div className="token-market-price-row">
+                    <div>
+                      <span className="token-market-mini-label">{t("tokenMarket.price")}</span>
+                      <div className="token-market-price-value">
+                        {listing.sale_type === "fixed_price"
+                          ? `${listing.price} ${listing.currency}`
+                          : `${(listing.discount_rate * 100).toFixed(0)}% ${t("tokenMarket.off")}`}
+                      </div>
                     </div>
-                  )}
+                    <div className="token-market-price-side">
+                      <span className="token-market-mini-label">{t("tokenMarket.availableQuota")}</span>
+                      <div className="token-market-side-value">{listing.available_quota || "-"}</div>
+                    </div>
+                  </div>
+
+                  <div className="token-market-card-footer">
+                    <span>{t("tokenMarket.saleType")}: {listing.sale_type === "fixed_price" ? t("tokenMarket.fixedPrice") : t("tokenMarket.discount")}</span>
+                    <span>{t("tokenMarket.createdAt")}: {listing.created_at}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="token-market-table-wrap">
+              <table className="diag-table token-market-table">
+                <thead>
+                  <tr>
+                    <th>{t("tokenMarket.tokenLabel")}</th>
+                    <th>{t("tokenMarket.seller")}</th>
+                    <th>{t("tokenMarket.saleType")}</th>
+                    <th>{t("tokenMarket.price")}</th>
+                    <th>{t("tokenMarket.availableQuota")}</th>
+                    <th>{t("tokenMarket.status")}</th>
+                    <th>{t("tokenMarket.createdAt")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {marketListings.map((listing) => (
+                    <tr key={listing.listing_id} onClick={() => navigate(`/token-market/listing/${listing.listing_id}`)}>
+                      <td>
+                        <div className="token-market-table-title">{listing.token_label}</div>
+                      </td>
+                      <td>{listing.seller_username}</td>
+                      <td>{listing.sale_type === "fixed_price" ? t("tokenMarket.fixedPrice") : t("tokenMarket.discount")}</td>
+                      <td className="token-market-table-price">
+                        {listing.sale_type === "fixed_price"
+                          ? `${listing.price} ${listing.currency}`
+                          : `${(listing.discount_rate * 100).toFixed(0)}% ${t("tokenMarket.off")}`}
+                      </td>
+                      <td>{listing.available_quota || "-"}</td>
+                      <td>
+                        <span className={`status-badge status-${listing.status}`}>
+                          {listing.status === "active" ? t("tokenMarket.statusActive") : listing.status}
+                        </span>
+                      </td>
+                      <td>{listing.created_at}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
           {page < totalPages && (
-            <div style={{ textAlign: "center", marginTop: 20 }}>
+            <div className="token-market-load-more">
               <button className="btn btn-secondary" onClick={handleLoadMore} disabled={loadingMore}>
                 {loadingMore ? t("common.loading") : `${t("tokenMarket.loadMore")} (${marketListings.length}/${total})`}
               </button>
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );

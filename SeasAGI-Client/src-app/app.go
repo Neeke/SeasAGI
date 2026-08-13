@@ -598,21 +598,6 @@ func (a *App) SetLogRotationConfig(cfg map[string]any) error {
 	return nil
 }
 
-// GetPricingSyncStatus 获取定价同步状态。
-func (a *App) GetPricingSyncStatus() map[string]any {
-	return map[string]any{
-		"last_sync":    "2026-07-31T00:00:00Z",
-		"status":       "idle",
-		"models_count": 50,
-		"auto_sync":    true,
-	}
-}
-
-// TriggerPricingSync 手动触发定价同步。
-func (a *App) TriggerPricingSync() error {
-	return nil
-}
-
 // GetCloudSyncStatus 获取云同步状态。
 func (a *App) GetCloudSyncStatus() map[string]any {
 	return map[string]any{

@@ -17,6 +17,7 @@ type CanonicalRequest struct {
 type Translator interface {
 	Match(body map[string]any) bool
 	ToCanonical(body map[string]any) (*CanonicalRequest, error)
+	SourceFormat() Format
 }
 
 var translators = []Translator{
@@ -24,6 +25,8 @@ var translators = []Translator{
 	openAIResponsesTranslator{},
 	GeminiTranslator{},
 	VertexTranslator{},
+	anthropicTranslator{},
+	passthroughTranslator{},
 }
 
 func ParseRequest(body []byte) (*CanonicalRequest, error) {
@@ -47,6 +50,8 @@ func (openAIChatTranslator) Match(body map[string]any) bool {
 	_, hasMessages := body["messages"]
 	return hasMessages
 }
+
+func (openAIChatTranslator) SourceFormat() Format { return FormatOpenAIChat }
 
 func (openAIChatTranslator) ToCanonical(body map[string]any) (*CanonicalRequest, error) {
 	model, _ := body["model"].(string)
@@ -75,6 +80,8 @@ func (openAIResponsesTranslator) Match(body map[string]any) bool {
 	_, hasInput := body["input"]
 	return hasInput
 }
+
+func (openAIResponsesTranslator) SourceFormat() Format { return FormatOpenAIResponses }
 
 func (openAIResponsesTranslator) ToCanonical(body map[string]any) (*CanonicalRequest, error) {
 	model, _ := body["model"].(string)

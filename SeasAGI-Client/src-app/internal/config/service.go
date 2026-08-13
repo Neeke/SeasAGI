@@ -41,19 +41,19 @@ type AppConfig struct {
 
 // RateLimitConfig 全局速率限制配置，借鉴 OmniRoute per-connection rateLimitOverrides。
 type RateLimitConfig struct {
-	Enabled         bool                `json:"enabled"`
-	DefaultRPM      int                 `json:"default_rpm"`       // 每分钟请求数，0=不限
-	DefaultTPM      int                 `json:"default_tpm"`       // 每分钟 token 数，0=不限
-	MinIntervalMs   int                 `json:"min_interval_ms"`   // 请求间最小间隔（毫秒），0=不限
-	MaxConcurrent   int                 `json:"max_concurrent"`    // 最大并发数，0=不限
-	MaxWaitMs       int                 `json:"max_wait_ms"`       // 队列最大等待（毫秒），默认 15000
+	Enabled          bool                         `json:"enabled"`
+	DefaultRPM       int                          `json:"default_rpm"`                 // 每分钟请求数，0=不限
+	DefaultTPM       int                          `json:"default_tpm"`                 // 每分钟 token 数，0=不限
+	MinIntervalMs    int                          `json:"min_interval_ms"`             // 请求间最小间隔（毫秒），0=不限
+	MaxConcurrent    int                          `json:"max_concurrent"`              // 最大并发数，0=不限
+	MaxWaitMs        int                          `json:"max_wait_ms"`                 // 队列最大等待（毫秒），默认 15000
 	ChannelOverrides map[string]*ChannelRateLimit `json:"channel_overrides,omitempty"` // per-channel 覆盖
 }
 
 // ChannelRateLimit 单个 Channel 的速率限制覆盖。
 type ChannelRateLimit struct {
-	RPM           int `json:"rpm"`            // 0=使用全局默认
-	TPM           int `json:"tpm"`            // 0=使用全局默认
+	RPM           int `json:"rpm"`             // 0=使用全局默认
+	TPM           int `json:"tpm"`             // 0=使用全局默认
 	MinIntervalMs int `json:"min_interval_ms"` // 0=使用全局默认
 	MaxConcurrent int `json:"max_concurrent"`  // 0=使用全局默认
 }
@@ -137,6 +137,13 @@ type Channel struct {
 	APIKey                 string            `json:"api_key,omitempty"`
 	APIKeys                []string          `json:"api_keys,omitempty"`
 	RetryConfig            *RetryConfig      `json:"retry_config,omitempty"`
+	Weight                 int               `json:"weight,omitempty"`         // 0=default(1); higher=more traffic in WRR
+	Priority               int               `json:"priority,omitempty"`       // lower=higher priority; 0=default
+	MaxConcurrent          int               `json:"max_concurrent,omitempty"` // 0=unlimited; per-channel in-flight limit
+	OAuthRefreshToken      string            `json:"oauth_refresh_token,omitempty"`
+	OAuthClientID          string            `json:"oauth_client_id,omitempty"`
+	OAuthClientSecret      string            `json:"oauth_client_secret,omitempty"`
+	OAuthTokenURL          string            `json:"oauth_token_url,omitempty"`
 }
 
 type Service struct {
@@ -445,6 +452,46 @@ func (s *Service) ListChannels() ([]Channel, error) {
 	return result, nil
 }
 
+// NormalizeChannelWeights validates and normalizes Weight and MaxConcurrent for
+// all channels. Weight defaults to 1 when <= 0; negative values are rejected.
+// MaxConcurrent stays 0 (unlimited) unless explicitly set positive.
+// Returns a slice of warning strings for channels that were auto-fixed.
+func (s *Service) NormalizeChannelWeights() []string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	var warnings []string
+	for i := range s.channels {
+		if s.channels[i].Weight < 0 {
+			warnings = append(warnings, fmt.Sprintf("channel %s: negative weight %d → 1", s.channels[i].ChannelID, s.channels[i].Weight))
+			s.channels[i].Weight = 1
+		} else if s.channels[i].Weight == 0 {
+			s.channels[i].Weight = 1
+		}
+		if s.channels[i].MaxConcurrent < 0 {
+			warnings = append(warnings, fmt.Sprintf("channel %s: negative max_concurrent %d → 0 (unlimited)", s.channels[i].ChannelID, s.channels[i].MaxConcurrent))
+			s.channels[i].MaxConcurrent = 0
+		}
+	}
+	if len(warnings) > 0 {
+		_ = s.saveLocked()
+	}
+	return warnings
+}
+
+// ValidateChannelWeights checks whether all channels in a group have valid
+// weights for WRR. Returns an error if any weight is negative.
+func (s *Service) ValidateChannelWeights() error {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	for _, ch := range s.channels {
+		if ch.Weight < 0 {
+			return fmt.Errorf("channel %s has negative weight %d", ch.ChannelID, ch.Weight)
+		}
+	}
+	return nil
+}
+
 func (s *Service) SaveCustomChannel(ch Channel) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -458,6 +505,14 @@ func (s *Service) SaveCustomChannel(ch Channel) (string, error) {
 	}
 	if ch.ProviderSpecificConfig == nil {
 		ch.ProviderSpecificConfig = map[string]string{}
+	}
+	// Normalize weight: default to 1 when unset
+	if ch.Weight <= 0 {
+		ch.Weight = 1
+	}
+	// Normalize max_concurrent: 0 means unlimited
+	if ch.MaxConcurrent < 0 {
+		ch.MaxConcurrent = 0
 	}
 
 	for i := range s.channels {

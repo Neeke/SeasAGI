@@ -11,6 +11,8 @@ func (GeminiTranslator) Match(body map[string]any) bool {
 	return hasContents
 }
 
+func (GeminiTranslator) SourceFormat() Format { return FormatGemini }
+
 func (GeminiTranslator) ToCanonical(body map[string]any) (*CanonicalRequest, error) {
 	model, _ := body["model"].(string)
 	if model == "" {

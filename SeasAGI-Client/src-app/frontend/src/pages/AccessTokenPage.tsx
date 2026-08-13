@@ -58,7 +58,7 @@ export function AccessTokenPage() {
 
   return (
     <div className="page token-page">
-      <div className="page-header">
+      <div className="page-header page-hero">
         <div>
           <h1>{t("token.title")}</h1>
           <p className="page-subtitle">{t("token.subtitle")}</p>

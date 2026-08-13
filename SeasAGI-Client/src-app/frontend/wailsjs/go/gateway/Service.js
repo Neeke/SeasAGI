@@ -6,6 +6,10 @@ export function GetComboRouteMetrics() {
   return window['go']['gateway']['Service']['GetComboRouteMetrics']();
 }
 
+export function GetConcurrencyInflight(arg1) {
+  return window['go']['gateway']['Service']['GetConcurrencyInflight'](arg1);
+}
+
 export function GetListenPort() {
   return window['go']['gateway']['Service']['GetListenPort']();
 }
@@ -28,4 +32,8 @@ export function Start(arg1) {
 
 export function Stop() {
   return window['go']['gateway']['Service']['Stop']();
+}
+
+export function SyncChannelConcurrencyLimits() {
+  return window['go']['gateway']['Service']['SyncChannelConcurrencyLimits']();
 }
