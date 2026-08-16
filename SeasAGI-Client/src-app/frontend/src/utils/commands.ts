@@ -60,6 +60,10 @@ type WailsAppApi = {
   GetRelayGateways(): Promise<Record<string, any>[]>;
   ChatCompletion(messages: Record<string, any>[], model: string): Promise<Record<string, any>>;
   ChatCompletionForChannel(channelId: string, messages: Record<string, any>[], model: string): Promise<Record<string, any>>;
+  ImageGeneration(prompt: string, model: string, params: Record<string, any>): Promise<Record<string, any>>;
+  ImageGenerationForChannel(channelId: string, prompt: string, model: string, params: Record<string, any>): Promise<Record<string, any>>;
+  VideoGeneration(prompt: string, model: string, params: Record<string, any>): Promise<Record<string, any>>;
+  VideoGenerationForChannel(channelId: string, prompt: string, model: string, params: Record<string, any>): Promise<Record<string, any>>;
   SyncCustomChannelsToCloud(channels: Record<string, any>[]): Promise<{ message: string; count: number }>;
   TestRelayGateway(gatewayId: string): Promise<Record<string, any>>;
   SaveRelayGateway(gatewayId: string): Promise<void>;
@@ -202,6 +206,22 @@ export async function chatCompletion(messages: Record<string, any>[], model: str
 
 export async function chatCompletionForChannel(channelId: string, messages: Record<string, any>[], model: string): Promise<Record<string, any>> {
   return getAppApi().ChatCompletionForChannel(channelId, messages, model);
+}
+
+export async function imageGeneration(prompt: string, model: string, params: Record<string, any> = {}): Promise<Record<string, any>> {
+  return getAppApi().ImageGeneration(prompt, model, params);
+}
+
+export async function imageGenerationForChannel(channelId: string, prompt: string, model: string, params: Record<string, any> = {}): Promise<Record<string, any>> {
+  return getAppApi().ImageGenerationForChannel(channelId, prompt, model, params);
+}
+
+export async function videoGeneration(prompt: string, model: string, params: Record<string, any> = {}): Promise<Record<string, any>> {
+  return getAppApi().VideoGeneration(prompt, model, params);
+}
+
+export async function videoGenerationForChannel(channelId: string, prompt: string, model: string, params: Record<string, any> = {}): Promise<Record<string, any>> {
+  return getAppApi().VideoGenerationForChannel(channelId, prompt, model, params);
 }
 
 export async function getUsageSummary(): Promise<UsageSummary> {

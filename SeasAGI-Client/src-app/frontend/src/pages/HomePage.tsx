@@ -484,19 +484,23 @@ export function HomePage() {
         <TeamCostSnapshot />
       )}
 
-      <div className="page-header page-hero">
-        <div>
-          <h1>{t("home.gatewayStatus")}</h1>
-          <p className="page-subtitle">{t("home.pageSubtitle")}</p>
-        </div>
-        <div className="hero-metrics">
-          <div className="hero-metric-card">
-            <span className="hero-metric-label">{t("home.metricGatewayStatus")}</span>
-            <strong className="hero-metric-value">{isRunning ? t("home.running") : t("home.stopped")}</strong>
-          </div>
-          <div className="hero-metric-card">
-            <span className="hero-metric-label">{t("home.metricAvailableChannels")}</span>
-            <strong className="hero-metric-value">{channels.length}</strong>
+      <div className="page-hero">
+        <div className="page-hero-head">
+          <div className="page-hero-copy">
+            <h1>{t("home.gatewayStatus")}</h1>
+            <div className="page-hero-content-row">
+              <p className="page-subtitle">{t("home.pageSubtitle")}</p>
+              <div className="hero-metrics">
+                <div className="hero-metric-card">
+                  <span className="hero-metric-label">{t("home.metricGatewayStatus")}</span>
+                  <strong className="hero-metric-value">{isRunning ? t("home.running") : t("home.stopped")}</strong>
+                </div>
+                <div className="hero-metric-card">
+                  <span className="hero-metric-label">{t("home.metricAvailableChannels")}</span>
+                  <strong className="hero-metric-value">{channels.length}</strong>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

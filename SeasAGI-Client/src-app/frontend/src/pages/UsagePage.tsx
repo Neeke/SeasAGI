@@ -130,26 +130,30 @@ export function UsagePage() {
 
   return (
     <div className="page usage-page">
-      <div className="page-header page-hero">
-        <div>
-          <h1>{t("usage.title")}</h1>
-          <p className="page-subtitle">{t("usage.subtitle")}</p>
-        </div>
-        <div className="hero-metrics">
-          <div className="hero-metric-card">
-            <span className="hero-metric-label">{t("usage.localRequests")}</span>
-            <strong className="hero-metric-value">{(localSummary?.month_requests ?? 0).toLocaleString()}</strong>
-          </div>
-          <div className="hero-metric-card">
-            <span className="hero-metric-label">{t("usage.cloudCost")}</span>
-            <strong className="hero-metric-value">{cloudUsage ? `$${cloudUsage.total_cost_usd.toFixed(2)}` : "--"}</strong>
-          </div>
-          {billing && (
-            <div className="hero-metric-card">
-              <span className="hero-metric-label">{billing.plan_name}</span>
-              <strong className="hero-metric-value">{billing.price > 0 ? `$${billing.price}/mo` : t("subscription.free")}</strong>
+      <div className="page-hero">
+        <div className="page-hero-head">
+          <div className="page-hero-copy">
+            <h1>{t("usage.title")}</h1>
+            <div className="page-hero-content-row">
+              <p className="page-subtitle">{t("usage.subtitle")}</p>
+              <div className="hero-metrics">
+                <div className="hero-metric-card">
+                  <span className="hero-metric-label">{t("usage.localRequests")}</span>
+                  <strong className="hero-metric-value">{(localSummary?.month_requests ?? 0).toLocaleString()}</strong>
+                </div>
+                <div className="hero-metric-card">
+                  <span className="hero-metric-label">{t("usage.cloudCost")}</span>
+                  <strong className="hero-metric-value">{cloudUsage ? `$${cloudUsage.total_cost_usd.toFixed(2)}` : "--"}</strong>
+                </div>
+                {billing && (
+                  <div className="hero-metric-card">
+                    <span className="hero-metric-label">{billing.plan_name}</span>
+                    <strong className="hero-metric-value">{billing.price > 0 ? `$${billing.price}/mo` : t("subscription.free")}</strong>
+                  </div>
+                )}
+              </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
 

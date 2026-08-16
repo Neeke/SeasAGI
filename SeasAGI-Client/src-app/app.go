@@ -2226,6 +2226,248 @@ func (a *App) ChatCompletionForChannel(channelID string, messages []map[string]a
 	return result, nil
 }
 
+func (a *App) ImageGeneration(prompt string, model string, params map[string]any) (map[string]any, error) {
+	gatewayPort := a.gatewaySvc.GetListenPort()
+	if gatewayPort == 0 {
+		return nil, fmt.Errorf("local gateway is not running")
+	}
+
+	body := map[string]any{
+		"model":  model,
+		"prompt": prompt,
+	}
+	for k, v := range params {
+		body[k] = v
+	}
+	bodyBytes, err := json.Marshal(body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	token, err := a.localTokenStore.GetOrCreate()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get access token: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(a.ctx, http.MethodPost,
+		fmt.Sprintf("http://127.0.0.1:%d/v1/images/generations", gatewayPort),
+		bytes.NewReader(bodyBytes))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("gateway request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal(respBytes, &result); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	result["_gateway_status"] = resp.StatusCode
+	result["_gateway_port"] = gatewayPort
+	result["_curl_command"] = buildCurlCommand(
+		fmt.Sprintf("http://127.0.0.1:%d/v1/images/generations", gatewayPort),
+		"Bearer "+token,
+		string(bodyBytes),
+	)
+
+	return result, nil
+}
+
+func (a *App) ImageGenerationForChannel(channelID string, prompt string, model string, params map[string]any) (map[string]any, error) {
+	ch, ok := a.configSvc.GetChannel(channelID)
+	if !ok {
+		return nil, fmt.Errorf("channel not found: %s", channelID)
+	}
+
+	apiKey := ""
+	if len(ch.APIKeys) > 0 {
+		apiKey = ch.APIKeys[0]
+	} else if ch.APIKey != "" {
+		apiKey = ch.APIKey
+	}
+	if apiKey == "" {
+		return nil, fmt.Errorf("no API key configured for channel %s", channelID)
+	}
+
+	body := map[string]any{
+		"model":  model,
+		"prompt": prompt,
+	}
+	for k, v := range params {
+		body[k] = v
+	}
+	bodyBytes, _ := json.Marshal(body)
+
+	baseURL := strings.TrimRight(ch.BaseURL, "/")
+	req, err := http.NewRequestWithContext(a.ctx, http.MethodPost,
+		baseURL+"/images/generations", bytes.NewReader(bodyBytes))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("channel request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal(respBytes, &result); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	result["_channel_id"] = channelID
+	result["_channel_name"] = ch.DisplayName
+	result["_status_code"] = resp.StatusCode
+	result["_curl_command"] = buildCurlCommand(
+		baseURL+"/images/generations",
+		"Bearer "+apiKey,
+		string(bodyBytes),
+	)
+
+	return result, nil
+}
+
+func (a *App) VideoGeneration(prompt string, model string, params map[string]any) (map[string]any, error) {
+	gatewayPort := a.gatewaySvc.GetListenPort()
+	if gatewayPort == 0 {
+		return nil, fmt.Errorf("local gateway is not running")
+	}
+
+	body := map[string]any{
+		"model":  model,
+		"prompt": prompt,
+	}
+	for k, v := range params {
+		body[k] = v
+	}
+	bodyBytes, err := json.Marshal(body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	token, err := a.localTokenStore.GetOrCreate()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get access token: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(a.ctx, http.MethodPost,
+		fmt.Sprintf("http://127.0.0.1:%d/v1/videos/generations", gatewayPort),
+		bytes.NewReader(bodyBytes))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("gateway request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal(respBytes, &result); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	result["_gateway_status"] = resp.StatusCode
+	result["_gateway_port"] = gatewayPort
+	result["_curl_command"] = buildCurlCommand(
+		fmt.Sprintf("http://127.0.0.1:%d/v1/videos/generations", gatewayPort),
+		"Bearer "+token,
+		string(bodyBytes),
+	)
+
+	return result, nil
+}
+
+func (a *App) VideoGenerationForChannel(channelID string, prompt string, model string, params map[string]any) (map[string]any, error) {
+	ch, ok := a.configSvc.GetChannel(channelID)
+	if !ok {
+		return nil, fmt.Errorf("channel not found: %s", channelID)
+	}
+
+	apiKey := ""
+	if len(ch.APIKeys) > 0 {
+		apiKey = ch.APIKeys[0]
+	} else if ch.APIKey != "" {
+		apiKey = ch.APIKey
+	}
+	if apiKey == "" {
+		return nil, fmt.Errorf("no API key configured for channel %s", channelID)
+	}
+
+	body := map[string]any{
+		"model":  model,
+		"prompt": prompt,
+	}
+	for k, v := range params {
+		body[k] = v
+	}
+	bodyBytes, _ := json.Marshal(body)
+
+	baseURL := strings.TrimRight(ch.BaseURL, "/")
+	req, err := http.NewRequestWithContext(a.ctx, http.MethodPost,
+		baseURL+"/videos/generations", bytes.NewReader(bodyBytes))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("channel request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal(respBytes, &result); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	result["_channel_id"] = channelID
+	result["_channel_name"] = ch.DisplayName
+	result["_status_code"] = resp.StatusCode
+	result["_curl_command"] = buildCurlCommand(
+		baseURL+"/videos/generations",
+		"Bearer "+apiKey,
+		string(bodyBytes),
+	)
+
+	return result, nil
+}
+
 func (a *App) GetRecommendedCombos() ([]map[string]any, error) {
 	combos, err := a.authSvc.FetchRecommendedCombos()
 	if err != nil {

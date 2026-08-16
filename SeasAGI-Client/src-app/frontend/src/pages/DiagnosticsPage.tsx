@@ -86,34 +86,36 @@ export function DiagnosticsPage() {
 
   return (
     <div className="page diagnostics-page">
-      <div className="page-header page-hero">
+      <div className="page-hero">
         <div className="page-hero-head">
           <div className="page-hero-copy">
             <h1>{t('diagnostics.title')}</h1>
-            <p className="page-subtitle">{t('diagnostics.subtitle')}</p>
+            <div className="page-hero-content-row">
+              <p className="page-subtitle">{t('diagnostics.subtitle')}</p>
+              <div className="hero-metrics">
+                <div className="hero-metric-card">
+                  <span className="hero-metric-label">{t('diagnostics.portCheck')}</span>
+                  <strong className="hero-metric-value">{totalPorts > 0 ? `${availablePorts}/${totalPorts}` : '--'}</strong>
+                </div>
+                <div className="hero-metric-card">
+                  <span className="hero-metric-label">{t('diagnostics.providerHealth')}</span>
+                  <strong className="hero-metric-value">{providerCount || '--'}</strong>
+                </div>
+                <div className="hero-metric-card">
+                  <span className="hero-metric-label">{t('diagnostics.tlsFingerprint')}</span>
+                  <strong className="hero-metric-value">{result?.tls_fingerprint?.current_profile || '--'}</strong>
+                </div>
+                <div className="hero-metric-card">
+                  <span className="hero-metric-label">{t('diagnostics.pending')}</span>
+                  <strong className="hero-metric-value">{pendingItems}</strong>
+                </div>
+              </div>
+            </div>
           </div>
           <div className="page-hero-actions">
             <button className="btn btn-primary" onClick={runDiag} disabled={loading}>
               {loading ? t('diagnostics.running') : t('diagnostics.runButton')}
             </button>
-          </div>
-        </div>
-        <div className="hero-metrics">
-          <div className="hero-metric-card">
-            <span className="hero-metric-label">{t('diagnostics.portCheck')}</span>
-            <strong className="hero-metric-value">{totalPorts > 0 ? `${availablePorts}/${totalPorts}` : '--'}</strong>
-          </div>
-          <div className="hero-metric-card">
-            <span className="hero-metric-label">{t('diagnostics.providerHealth')}</span>
-            <strong className="hero-metric-value">{providerCount || '--'}</strong>
-          </div>
-          <div className="hero-metric-card">
-            <span className="hero-metric-label">{t('diagnostics.tlsFingerprint')}</span>
-            <strong className="hero-metric-value">{result?.tls_fingerprint?.current_profile || '--'}</strong>
-          </div>
-          <div className="hero-metric-card">
-            <span className="hero-metric-label">{t('diagnostics.pending')}</span>
-            <strong className="hero-metric-value">{pendingItems}</strong>
           </div>
         </div>
       </div>

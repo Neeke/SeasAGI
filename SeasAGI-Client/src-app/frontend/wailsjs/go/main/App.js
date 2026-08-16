@@ -322,6 +322,14 @@ export function HandleDeepLink(arg1) {
   return window['go']['main']['App']['HandleDeepLink'](arg1);
 }
 
+export function ImageGeneration(arg1, arg2, arg3) {
+  return window['go']['main']['App']['ImageGeneration'](arg1, arg2, arg3);
+}
+
+export function ImageGenerationForChannel(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['ImageGenerationForChannel'](arg1, arg2, arg3, arg4);
+}
+
 export function ImportConfig(arg1) {
   return window['go']['main']['App']['ImportConfig'](arg1);
 }
@@ -656,4 +664,12 @@ export function UpdateRoutingSettings(arg1, arg2) {
 
 export function UpdateSyncConfig(arg1) {
   return window['go']['main']['App']['UpdateSyncConfig'](arg1);
+}
+
+export function VideoGeneration(arg1, arg2, arg3) {
+  return window['go']['main']['App']['VideoGeneration'](arg1, arg2, arg3);
+}
+
+export function VideoGenerationForChannel(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['VideoGenerationForChannel'](arg1, arg2, arg3, arg4);
 }

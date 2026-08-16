@@ -219,11 +219,23 @@ export function ChannelPage() {
 
   return (
     <div className="page channel-page">
-      <div className="page-header-row page-hero">
+      <div className="page-hero">
         <div className="page-hero-head">
           <div className="page-hero-copy">
             <h1>{t("channel.title")}</h1>
-            <p className="page-subtitle">{t("channel.pageSubtitle")}</p>
+            <div className="page-hero-content-row">
+              <p className="page-subtitle">{t("channel.pageSubtitle")}</p>
+              <div className="hero-metrics">
+                <div className="hero-metric-card">
+                  <span className="hero-metric-label">{t("channel.platformChannels")}</span>
+                  <strong className="hero-metric-value">{platformChannels.length}</strong>
+                </div>
+                <div className="hero-metric-card">
+                  <span className="hero-metric-label">{t("channel.customChannels")}</span>
+                  <strong className="hero-metric-value">{customChannels.length}</strong>
+                </div>
+              </div>
+            </div>
           </div>
           <div className="page-hero-actions">
             {auth.is_logged_in && (
@@ -245,16 +257,6 @@ export function ChannelPage() {
             >
               {t("channel.addChannel")}
             </button>
-          </div>
-        </div>
-        <div className="hero-metrics">
-          <div className="hero-metric-card">
-            <span className="hero-metric-label">{t("channel.platformChannels")}</span>
-            <strong className="hero-metric-value">{platformChannels.length}</strong>
-          </div>
-          <div className="hero-metric-card">
-            <span className="hero-metric-label">{t("channel.customChannels")}</span>
-            <strong className="hero-metric-value">{customChannels.length}</strong>
           </div>
         </div>
       </div>

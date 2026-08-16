@@ -173,6 +173,10 @@ export function GetUsageSummary():Promise<{[key: string]: any}>;
 
 export function HandleDeepLink(arg1:string):Promise<void>;
 
+export function ImageGeneration(arg1:string,arg2:string,arg3:{[key: string]: any}):Promise<{[key: string]: any}>;
+
+export function ImageGenerationForChannel(arg1:string,arg2:string,arg3:string,arg4:{[key: string]: any}):Promise<{[key: string]: any}>;
+
 export function ImportConfig(arg1:string):Promise<void>;
 
 export function ImportCustomPreset(arg1:Array<number>):Promise<void>;
@@ -340,3 +344,7 @@ export function UpdateDefaultModel(arg1:string,arg2:string):Promise<void>;
 export function UpdateRoutingSettings(arg1:string,arg2:number):Promise<void>;
 
 export function UpdateSyncConfig(arg1:sync.SyncConfig):Promise<void>;
+
+export function VideoGeneration(arg1:string,arg2:string,arg3:{[key: string]: any}):Promise<{[key: string]: any}>;
+
+export function VideoGenerationForChannel(arg1:string,arg2:string,arg3:string,arg4:{[key: string]: any}):Promise<{[key: string]: any}>;

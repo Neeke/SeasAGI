@@ -3,9 +3,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useAppStore } from "../stores/appStore";
 import { useTranslation } from "../i18n";
 import { getCloudBilling, getRuntimeStatus } from "../utils/commands";
-import { formatPlanTier, normalizePlanTier } from "../utils/plan";
 import { useConfigSync } from "../hooks/useConfigSync";
-import { ConfigSyncIndicator } from "./ConfigSyncIndicator";
 import seasagiIcon from "../assets/seasagi-icon.png";
 
 type AppIconName =
@@ -24,24 +22,36 @@ type AppIconName =
   | "layers"
   | "store"
   | "diagnostics"
-  | "plugin";
+  | "plugin"
+  | "chevron";
 
-const navItems: Array<{ to: string; label: string; icon: AppIconName; cloudOnly?: boolean }> = [
-  { to: "/", label: "nav.home", icon: "home" as AppIconName },
-  { to: "/access-token", label: "nav.accessToken", icon: "key" as AppIconName },
-  { to: "/channels", label: "nav.channels", icon: "channels" as AppIconName },
-  { to: "/combo-workbench", label: "nav.comboWorkbench", icon: "layers" as AppIconName },
-  { to: "/playground", label: "nav.playground", icon: "playground" as AppIconName },
-  { to: "/subscription", label: "nav.subscription", icon: "subscription" as AppIconName },
-  { to: "/usage", label: "nav.usage", icon: "usage" as AppIconName },
-  { to: "/token-market", label: "nav.tokenMarket", icon: "store" as AppIconName, cloudOnly: true },
-  { to: "/logs", label: "nav.logs", icon: "logs" as AppIconName },
-  { to: "/diagnostics", label: "nav.diagnostics", icon: "diagnostics" as AppIconName },
-  { to: "/plugins", label: "nav.plugins", icon: "plugin" as AppIconName },
-  { to: "/settings", label: "nav.settings", icon: "settings" as AppIconName },
+type NavEntry =
+  | { kind: "item"; to: string; label: string; icon: AppIconName; cloudOnly?: boolean }
+  | { kind: "group"; id: string; label: string; icon: AppIconName; children: Array<{ to: string; label: string; icon: AppIconName; cloudOnly?: boolean }> };
+
+const navEntries: NavEntry[] = [
+  { kind: "item", to: "/", label: "nav.home", icon: "home" },
+  { kind: "item", to: "/channels", label: "nav.channels", icon: "channels" },
+  { kind: "item", to: "/combo-workbench", label: "nav.comboWorkbench", icon: "layers" },
+  { kind: "item", to: "/playground", label: "nav.playground", icon: "playground" },
+  { kind: "group", id: "data-security", label: "nav.dataSecurity", icon: "key", children: [
+    { to: "/access-token", label: "nav.accessToken", icon: "key" },
+    { to: "/diagnostics", label: "nav.diagnostics", icon: "diagnostics" },
+  ]},
+  { kind: "group", id: "data-compliance", label: "nav.dataCompliance", icon: "combo", children: [
+    { to: "/enterprise", label: "nav.enterprise", icon: "combo" },
+  ]},
+  { kind: "group", id: "budget-control", label: "nav.budgetControl", icon: "subscription", children: [
+    { to: "/subscription", label: "nav.subscription", icon: "subscription" },
+    { to: "/usage", label: "nav.usage", icon: "usage" },
+    { to: "/token-market", label: "nav.tokenMarket", icon: "store", cloudOnly: true },
+  ]},
+  { kind: "group", id: "audit-governance", label: "nav.auditGovernance", icon: "logs", children: [
+    { to: "/logs", label: "nav.logs", icon: "logs" },
+    { to: "/plugins", label: "nav.plugins", icon: "plugin" },
+  ]},
+  { kind: "item", to: "/settings", label: "nav.settings", icon: "settings" },
 ];
-
-const teamNavItem = { to: "/team", label: "nav.team", icon: "combo" as AppIconName };
 
 type ThemeMode = "light" | "dark";
 
@@ -101,6 +111,8 @@ function AppIcon({ name, className = "" }: { name: AppIconName; className?: stri
       return <svg {...props}><path d="M12 2a10 10 0 100 20 10 10 0 000-20z" /><path d="M12 6v6l4 2" /></svg>;
     case "plugin":
       return <svg {...props}><path d="M9 3v4M15 3v4M7 7h10v4a3 3 0 01-3 3h-4a3 3 0 01-3-3V7z" /><path d="M12 14v4M10 21h4" /></svg>;
+    case "chevron":
+      return <svg {...props}><path d="M6 9l6 6 6-6" /></svg>;
     default:
       return null;
   }
@@ -114,6 +126,37 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const setCloudBilling = useAppStore((s) => s.setCloudBilling);
   const location = useLocation();
   const [theme, setTheme] = useState<ThemeMode>(getInitialTheme);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  const toggleGroup = (id: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  // Auto-expand group containing current route
+  useEffect(() => {
+    for (const entry of navEntries) {
+      if (entry.kind === "group") {
+        for (const child of entry.children) {
+          if (location.pathname === child.to || (child.to !== "/" && location.pathname.startsWith(child.to))) {
+            setExpandedGroups((prev) => new Set(prev).add(entry.id));
+            return;
+          }
+        }
+      }
+    }
+    // Also check enterprise route
+    if (location.pathname === "/enterprise") {
+      setExpandedGroups((prev) => new Set(prev).add("data-compliance"));
+    }
+  }, [location.pathname]);
 
   const isAuthPage = location.pathname === "/auth";
   useEffect(() => {
@@ -148,9 +191,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
     window.localStorage.setItem("seasagi-theme", theme);
   }, [theme]);
 
-  const planTier = normalizePlanTier(cloudBilling);
-  const planLabel = formatPlanTier(cloudBilling);
-
   return (
     <div className="app-frame">
       <div className="app-chrome">
@@ -167,34 +207,82 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <div className="app-layout">
         <aside className="sidebar">
           <div className="sidebar-header">
-            <NavLink to="/" className="sidebar-logo">
-              <img src={seasagiIcon} alt="SeasAGI" className="logo-icon-image" />
-              <span className="logo-text">SeasAGI</span>
-              <span className="logo-version">v{import.meta.env.VITE_APP_VERSION || "0.1.0"}</span>
-            </NavLink>
+            <div className="sidebar-title-row">
+              <div className="sidebar-logo-container">
+                <img src={seasagiIcon} alt="SeasAGI" className="sidebar-logo-img" />
+                <div className="sidebar-logo-info">
+                  <span className="logo-text">SeasAGI</span>
+                  <span className="logo-version">v0.1.0</span>
+                </div>
+              </div>
+              <AppIcon name="chevron" className="title-chevron" />
+            </div>
           </div>
           <nav className="sidebar-nav">
-            {navItems.map((item) => {
-              const disabled = !!item.cloudOnly && !auth.is_logged_in;
-              if (disabled) {
+            {navEntries.map((entry) => {
+              if (entry.kind === "item") {
+                const disabled = !!entry.cloudOnly && !auth.is_logged_in;
+                if (disabled) {
+                  return (
+                    <div key={entry.to} className="nav-item nav-item-disabled" aria-disabled="true" title={t("tokenMarket.loginToUse")} onClick={() => window.location.assign("#/auth")}>
+                      <span className="nav-icon"><AppIcon name={entry.icon} /></span>
+                      <span className="nav-label">{t(entry.label)}</span>
+                      <span className="nav-cloud-lock" title={t("tokenMarket.loginToUse")}><AppIcon name="lock" /></span>
+                    </div>
+                  );
+                }
                 return (
-                  <div key={item.to} className="nav-item nav-item-disabled" aria-disabled="true" title={t("tokenMarket.loginToUse")} onClick={() => window.location.assign("#/auth")}>
-                    <span className="nav-icon"><AppIcon name={item.icon} /></span>
-                    <span className="nav-label">{t(item.label)}</span>
-                    <span className="nav-cloud-lock" title={t("tokenMarket.loginToUse")}><AppIcon name="lock" /></span>
-                  </div>
+                  <NavLink
+                    key={entry.to}
+                    to={entry.to}
+                    end={entry.to === "/"}
+                    className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
+                  >
+                    <span className="nav-icon"><AppIcon name={entry.icon} /></span>
+                    <span className="nav-label">{t(entry.label)}</span>
+                  </NavLink>
                 );
               }
+              // Group: skip data-compliance if not enterprise
+              if (entry.id === "data-compliance" && !(auth.is_logged_in && cloudBilling?.plan_id === "enterprise")) {
+                return null;
+              }
+              const isExpanded = expandedGroups.has(entry.id);
               return (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.to === "/"}
-                  className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
-                >
-                  <span className="nav-icon"><AppIcon name={item.icon} /></span>
-                  <span className="nav-label">{t(item.label)}</span>
-                </NavLink>
+                <div key={entry.id} className="nav-group">
+                  <button type="button" className="nav-group-header" onClick={() => toggleGroup(entry.id)}>
+                    <span className="nav-icon"><AppIcon name={entry.icon} /></span>
+                    <span className="nav-label">{t(entry.label)}</span>
+                    <span className={`nav-chevron ${isExpanded ? "expanded" : ""}`}><AppIcon name="chevron" /></span>
+                  </button>
+                  {isExpanded && (
+                    <div className="nav-group-children">
+                      {entry.children.map((child) => {
+                        const childDisabled = !!child.cloudOnly && !auth.is_logged_in;
+                        if (childDisabled) {
+                          return (
+                            <div key={child.to} className="nav-item nav-item-disabled nav-sub-item" aria-disabled="true" title={t("tokenMarket.loginToUse")} onClick={() => window.location.assign("#/auth")}>
+                              <span className="nav-icon"><AppIcon name={child.icon} /></span>
+                              <span className="nav-label">{t(child.label)}</span>
+                              <span className="nav-cloud-lock" title={t("tokenMarket.loginToUse")}><AppIcon name="lock" /></span>
+                            </div>
+                          );
+                        }
+                        return (
+                          <NavLink
+                            key={child.to}
+                            to={child.to}
+                            end={child.to === "/"}
+                            className={({ isActive }) => `nav-item nav-sub-item ${isActive ? "active" : ""}`}
+                          >
+                            <span className="nav-icon"><AppIcon name={child.icon} /></span>
+                            <span className="nav-label">{t(child.label)}</span>
+                          </NavLink>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               );
             })}
             {auth.is_logged_in && (cloudBilling?.plan_id === "teams" || cloudBilling?.plan_id === "enterprise") && (
@@ -202,40 +290,44 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 to="/team"
                 className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
               >
-                <span className="nav-icon"><AppIcon name={teamNavItem.icon} /></span>
+                <span className="nav-icon"><AppIcon name="combo" /></span>
                 <span className="nav-label">{t("nav.team")}</span>
               </NavLink>
             )}
-            {auth.is_logged_in && cloudBilling?.plan_id === "enterprise" && (
-              <NavLink
-                to="/enterprise"
-                className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
-              >
-                <span className="nav-icon"><AppIcon name="combo" /></span>
-                <span className="nav-label">{t("nav.enterprise")}</span>
-              </NavLink>
-            )}
           </nav>
+          
           <div className="sidebar-footer">
-            <ConfigSyncIndicator />
-            {auth.is_logged_in ? (
-              <div className="user-info">
-                <div className="user-avatar">{auth.email?.[0]?.toUpperCase() || "U"}</div>
-                <div className="user-details">
-                  <div className="user-name">{auth.email || t("layout.loggedIn")}</div>
-                  {planTier && <div className={`plan-badge plan-badge-${planTier}`}>{planLabel}</div>}
+            <div className="user-profile-bar">
+              {auth.is_logged_in ? (
+                <div className="user-avatar-section">
+                  <div className="user-avatar-container">
+                    <div className="user-avatar">{auth.email?.[0]?.toUpperCase() || "U"}</div>
+                    <div className="status-indicator online" />
+                  </div>
+                  <div className="user-info-text">
+                    <div className="user-name">{auth.email?.split("@")[0] || t("layout.loggedIn")}</div>
+                    <div className="user-status-text">在线</div>
+                  </div>
                 </div>
-                <span className="user-chevron">›</span>
+              ) : (
+                <NavLink to="/auth" className="user-avatar-section guest">
+                  <div className="user-avatar-container">
+                    <div className="user-avatar guest"><AppIcon name="home" /></div>
+                    <div className="status-indicator offline" />
+                  </div>
+                  <div className="user-info-text">
+                    <div className="user-name">未登录</div>
+                    <div className="user-status-text">点击登录云端</div>
+                  </div>
+                </NavLink>
+              )}
+              <div className="user-control-icons">
+                <NavLink to="/settings" className="user-control-btn" title="设置"><AppIcon name="settings" /></NavLink>
               </div>
-            ) : (
-              <NavLink to={isAuthPage ? "/" : "/auth"} className="login-prompt">
-                <span className="login-icon"><AppIcon name="key" /></span>
-                <span>{t("nav.localMode")}</span>
-                <span className="user-chevron">›</span>
-              </NavLink>
-            )}
+            </div>
           </div>
         </aside>
+
         <div className="main-shell">
           {!auth.is_logged_in && !isAuthPage && (
             <div className="readonly-banner">
@@ -247,7 +339,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
           )}
           <main className="main-content">
-            <div>
+            <div className="content-inner">
               {children}
             </div>
           </main>
