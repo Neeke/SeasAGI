@@ -42,6 +42,10 @@ export function SubscriptionPage() {
 
   useEffect(() => {
     (async () => {
+      if (!auth.is_logged_in) {
+        setLoading(false);
+        return;
+      }
       try {
         const items = await getPlans();
         setPlans(items.map((p: any) => ({
@@ -60,7 +64,7 @@ export function SubscriptionPage() {
       }
       setLoading(false);
     })();
-  }, []);
+  }, [auth.is_logged_in]);
 
   const handleSubscribe = async (planId: string, quantity?: number) => {
     if (!auth.is_logged_in) {
@@ -91,9 +95,25 @@ export function SubscriptionPage() {
 
   if (loading) return <div className="page"><div className="loading">{t("subscription.loading")}</div></div>;
 
+  if (!auth.is_logged_in) {
+    return (
+      <div className="page subscription-page">
+        <div className="page-header page-hero">
+          <div>
+            <h1>{t("subscription.title")}</h1>
+            <p className="page-subtitle">{t("subscription.pageSubtitle")}</p>
+          </div>
+        </div>
+        <div className="section section-card" style={{ textAlign: "center", padding: 48 }}>
+          <p style={{ fontSize: 16, marginBottom: 16 }}>{t("subscription.pleaseLogin")}</p>
+        </div>
+      </div>
+    );
+  }
+
   const currentPlan = cloudBilling?.plan_id || "free";
 
-  const sorted = [...plans].sort((a, b) => a.sort_order - b.sort_order).filter(p => p.plan_id !== "enterprise");
+  const sorted = [...plans].sort((a, b) => a.sort_order - b.sort_order);
 
   return (
     <div className="page subscription-page">

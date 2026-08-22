@@ -43,6 +43,8 @@ export function Login(arg1:string,arg2:string):Promise<void>;
 
 export function Logout():Promise<void>;
 
+export function PlatformAPIBaseURL():Promise<string>;
+
 export function PushCloudCombo(arg1:string,arg2:string,arg3:string,arg4:string,arg5:number,arg6:string,arg7:{[key: string]: any},arg8:Array<number>):Promise<auth.CloudUserCombo>;
 
 export function PushCloudOptimizationConfig(arg1:string):Promise<void>;

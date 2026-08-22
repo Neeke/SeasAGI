@@ -604,7 +604,7 @@
   "settings.cavemanStyleMinimal": "Minimal",
   "settings.cavemanStyleTerse": "Terse",
   "settings.platformApiUrl": "Cloud API URL",
-  "settings.platformApiUrlHint": "Base URL for the SeasAGI cloud API. Defaults to the local dev server (http://127.0.0.1:9318/api/v1); change to your production URL after deployment.",
+  "settings.platformApiUrlHint": "Base URL for the SeasAGI cloud API. Defaults to the production server (https://seasagi.seasx.ai/api/v1); change to your local dev server if needed.",
   "settings.platformApiUrlSave": "Save",
   "settings.saveFailed": "Save failed",
   "settings.oauthConnect": "OAuth Connect",

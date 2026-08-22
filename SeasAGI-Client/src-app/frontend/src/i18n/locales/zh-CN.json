@@ -604,7 +604,7 @@
   "settings.cavemanStyleMinimal": "极简",
   "settings.cavemanStyleTerse": "扼要",
   "settings.platformApiUrl": "云端 API 地址",
-  "settings.platformApiUrlHint": "SeasAGI 云端服务的 API 基地址。默认指向本地开发服务器（http://127.0.0.1:9318/api/v1），部署后可修改为生产地址。",
+  "settings.platformApiUrlHint": "SeasAGI 云端服务的 API 基地址。默认指向生产地址（https://seasagi.seasx.ai/api/v1），如需对接本地开发服务器可在此修改。",
   "settings.platformApiUrlSave": "保存",
   "settings.saveFailed": "保存失败",
   "settings.oauthConnect": "OAuth 授权登录",

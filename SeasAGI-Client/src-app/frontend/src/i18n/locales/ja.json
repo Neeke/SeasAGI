@@ -590,7 +590,7 @@
   "settings.cavemanStyleMinimal": "最小限",
   "settings.cavemanStyleTerse": "簡潔",
   "settings.platformApiUrl": "クラウド API アドレス",
-  "settings.platformApiUrlHint": "SeasAGI クラウドサービスの API ベース URL。デフォルトはローカル開発サーバー (http://127.0.0.1:9318/api/v1) です。デプロイ後に本番 URL に変更できます。",
+  "settings.platformApiUrlHint": "SeasAGI クラウドサービスの API ベース URL。デフォルトは本番サーバー (https://seasagi.seasx.ai/api/v1) です。必要に応じてローカル開発サーバーに変更できます。",
   "settings.platformApiUrlSave": "保存",
   "settings.saveFailed": "保存に失敗しました",
   "settings.oauthConnect": "OAuth 認証ログイン",

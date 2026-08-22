@@ -192,7 +192,7 @@ export function SettingsPage() {
                 <input
                   value={platformApiURL}
                   onChange={(e) => setPlatformApiURL(e.target.value)}
-                  placeholder="http://127.0.0.1:9318/api/v1"
+                  placeholder="https://seasagi.seasx.ai/api/v1"
                 />
               </div>
               <button

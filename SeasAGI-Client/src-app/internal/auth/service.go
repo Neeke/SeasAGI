@@ -218,6 +218,10 @@ func (s *Service) FetchFreeChannels(ctx context.Context) ([]map[string]interface
 	return result.Data, nil
 }
 
+func (s *Service) PlatformAPIBaseURL() string {
+	return platformAPIBaseURL()
+}
+
 func platformAPIBaseURL() string {
 	if value := os.Getenv("PLATFORM_API_BASE_URL"); value != "" {
 		return value
@@ -225,5 +229,5 @@ func platformAPIBaseURL() string {
 	if value := getConfiguredBaseURL(); value != "" {
 		return value
 	}
-	return "http://127.0.0.1:9318/api/v1"
+	return "https://seasagi.seasx.ai/api/v1"
 }

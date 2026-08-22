@@ -685,7 +685,7 @@ func (a *App) CreateCheckoutSession(planID string, quantity ...int) (map[string]
 	body := map[string]any{"plan_id": planID, "quantity": qty}
 	bodyBytes, _ := json.Marshal(body)
 
-	apiBase := a.configSvc.GetPlatformAPIBaseURL()
+	apiBase := a.authSvc.PlatformAPIBaseURL()
 	reqCtx, cancel := context.WithTimeout(a.ctx, 8*time.Second)
 	defer cancel()
 
@@ -1929,6 +1929,9 @@ func (a *App) GetCloudBilling() (map[string]any, error) {
 }
 
 func (a *App) GetPlans() ([]map[string]any, error) {
+	if !a.authSvc.IsLoggedIn() {
+		return nil, fmt.Errorf("not logged in")
+	}
 	plans, err := a.authSvc.FetchPlans()
 	if err != nil {
 		return nil, err
@@ -1956,7 +1959,7 @@ func (a *App) GetRelayGateways() ([]map[string]any, error) {
 		return nil, fmt.Errorf("not logged in")
 	}
 
-	apiBase := a.configSvc.GetPlatformAPIBaseURL()
+	apiBase := a.authSvc.PlatformAPIBaseURL()
 
 	reqCtx, cancel := context.WithTimeout(a.ctx, 8*time.Second)
 	defer cancel()

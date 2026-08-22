@@ -82,6 +82,10 @@ export function Logout() {
   return window['go']['auth']['Service']['Logout']();
 }
 
+export function PlatformAPIBaseURL() {
+  return window['go']['auth']['Service']['PlatformAPIBaseURL']();
+}
+
 export function PushCloudCombo(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
   return window['go']['auth']['Service']['PushCloudCombo'](arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 }

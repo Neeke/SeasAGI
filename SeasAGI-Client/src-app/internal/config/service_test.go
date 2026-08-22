@@ -1092,8 +1092,8 @@ func TestSetSelectedRelayGateway(t *testing.T) {
 
 func TestPlatformAPIBaseURL(t *testing.T) {
 	svc := newTestService(t)
-	if got := svc.GetPlatformAPIBaseURL(); got != "http://127.0.0.1:9318/api/v1" {
-		t.Errorf("default PlatformAPIBaseURL = %q, want %q", got, "http://127.0.0.1:9318/api/v1")
+	if got := svc.GetPlatformAPIBaseURL(); got != "https://seasagi.seasx.ai/api/v1" {
+		t.Errorf("default PlatformAPIBaseURL = %q, want %q", got, "https://seasagi.seasx.ai/api/v1")
 	}
 	_ = svc.SetPlatformAPIBaseURL("https://api.example.com")
 	if got := svc.GetPlatformAPIBaseURL(); got != "https://api.example.com" {

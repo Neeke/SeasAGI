@@ -276,7 +276,7 @@ func LoadOrDefault() (AppConfig, error) {
 		AutoUpdate:         true,
 		LogRetentionDays:   30,
 		AnalyticsEnabled:   false,
-		PlatformAPIBaseURL: "http://127.0.0.1:9318/api/v1",
+		PlatformAPIBaseURL: "https://seasagi.seasx.ai/api/v1",
 	})
 	if err := svc.load(); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return svc.config, err
@@ -429,7 +429,7 @@ func (s *Service) GetPlatformAPIBaseURL() string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	if s.config.PlatformAPIBaseURL == "" {
-		return "http://127.0.0.1:9318/api/v1"
+		return "https://seasagi.seasx.ai/api/v1"
 	}
 	return s.config.PlatformAPIBaseURL
 }

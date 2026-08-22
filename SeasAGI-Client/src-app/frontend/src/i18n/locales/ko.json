@@ -590,7 +590,7 @@
   "settings.cavemanStyleMinimal": "최소",
   "settings.cavemanStyleTerse": "간략",
   "settings.platformApiUrl": "클라우드 API 주소",
-  "settings.platformApiUrlHint": "SeasAGI 클라우드 서비스의 API 기본 URL입니다. 기본값은 로컬 개발 서버(http://127.0.0.1:9318/api/v1)이며, 배포 후 운영 주소로 변경할 수 있습니다.",
+  "settings.platformApiUrlHint": "SeasAGI 클라우드 서비스의 API 기본 URL입니다. 기본값은 프로덕션 서버(https://seasagi.seasx.ai/api/v1)이며, 필요 시 로컬 개발 서버로 변경할 수 있습니다.",
   "settings.platformApiUrlSave": "저장",
   "settings.saveFailed": "저장 실패",
   "settings.oauthConnect": "OAuth 인증 로그인",
