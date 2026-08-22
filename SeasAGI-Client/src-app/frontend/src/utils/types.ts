@@ -186,6 +186,7 @@ export interface RelayGateway {
   region: string;
   host: string;
   port: number;
+  supports_federation?: boolean;
 }
 
 export interface OverageRecord {

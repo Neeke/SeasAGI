@@ -30,6 +30,13 @@ export function TokenMarketPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [freeChannels, setFreeChannels] = useState<FreeChannel[]>([]);
   const [viewMode, setViewMode] = useState<MarketViewMode>("card");
+  // P11: 搜索/筛选/排序
+  const [search, setSearch] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [saleType, setSaleType] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
+  const [filterKey, setFilterKey] = useState(0);
 
   const fetchListings = async (pageNum: number, append: boolean) => {
     if (append) {
@@ -40,7 +47,15 @@ export function TokenMarketPage() {
     setError(null);
     try {
       const [baseURL, token] = await Promise.all([getPlatformAPIBaseURL(), getPlatformToken()]);
-      const resp = await fetch(`${baseURL}/token-market/listings?page=${pageNum}&page_size=20`, {
+      const params = new URLSearchParams();
+      params.set("page", String(pageNum));
+      params.set("page_size", "20");
+      if (search) params.set("search", search);
+      if (minPrice) params.set("min_price", minPrice);
+      if (maxPrice) params.set("max_price", maxPrice);
+      if (saleType) params.set("sale_type", saleType);
+      params.set("sort", sortBy);
+      const resp = await fetch(`${baseURL}/token-market/listings?${params}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -71,7 +86,12 @@ export function TokenMarketPage() {
         setFreeChannels([]);
       }
     })();
-  }, []);
+  }, [filterKey]);
+
+  const handleSearch = () => {
+    setPage(1);
+    setFilterKey((k) => k + 1);
+  };
 
   const handleLoadMore = () => {
     const nextPage = page + 1;
@@ -175,6 +195,63 @@ export function TokenMarketPage() {
 
       {loading && <div className="loading-state">{t("common.loading")}</div>}
       {error && <div className="form-error">{error}</div>}
+
+      {!loading && !error && (
+        <div className="token-market-filters" style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "flex-end", marginBottom: "16px" }}>
+          <div className="filter-field">
+            <label className="filter-label" style={{ fontSize: "12px", display: "block", marginBottom: "4px" }}>{t("tokenMarket.search") || "Search"}</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder={t("tokenMarket.searchPlaceholder") || "Token name or seller"}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              style={{ minWidth: "200px" }}
+            />
+          </div>
+          <div className="filter-field">
+            <label className="filter-label" style={{ fontSize: "12px", display: "block", marginBottom: "4px" }}>{t("tokenMarket.minPrice") || "Min Price"}</label>
+            <input
+              type="number"
+              className="form-input"
+              placeholder="0"
+              value={minPrice}
+              onChange={(e) => setMinPrice(e.target.value)}
+              style={{ width: "100px" }}
+            />
+          </div>
+          <div className="filter-field">
+            <label className="filter-label" style={{ fontSize: "12px", display: "block", marginBottom: "4px" }}>{t("tokenMarket.maxPrice") || "Max Price"}</label>
+            <input
+              type="number"
+              className="form-input"
+              placeholder="9999"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              style={{ width: "100px" }}
+            />
+          </div>
+          <div className="filter-field">
+            <label className="filter-label" style={{ fontSize: "12px", display: "block", marginBottom: "4px" }}>{t("tokenMarket.saleType") || "Type"}</label>
+            <select className="form-input" value={saleType} onChange={(e) => setSaleType(e.target.value)} style={{ width: "120px" }}>
+              <option value="">{t("tokenMarket.all") || "All"}</option>
+              <option value="fixed_price">{t("tokenMarket.fixedPrice")}</option>
+              <option value="discount">{t("tokenMarket.discount")}</option>
+            </select>
+          </div>
+          <div className="filter-field">
+            <label className="filter-label" style={{ fontSize: "12px", display: "block", marginBottom: "4px" }}>{t("tokenMarket.sortBy") || "Sort"}</label>
+            <select className="form-input" value={sortBy} onChange={(e) => { setSortBy(e.target.value); handleSearch(); }} style={{ width: "140px" }}>
+              <option value="newest">{t("tokenMarket.sortNewest") || "Newest"}</option>
+              <option value="price_asc">{t("tokenMarket.sortPriceAsc") || "Price: Low to High"}</option>
+              <option value="price_desc">{t("tokenMarket.sortPriceDesc") || "Price: High to Low"}</option>
+              <option value="quota_desc">{t("tokenMarket.sortQuotaDesc") || "Quota: High to Low"}</option>
+            </select>
+          </div>
+          <button className="btn btn-primary" onClick={handleSearch}>{t("tokenMarket.applyFilters") || "Apply"}</button>
+        </div>
+      )}
 
       {!loading && !error && marketListings.length === 0 && (
         <div className="empty-state">

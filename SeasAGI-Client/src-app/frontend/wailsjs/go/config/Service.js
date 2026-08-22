@@ -62,6 +62,14 @@ export function GetRateLimitConfig() {
   return window['go']['config']['Service']['GetRateLimitConfig']();
 }
 
+export function GetSelectedGrantID() {
+  return window['go']['config']['Service']['GetSelectedGrantID']();
+}
+
+export function GetSelectedGrantRelayURL() {
+  return window['go']['config']['Service']['GetSelectedGrantRelayURL']();
+}
+
 export function GetSetting(arg1) {
   return window['go']['config']['Service']['GetSetting'](arg1);
 }
@@ -146,8 +154,8 @@ export function SetRateLimitConfig(arg1) {
   return window['go']['config']['Service']['SetRateLimitConfig'](arg1);
 }
 
-export function SetSelectedRelayGateway(arg1) {
-  return window['go']['config']['Service']['SetSelectedRelayGateway'](arg1);
+export function SetSelectedGrant(arg1, arg2) {
+  return window['go']['config']['Service']['SetSelectedGrant'](arg1, arg2);
 }
 
 export function UpdateChannelHealth(arg1, arg2) {

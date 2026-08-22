@@ -38,6 +38,10 @@ export function ClearLogs() {
   return window['go']['main']['App']['ClearLogs']();
 }
 
+export function ClearSelectedGrant() {
+  return window['go']['main']['App']['ClearSelectedGrant']();
+}
+
 export function ConfirmAction(arg1, arg2) {
   return window['go']['main']['App']['ConfirmAction'](arg1, arg2);
 }
@@ -92,6 +96,10 @@ export function ExchangeOAuthCode(arg1, arg2, arg3, arg4, arg5, arg6) {
 
 export function ExportConfig() {
   return window['go']['main']['App']['ExportConfig']();
+}
+
+export function FetchActiveGrants() {
+  return window['go']['main']['App']['FetchActiveGrants']();
 }
 
 export function FetchCloudCombos() {
@@ -270,16 +278,12 @@ export function GetRecommendedCombos() {
   return window['go']['main']['App']['GetRecommendedCombos']();
 }
 
-export function GetRelayGateways() {
-  return window['go']['main']['App']['GetRelayGateways']();
-}
-
 export function GetRuntimeStatus() {
   return window['go']['main']['App']['GetRuntimeStatus']();
 }
 
-export function GetSelectedRelayGateway() {
-  return window['go']['main']['App']['GetSelectedRelayGateway']();
+export function GetSelectedGrant() {
+  return window['go']['main']['App']['GetSelectedGrant']();
 }
 
 export function GetSession(arg1, arg2) {
@@ -498,10 +502,6 @@ export function SavePromptPreset(arg1) {
   return window['go']['main']['App']['SavePromptPreset'](arg1);
 }
 
-export function SaveRelayGateway(arg1) {
-  return window['go']['main']['App']['SaveRelayGateway'](arg1);
-}
-
 export function ScanSkillsDir() {
   return window['go']['main']['App']['ScanSkillsDir']();
 }
@@ -556,6 +556,10 @@ export function SetPlatformAPIBaseURL(arg1) {
 
 export function SetRateLimitConfig(arg1) {
   return window['go']['main']['App']['SetRateLimitConfig'](arg1);
+}
+
+export function SetSelectedGrant(arg1, arg2) {
+  return window['go']['main']['App']['SetSelectedGrant'](arg1, arg2);
 }
 
 export function ShowMessage(arg1, arg2) {
@@ -628,10 +632,6 @@ export function TestCustomChannel(arg1) {
 
 export function TestMITMDomain(arg1) {
   return window['go']['main']['App']['TestMITMDomain'](arg1);
-}
-
-export function TestRelayGateway(arg1) {
-  return window['go']['main']['App']['TestRelayGateway'](arg1);
 }
 
 export function ToggleMCPServer(arg1, arg2) {

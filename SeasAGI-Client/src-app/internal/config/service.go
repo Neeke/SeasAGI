@@ -15,28 +15,29 @@ import (
 )
 
 type AppConfig struct {
-	ListenPort           int                   `json:"listen_port"`
-	DefaultModel         string                `json:"default_model"`
-	DefaultChannelID     string                `json:"default_channel_id"`
-	RoutingStrategy      string                `json:"routing_strategy"`
-	StickyChannelUse     int                   `json:"sticky_channel_use"`
-	AutoLaunch           bool                  `json:"auto_launch"`
-	AutoUpdate           bool                  `json:"auto_update"`
-	LogRetentionDays     int                   `json:"log_retention_days"`
-	AnalyticsEnabled     bool                  `json:"analytics_enabled"`
-	Locale               string                `json:"locale"`
-	RTKEnabled           bool                  `json:"rtk_enabled"`
-	RTKMaxOutputChars    int                   `json:"rtk_max_output_chars"`
-	CavemanEnabled       bool                  `json:"caveman_enabled"`
-	CavemanStyle         string                `json:"caveman_style"`
-	ModelCombos          []ModelCombo          `json:"model_combos,omitempty"`
-	ComboTemplates       []ModelCombo          `json:"combo_templates,omitempty"`
-	OAuthProviders       []OAuthProviderConfig `json:"oauth_providers,omitempty"`
-	SelectedRelayGateway string                `json:"selected_relay_gateway,omitempty"`
-	Optimizations        *OptimizationConfig   `json:"optimizations,omitempty"`
-	PlatformAPIBaseURL   string                `json:"platform_api_base_url,omitempty"`
-	DefaultComboName     string                `json:"default_combo_name,omitempty"`
-	RateLimit            *RateLimitConfig      `json:"rate_limit,omitempty"`
+	ListenPort            int                   `json:"listen_port"`
+	DefaultModel          string                `json:"default_model"`
+	DefaultChannelID      string                `json:"default_channel_id"`
+	RoutingStrategy       string                `json:"routing_strategy"`
+	StickyChannelUse      int                   `json:"sticky_channel_use"`
+	AutoLaunch            bool                  `json:"auto_launch"`
+	AutoUpdate            bool                  `json:"auto_update"`
+	LogRetentionDays      int                   `json:"log_retention_days"`
+	AnalyticsEnabled      bool                  `json:"analytics_enabled"`
+	Locale                string                `json:"locale"`
+	RTKEnabled            bool                  `json:"rtk_enabled"`
+	RTKMaxOutputChars     int                   `json:"rtk_max_output_chars"`
+	CavemanEnabled        bool                  `json:"caveman_enabled"`
+	CavemanStyle          string                `json:"caveman_style"`
+	ModelCombos           []ModelCombo          `json:"model_combos,omitempty"`
+	ComboTemplates        []ModelCombo          `json:"combo_templates,omitempty"`
+	OAuthProviders        []OAuthProviderConfig `json:"oauth_providers,omitempty"`
+	Optimizations         *OptimizationConfig   `json:"optimizations,omitempty"`
+	PlatformAPIBaseURL    string                `json:"platform_api_base_url,omitempty"`
+	DefaultComboName      string                `json:"default_combo_name,omitempty"`
+	RateLimit             *RateLimitConfig      `json:"rate_limit,omitempty"`
+	SelectedGrantID       string                `json:"selected_grant_id,omitempty"`
+	SelectedGrantRelayURL string                `json:"selected_grant_relay_url,omitempty"`
 }
 
 // RateLimitConfig 全局速率限制配置，借鉴 OmniRoute per-connection rateLimitOverrides。
@@ -418,13 +419,6 @@ func (s *Service) SetDefaultComboName(name string) {
 	_ = s.saveLocked()
 }
 
-func (s *Service) SetSelectedRelayGateway(gatewayID string) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.config.SelectedRelayGateway = gatewayID
-	_ = s.saveLocked()
-}
-
 func (s *Service) GetPlatformAPIBaseURL() string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -438,6 +432,26 @@ func (s *Service) SetPlatformAPIBaseURL(url string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.config.PlatformAPIBaseURL = url
+	return s.saveLocked()
+}
+
+func (s *Service) GetSelectedGrantID() string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.config.SelectedGrantID
+}
+
+func (s *Service) GetSelectedGrantRelayURL() string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.config.SelectedGrantRelayURL
+}
+
+func (s *Service) SetSelectedGrant(grantID, relayURL string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.config.SelectedGrantID = grantID
+	s.config.SelectedGrantRelayURL = relayURL
 	return s.saveLocked()
 }
 

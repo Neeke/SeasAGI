@@ -1928,6 +1928,46 @@ func (a *App) GetCloudBilling() (map[string]any, error) {
 	}, nil
 }
 
+func (a *App) FetchActiveGrants() ([]map[string]any, error) {
+	grants, err := a.authSvc.FetchActiveGrants()
+	if err != nil {
+		return nil, err
+	}
+	result := make([]map[string]any, 0, len(grants))
+	for _, g := range grants {
+		result = append(result, map[string]any{
+			"grant_id":          g.GrantID,
+			"grantor_user_id":   g.GrantorUserID,
+			"channel_id":        g.ChannelID,
+			"token_fingerprint": g.TokenFingerprint,
+			"granted_quota_usd": g.GrantedQuotaUSD,
+			"used_quota_usd":    g.UsedQuotaUSD,
+			"remaining_quota":   g.RemainingQuota,
+			"granted_tokens":    g.GrantedTokens,
+			"used_tokens":       g.UsedTokens,
+			"remaining_tokens":  g.RemainingTokens,
+			"status":            g.Status,
+			"expires_at":        g.ExpiresAt,
+		})
+	}
+	return result, nil
+}
+
+func (a *App) SetSelectedGrant(grantID, relayURL string) error {
+	return a.configSvc.SetSelectedGrant(grantID, relayURL)
+}
+
+func (a *App) GetSelectedGrant() map[string]any {
+	return map[string]any{
+		"grant_id":  a.configSvc.GetSelectedGrantID(),
+		"relay_url": a.configSvc.GetSelectedGrantRelayURL(),
+	}
+}
+
+func (a *App) ClearSelectedGrant() error {
+	return a.configSvc.SetSelectedGrant("", "")
+}
+
 func (a *App) GetPlans() ([]map[string]any, error) {
 	if !a.authSvc.IsLoggedIn() {
 		return nil, fmt.Errorf("not logged in")
@@ -1954,163 +1994,7 @@ func (a *App) GetPlans() ([]map[string]any, error) {
 	return result, nil
 }
 
-func (a *App) GetRelayGateways() ([]map[string]any, error) {
-	if !a.authSvc.IsLoggedIn() {
-		return nil, fmt.Errorf("not logged in")
-	}
-
-	apiBase := a.authSvc.PlatformAPIBaseURL()
-
-	reqCtx, cancel := context.WithTimeout(a.ctx, 8*time.Second)
-	defer cancel()
-
-	req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, apiBase+"/relay-gateways", nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Authorization", "Bearer "+a.authSvc.GetPlatformToken())
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	var result struct {
-		Data  []map[string]any `json:"data"`
-		Error string           `json:"error"`
-	}
-	json.NewDecoder(resp.Body).Decode(&result)
-	if resp.StatusCode >= http.StatusBadRequest {
-		if strings.TrimSpace(result.Error) != "" {
-			return nil, fmt.Errorf(result.Error)
-		}
-		return nil, fmt.Errorf("fetch relay gateways failed: status %d", resp.StatusCode)
-	}
-	if result.Data == nil {
-		return []map[string]any{}, nil
-	}
-	return result.Data, nil
-}
-
-func (a *App) TestRelayGateway(gatewayID string) (map[string]any, error) {
-	if !a.authSvc.IsLoggedIn() {
-		return nil, fmt.Errorf("not logged in")
-	}
-	gatewayID = strings.TrimSpace(gatewayID)
-	if gatewayID == "" {
-		return map[string]any{
-			"success": false,
-			"error":   "relay gateway is not selected",
-		}, nil
-	}
-
-	billingData, err := a.authSvc.FetchCloudBilling()
-	if err != nil {
-		return nil, err
-	}
-	if billingData == nil || !billingData.RelayEnabled {
-		return map[string]any{
-			"success": false,
-			"error":   "remote acceleration is not enabled for current plan",
-		}, nil
-	}
-
-	var target *auth.RelayGateway
-	for i := range billingData.RelayGateways {
-		gateway := &billingData.RelayGateways[i]
-		if strings.TrimSpace(gateway.GatewayID) == gatewayID {
-			target = gateway
-			break
-		}
-	}
-	if target == nil {
-		return map[string]any{
-			"success": false,
-			"error":   "relay gateway not found",
-		}, nil
-	}
-	if strings.TrimSpace(target.Host) == "" || target.Port <= 0 {
-		return map[string]any{
-			"success": false,
-			"error":   "relay gateway configuration is invalid",
-		}, nil
-	}
-
-	baseCtx := a.ctx
-	if baseCtx == nil {
-		baseCtx = context.Background()
-	}
-	testCtx, cancel := context.WithTimeout(baseCtx, 5*time.Second)
-	defer cancel()
-
-	startedAt := time.Now()
-	healthzURL := fmt.Sprintf("http://%s/healthz", net.JoinHostPort(strings.TrimSpace(target.Host), fmt.Sprintf("%d", target.Port)))
-	req, err := http.NewRequestWithContext(testCtx, http.MethodGet, healthzURL, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return map[string]any{
-			"success":    false,
-			"gateway_id": target.GatewayID,
-			"host":       target.Host,
-			"port":       target.Port,
-			"error":      fmt.Sprintf("local relay health check failed: %v", err),
-		}, nil
-	}
-	defer resp.Body.Close()
-
-	var healthz struct {
-		Status string `json:"status"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&healthz); err != nil {
-		return map[string]any{
-			"success":    false,
-			"gateway_id": target.GatewayID,
-			"host":       target.Host,
-			"port":       target.Port,
-			"error":      fmt.Sprintf("relay healthz response is invalid: %v", err),
-		}, nil
-	}
-	if resp.StatusCode != http.StatusOK || healthz.Status != "ok" {
-		return map[string]any{
-			"success":    false,
-			"gateway_id": target.GatewayID,
-			"host":       target.Host,
-			"port":       target.Port,
-			"error":      fmt.Sprintf("relay healthz check failed: status_code=%d, body_status=%s", resp.StatusCode, healthz.Status),
-		}, nil
-	}
-
-	a.configSvc.SetSelectedRelayGateway(gatewayID)
-	return map[string]any{
-		"success":    true,
-		"gateway_id": target.GatewayID,
-		"name":       target.Name,
-		"host":       target.Host,
-		"port":       target.Port,
-		"latency_ms": time.Since(startedAt).Milliseconds(),
-		"message":    "local relay connectivity test succeeded and relay gateway enabled",
-	}, nil
-}
-
-func (a *App) SaveRelayGateway(gatewayID string) {
-	a.configSvc.SetSelectedRelayGateway(gatewayID)
-}
-
-func (a *App) GetSelectedRelayGateway() string {
-	return a.configSvc.GetConfig().SelectedRelayGateway
-}
-
 func (a *App) ChatCompletion(messages []map[string]any, model string) (map[string]any, error) {
-	gatewayPort := a.gatewaySvc.GetListenPort()
-	if gatewayPort == 0 {
-		return nil, fmt.Errorf("local gateway is not running")
-	}
-
 	body := map[string]any{
 		"model":    model,
 		"messages": messages,
@@ -2118,6 +2002,45 @@ func (a *App) ChatCompletion(messages []map[string]any, model string) (map[strin
 	bodyBytes, err := json.Marshal(body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	// P8: Grant-based routing — if a grant is selected, send directly to relay gateway
+	grantID := a.configSvc.GetSelectedGrantID()
+	grantRelayURL := a.configSvc.GetSelectedGrantRelayURL()
+	if grantID != "" && grantRelayURL != "" {
+		targetURL := strings.TrimRight(grantRelayURL, "/") + "/v1/chat/completions"
+		req, err := http.NewRequestWithContext(a.ctx, http.MethodPost, targetURL, bytes.NewReader(bodyBytes))
+		if err != nil {
+			return nil, fmt.Errorf("failed to create request: %w", err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("X-Grant-Id", grantID)
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return nil, fmt.Errorf("relay gateway request failed: %w", err)
+		}
+		defer resp.Body.Close()
+
+		respBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read response: %w", err)
+		}
+
+		var result map[string]any
+		if err := json.Unmarshal(respBytes, &result); err != nil {
+			return nil, fmt.Errorf("failed to parse response: %w", err)
+		}
+		result["_gateway_status"] = resp.StatusCode
+		result["_grant_id"] = grantID
+		result["_curl_command"] = buildCurlCommand(targetURL, "X-Grant-Id: "+grantID, string(bodyBytes))
+		return result, nil
+	}
+
+	// Default: local gateway routing
+	gatewayPort := a.gatewaySvc.GetListenPort()
+	if gatewayPort == 0 {
+		return nil, fmt.Errorf("local gateway is not running")
 	}
 
 	token, err := a.localTokenStore.GetOrCreate()

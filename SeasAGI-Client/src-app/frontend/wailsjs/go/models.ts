@@ -1,5 +1,39 @@
 export namespace auth {
 	
+	export class ActiveGrant {
+	    grant_id: string;
+	    grantor_user_id: string;
+	    channel_id: string;
+	    token_fingerprint: string;
+	    granted_quota_usd: number;
+	    used_quota_usd: number;
+	    remaining_quota: number;
+	    granted_tokens: number;
+	    used_tokens: number;
+	    remaining_tokens: number;
+	    status: string;
+	    expires_at: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ActiveGrant(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.grant_id = source["grant_id"];
+	        this.grantor_user_id = source["grantor_user_id"];
+	        this.channel_id = source["channel_id"];
+	        this.token_fingerprint = source["token_fingerprint"];
+	        this.granted_quota_usd = source["granted_quota_usd"];
+	        this.used_quota_usd = source["used_quota_usd"];
+	        this.remaining_quota = source["remaining_quota"];
+	        this.granted_tokens = source["granted_tokens"];
+	        this.used_tokens = source["used_tokens"];
+	        this.remaining_tokens = source["remaining_tokens"];
+	        this.status = source["status"];
+	        this.expires_at = source["expires_at"];
+	    }
+	}
 	export class AuthInfo {
 	    is_logged_in: boolean;
 	    user_id?: string;
@@ -22,6 +56,7 @@ export namespace auth {
 	    host: string;
 	    port: number;
 	    region: string;
+	    supports_federation: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new RelayGateway(source);
@@ -34,6 +69,7 @@ export namespace auth {
 	        this.host = source["host"];
 	        this.port = source["port"];
 	        this.region = source["region"];
+	        this.supports_federation = source["supports_federation"];
 	    }
 	}
 	export class CloudBilling {
@@ -532,11 +568,12 @@ export namespace config {
 	    model_combos?: ModelCombo[];
 	    combo_templates?: ModelCombo[];
 	    oauth_providers?: OAuthProviderConfig[];
-	    selected_relay_gateway?: string;
 	    optimizations?: OptimizationConfig;
 	    platform_api_base_url?: string;
 	    default_combo_name?: string;
 	    rate_limit?: RateLimitConfig;
+	    selected_grant_id?: string;
+	    selected_grant_relay_url?: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new AppConfig(source);
@@ -561,11 +598,12 @@ export namespace config {
 	        this.model_combos = this.convertValues(source["model_combos"], ModelCombo);
 	        this.combo_templates = this.convertValues(source["combo_templates"], ModelCombo);
 	        this.oauth_providers = this.convertValues(source["oauth_providers"], OAuthProviderConfig);
-	        this.selected_relay_gateway = source["selected_relay_gateway"];
 	        this.optimizations = this.convertValues(source["optimizations"], OptimizationConfig);
 	        this.platform_api_base_url = source["platform_api_base_url"];
 	        this.default_combo_name = source["default_combo_name"];
 	        this.rate_limit = this.convertValues(source["rate_limit"], RateLimitConfig);
+	        this.selected_grant_id = source["selected_grant_id"];
+	        this.selected_grant_relay_url = source["selected_grant_relay_url"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

@@ -32,6 +32,10 @@ export function GetPlatformAPIBaseURL():Promise<string>;
 
 export function GetRateLimitConfig():Promise<config.RateLimitConfig>;
 
+export function GetSelectedGrantID():Promise<string>;
+
+export function GetSelectedGrantRelayURL():Promise<string>;
+
 export function GetSetting(arg1:string):Promise<string>;
 
 export function ListChannels():Promise<Array<config.Channel>>;
@@ -74,7 +78,7 @@ export function SetPlatformAPIBaseURL(arg1:string):Promise<void>;
 
 export function SetRateLimitConfig(arg1:config.RateLimitConfig):Promise<void>;
 
-export function SetSelectedRelayGateway(arg1:string):Promise<void>;
+export function SetSelectedGrant(arg1:string,arg2:string):Promise<void>;
 
 export function UpdateChannelHealth(arg1:string,arg2:string):Promise<void>;
 

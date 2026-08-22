@@ -1060,7 +1060,7 @@ func TestFirstEnabledChannel_NoEnabled(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// SetAutoLaunch / SetAnalyticsEnabled / SetSelectedRelayGateway / PlatformAPI tests
+// SetAutoLaunch / SetAnalyticsEnabled / PlatformAPI tests
 // ---------------------------------------------------------------------------
 
 func TestSetAutoLaunch(t *testing.T) {
@@ -1078,15 +1078,6 @@ func TestSetAnalyticsEnabled(t *testing.T) {
 	cfg := svc.GetConfig()
 	if !cfg.AnalyticsEnabled {
 		t.Error("AnalyticsEnabled should be true")
-	}
-}
-
-func TestSetSelectedRelayGateway(t *testing.T) {
-	svc := newTestService(t)
-	svc.SetSelectedRelayGateway("gateway-1")
-	cfg := svc.GetConfig()
-	if cfg.SelectedRelayGateway != "gateway-1" {
-		t.Errorf("SelectedRelayGateway = %q, want %q", cfg.SelectedRelayGateway, "gateway-1")
 	}
 }
 

@@ -57,7 +57,10 @@ type WailsAppApi = {
   GetOAuthToken(providerName: string): Promise<string>;
   RevokeOAuthToken(providerName: string): Promise<void>;
   GetPlans(): Promise<Record<string, any>[]>;
-  GetRelayGateways(): Promise<Record<string, any>[]>;
+  FetchActiveGrants(): Promise<Record<string, any>[]>;
+  SetSelectedGrant(grantID: string, relayURL: string): Promise<void>;
+  GetSelectedGrant(): Promise<Record<string, any>>;
+  ClearSelectedGrant(): Promise<void>;
   ChatCompletion(messages: Record<string, any>[], model: string): Promise<Record<string, any>>;
   ChatCompletionForChannel(channelId: string, messages: Record<string, any>[], model: string): Promise<Record<string, any>>;
   ImageGeneration(prompt: string, model: string, params: Record<string, any>): Promise<Record<string, any>>;
@@ -65,9 +68,6 @@ type WailsAppApi = {
   VideoGeneration(prompt: string, model: string, params: Record<string, any>): Promise<Record<string, any>>;
   VideoGenerationForChannel(channelId: string, prompt: string, model: string, params: Record<string, any>): Promise<Record<string, any>>;
   SyncCustomChannelsToCloud(channels: Record<string, any>[]): Promise<{ message: string; count: number }>;
-  TestRelayGateway(gatewayId: string): Promise<Record<string, any>>;
-  SaveRelayGateway(gatewayId: string): Promise<void>;
-  GetSelectedRelayGateway(): Promise<string>;
   GetOfficialComboTemplates(): Promise<ModelCombo[]>;
   FetchCloudCombos(): Promise<Record<string, any>[]>;
   PushCloudCombo(logicalName: string, displayName: string, description: string, strategy: string, stickyUses: number, quickStrategy: string, taskProfile: Record<string, any>, stepsJSON: string): Promise<Record<string, any>>;
@@ -196,10 +196,6 @@ export async function getPlans(): Promise<Record<string, any>[]> {
   return getAppApi().GetPlans();
 }
 
-export async function getRelayGateways(): Promise<Record<string, any>[]> {
-  return getAppApi().GetRelayGateways();
-}
-
 export async function chatCompletion(messages: Record<string, any>[], model: string): Promise<Record<string, any>> {
   return getAppApi().ChatCompletion(messages, model);
 }
@@ -226,18 +222,6 @@ export async function videoGenerationForChannel(channelId: string, prompt: strin
 
 export async function getUsageSummary(): Promise<UsageSummary> {
   return getAppApi().GetUsageSummary();
-}
-
-export async function testRelayGateway(gatewayId: string): Promise<Record<string, any>> {
-  return getAppApi().TestRelayGateway(gatewayId);
-}
-
-export async function saveRelayGateway(gatewayId: string): Promise<void> {
-  return getAppApi().SaveRelayGateway(gatewayId);
-}
-
-export async function getSelectedRelayGateway(): Promise<string> {
-  return getAppApi().GetSelectedRelayGateway();
 }
 
 export async function syncLocalDataToCloud(): Promise<void> {
@@ -449,6 +433,22 @@ export async function getCloudUsage(): Promise<CloudUsage> {
 
 export async function getCloudBilling(): Promise<CloudBilling> {
   return getAppApi().GetCloudBilling();
+}
+
+export async function fetchActiveGrants(): Promise<Record<string, any>[]> {
+  return getAppApi().FetchActiveGrants();
+}
+
+export async function setSelectedGrant(grantID: string, relayURL: string): Promise<void> {
+  return getAppApi().SetSelectedGrant(grantID, relayURL);
+}
+
+export async function getSelectedGrant(): Promise<Record<string, any>> {
+  return getAppApi().GetSelectedGrant();
+}
+
+export async function clearSelectedGrant(): Promise<void> {
+  return getAppApi().ClearSelectedGrant();
 }
 
 export async function getRecommendedCombos(): Promise<CloudCombo[]> {

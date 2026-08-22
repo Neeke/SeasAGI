@@ -7,6 +7,8 @@ export function CreateByokPolicy(arg1:{[key: string]: any}):Promise<{[key: strin
 
 export function DeleteCloudCombo(arg1:string):Promise<void>;
 
+export function FetchActiveGrants():Promise<Array<auth.ActiveGrant>>;
+
 export function FetchByokPolicies():Promise<Array<{[key: string]: any}>>;
 
 export function FetchCloudBilling():Promise<auth.CloudBilling>;

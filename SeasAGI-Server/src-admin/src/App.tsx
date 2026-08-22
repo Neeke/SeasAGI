@@ -6,6 +6,7 @@ import { UsagePage } from "./pages/UsagePage";
 import { RelayGatewaysPage } from "./pages/RelayGatewaysPage";
 import { ChannelsPage } from "./pages/ChannelsPage";
 import { AdminCombosPage } from "./pages/AdminCombosPage";
+import { TokenMarketAdminPage } from "./pages/TokenMarketAdminPage";
 import { I18nProvider } from "./i18n";
 
 export default function App() {
@@ -20,6 +21,7 @@ export default function App() {
             <Route path="/relay-gateways" element={<RelayGatewaysPage />} />
             <Route path="/channels" element={<ChannelsPage />} />
             <Route path="/combos" element={<AdminCombosPage />} />
+            <Route path="/token-market" element={<TokenMarketAdminPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

@@ -1,17 +1,6 @@
 import { create } from "zustand";
 import type { AuthState, RuntimeStatus, Channel, RequestLog, AppConfig, ModelCombo, CloudBilling, CloudUsage, SyncState, ProviderHealthSummary, BYOKPolicy, QuickStrategy, TaskProfile } from "../utils/types";
 
-const RELAY_KEY = "seasagi-relay-enabled";
-
-function getInitialRelayEnabled(): boolean {
-  try {
-    const stored = localStorage.getItem(RELAY_KEY);
-    return stored === "true";
-  } catch {
-    return false;
-  }
-}
-
 interface AppStore {
   auth: AuthState;
   runtime: RuntimeStatus;
@@ -23,13 +12,14 @@ interface AppStore {
   cloudBilling: CloudBilling | null;
   cloudUsage: CloudUsage | null;
   syncState: SyncState;
-  relayEnabled: boolean;
   defaultComboName: string;
   taskType: "chat" | "tools" | "json" | "long_context";
   providerHealth: ProviderHealthSummary[];
   byokPolicies: BYOKPolicy[];
   quickStrategies: QuickStrategy[];
   taskProfiles: TaskProfile[];
+  activeGrants: Record<string, any>[];
+  selectedGrant: Record<string, any> | null;
   setAuth: (auth: AuthState) => void;
   setRuntime: (runtime: RuntimeStatus) => void;
   setChannels: (channels: Channel[]) => void;
@@ -40,13 +30,14 @@ interface AppStore {
   setCloudBilling: (billing: CloudBilling | null) => void;
   setCloudUsage: (usage: CloudUsage | null) => void;
   setSyncState: (sync: Partial<SyncState>) => void;
-  setRelayEnabled: (enabled: boolean) => void;
   setDefaultComboName: (name: string) => void;
   setTaskType: (taskType: "chat" | "tools" | "json" | "long_context") => void;
   setProviderHealth: (providerHealth: ProviderHealthSummary[]) => void;
   setByokPolicies: (byokPolicies: BYOKPolicy[]) => void;
   setQuickStrategies: (quickStrategies: QuickStrategy[]) => void;
   setTaskProfiles: (taskProfiles: TaskProfile[]) => void;
+  setActiveGrants: (grants: Record<string, any>[]) => void;
+  setSelectedGrant: (grant: Record<string, any> | null) => void;
 }
 
 export const useAppStore = create<AppStore>((set) => ({
@@ -59,13 +50,14 @@ export const useAppStore = create<AppStore>((set) => ({
   templates: [],
   cloudBilling: null,
   cloudUsage: null,
-  relayEnabled: getInitialRelayEnabled(),
   defaultComboName: "",
   taskType: "chat",
   providerHealth: [],
   byokPolicies: [],
   quickStrategies: [],
   taskProfiles: [],
+  activeGrants: [],
+  selectedGrant: null,
   syncState: {
     status: "idle",
     config_version: 0,
@@ -84,14 +76,12 @@ export const useAppStore = create<AppStore>((set) => ({
   setCloudBilling: (cloudBilling) => set({ cloudBilling }),
   setCloudUsage: (cloudUsage) => set({ cloudUsage }),
   setSyncState: (sync) => set((s) => ({ syncState: { ...s.syncState, ...sync } })),
-  setRelayEnabled: (enabled) => {
-    try { localStorage.setItem(RELAY_KEY, enabled ? "true" : "false"); } catch {}
-    set({ relayEnabled: enabled });
-  },
   setDefaultComboName: (name) => set({ defaultComboName: name }),
   setTaskType: (taskType) => set({ taskType }),
   setProviderHealth: (providerHealth) => set({ providerHealth }),
   setByokPolicies: (byokPolicies) => set({ byokPolicies }),
   setQuickStrategies: (quickStrategies) => set({ quickStrategies }),
   setTaskProfiles: (taskProfiles) => set({ taskProfiles }),
+  setActiveGrants: (activeGrants) => set({ activeGrants }),
+  setSelectedGrant: (selectedGrant) => set({ selectedGrant }),
 }));

@@ -31,6 +31,8 @@ export function CheckUpdate():Promise<{[key: string]: any}>;
 
 export function ClearLogs():Promise<void>;
 
+export function ClearSelectedGrant():Promise<void>;
+
 export function ConfirmAction(arg1:string,arg2:string):Promise<boolean>;
 
 export function CopyToClipboard(arg1:string):Promise<void>;
@@ -58,6 +60,8 @@ export function DiscoverModels(arg1:string):Promise<Array<discovery.DiscoveredMo
 export function ExchangeOAuthCode(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string):Promise<void>;
 
 export function ExportConfig():Promise<string>;
+
+export function FetchActiveGrants():Promise<Array<{[key: string]: any}>>;
 
 export function FetchCloudCombos():Promise<Array<{[key: string]: any}>>;
 
@@ -147,11 +151,9 @@ export function GetRateLimitConfig():Promise<{[key: string]: any}>;
 
 export function GetRecommendedCombos():Promise<Array<{[key: string]: any}>>;
 
-export function GetRelayGateways():Promise<Array<{[key: string]: any}>>;
-
 export function GetRuntimeStatus():Promise<{[key: string]: any}>;
 
-export function GetSelectedRelayGateway():Promise<string>;
+export function GetSelectedGrant():Promise<{[key: string]: any}>;
 
 export function GetSession(arg1:string,arg2:string):Promise<sessions.Session>;
 
@@ -261,8 +263,6 @@ export function SaveModelPricing(arg1:Array<usage.ModelPricing>):Promise<void>;
 
 export function SavePromptPreset(arg1:prompts.PromptPreset):Promise<void>;
 
-export function SaveRelayGateway(arg1:string):Promise<void>;
-
 export function ScanSkillsDir():Promise<Array<skills.Skill>>;
 
 export function SearchNotion(arg1:string,arg2:string):Promise<{[key: string]: any}>;
@@ -290,6 +290,8 @@ export function SetOptimizationConfig(arg1:{[key: string]: any}):Promise<void>;
 export function SetPlatformAPIBaseURL(arg1:string):Promise<void>;
 
 export function SetRateLimitConfig(arg1:{[key: string]: any}):Promise<void>;
+
+export function SetSelectedGrant(arg1:string,arg2:string):Promise<void>;
 
 export function ShowMessage(arg1:string,arg2:string):Promise<void>;
 
@@ -326,8 +328,6 @@ export function TestChannelDirect(arg1:string):Promise<{[key: string]: any}>;
 export function TestCustomChannel(arg1:string):Promise<{[key: string]: any}>;
 
 export function TestMITMDomain(arg1:string):Promise<{[key: string]: any}>;
-
-export function TestRelayGateway(arg1:string):Promise<{[key: string]: any}>;
 
 export function ToggleMCPServer(arg1:string,arg2:boolean):Promise<void>;
 

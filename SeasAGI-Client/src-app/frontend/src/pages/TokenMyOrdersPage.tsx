@@ -12,6 +12,11 @@ export function TokenMyOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [settlingId, setSettlingId] = useState<string | null>(null);
+  // P11: 评价功能
+  const [reviewOrder, setReviewOrder] = useState<string | null>(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -53,6 +58,35 @@ export function TokenMyOrdersPage() {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setSettlingId(null);
+    }
+  };
+
+  // P11: 提交评价
+  const handleSubmitReview = async () => {
+    if (!reviewOrder) return;
+    setSubmittingReview(true);
+    setError(null);
+    try {
+      const [baseURL, token] = await Promise.all([getPlatformAPIBaseURL(), getPlatformToken()]);
+      const resp = await fetch(`${baseURL}/token-market/orders/${reviewOrder}/review`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ rating: reviewRating, comment: reviewComment }),
+      });
+      if (!resp.ok) {
+        const errData = await resp.json().catch(() => ({}));
+        throw new Error(errData.error || `HTTP ${resp.status}`);
+      }
+      setReviewOrder(null);
+      setReviewRating(5);
+      setReviewComment("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSubmittingReview(false);
     }
   };
 
@@ -141,7 +175,15 @@ export function TokenMyOrdersPage() {
                       {settlingId === order.order_id ? t("common.processing") : t("tokenMarket.settle")}
                     </button>
                   )}
-                  {order.status === "settled" && (
+                  {order.status === "settled" && order.role === "buyer" && (
+                    <button
+                      className="btn btn-sm btn-secondary"
+                      onClick={() => { setReviewOrder(order.order_id); setReviewRating(5); setReviewComment(""); }}
+                    >
+                      {t("tokenMarket.leaveReview") || "Review"}
+                    </button>
+                  )}
+                  {order.status === "settled" && order.role === "seller" && (
                     <span className="text-muted">{t("tokenMarket.settlementSettled")}</span>
                   )}
                 </td>
@@ -149,6 +191,47 @@ export function TokenMyOrdersPage() {
             ))}
           </tbody>
         </table>
+      )}
+
+      {/* P11: 评价弹窗 */}
+      {reviewOrder && (
+        <div className="modal-overlay" onClick={() => setReviewOrder(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "400px" }}>
+            <h3 style={{ marginBottom: "16px" }}>{t("tokenMarket.leaveReview") || "Leave a Review"}</h3>
+            <div className="form-group" style={{ marginBottom: "16px" }}>
+              <label className="form-label">{t("tokenMarket.rating") || "Rating"}</label>
+              <div style={{ display: "flex", gap: "8px", fontSize: "24px" }}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <span
+                    key={star}
+                    style={{ cursor: "pointer", color: star <= reviewRating ? "var(--color-warning)" : "var(--text-tertiary)" }}
+                    onClick={() => setReviewRating(star)}
+                  >
+                    {"★"}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="form-group" style={{ marginBottom: "16px" }}>
+              <label className="form-label">{t("tokenMarket.comment") || "Comment"}</label>
+              <textarea
+                className="form-input"
+                rows={3}
+                value={reviewComment}
+                onChange={(e) => setReviewComment(e.target.value)}
+                placeholder={t("tokenMarket.commentPlaceholder") || "Share your experience..."}
+              />
+            </div>
+            <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+              <button className="btn btn-secondary" onClick={() => setReviewOrder(null)} disabled={submittingReview}>
+                {t("common.cancel")}
+              </button>
+              <button className="btn btn-primary" onClick={handleSubmitReview} disabled={submittingReview}>
+                {submittingReview ? t("common.processing") : t("common.submit") || "Submit"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

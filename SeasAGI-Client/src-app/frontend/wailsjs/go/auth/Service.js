@@ -10,6 +10,10 @@ export function DeleteCloudCombo(arg1) {
   return window['go']['auth']['Service']['DeleteCloudCombo'](arg1);
 }
 
+export function FetchActiveGrants() {
+  return window['go']['auth']['Service']['FetchActiveGrants']();
+}
+
 export function FetchByokPolicies() {
   return window['go']['auth']['Service']['FetchByokPolicies']();
 }

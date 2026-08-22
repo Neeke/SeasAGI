@@ -4,6 +4,21 @@ import { getPlatformAPIBaseURL, getPlatformToken } from "../utils/commands";
 import { useTranslation } from "../i18n";
 import type { MarketListing } from "../stores/marketStore";
 
+interface SellerReview {
+  review_id: string;
+  order_id: string;
+  reviewer_name: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+}
+
+interface SellerReviewData {
+  reviews: SellerReview[];
+  total: number;
+  avg_rating: number;
+}
+
 export function TokenListingDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation();
@@ -12,6 +27,8 @@ export function TokenListingDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [purchasing, setPurchasing] = useState(false);
+  const [sellerReviews, setSellerReviews] = useState<SellerReviewData | null>(null);
+  const [reviewLoading, setReviewLoading] = useState(false);
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -25,6 +42,10 @@ export function TokenListingDetailPage() {
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const data = await resp.json();
         setListing(data.data);
+        // P11: 拉取卖家评价
+        if (data.data?.seller_user_id) {
+          fetchSellerReviews(data.data.seller_user_id);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
       } finally {
@@ -33,6 +54,24 @@ export function TokenListingDetailPage() {
     };
     fetchListing();
   }, [id]);
+
+  // P11: 拉取卖家评价
+  const fetchSellerReviews = async (sellerID: string) => {
+    setReviewLoading(true);
+    try {
+      const [baseURL, token] = await Promise.all([getPlatformAPIBaseURL(), getPlatformToken()]);
+      const resp = await fetch(`${baseURL}/token-market/sellers/${sellerID}/reviews`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+      setSellerReviews(data.data);
+    } catch {
+      setSellerReviews(null);
+    } finally {
+      setReviewLoading(false);
+    }
+  };
 
   const handlePurchase = async () => {
     if (!listing) return;
@@ -115,6 +154,40 @@ export function TokenListingDetailPage() {
           </div>
         )}
         {error && <div className="form-error">{error}</div>}
+      </div>
+
+      {/* P11: 卖家评价 */}
+      <div className="detail-card" style={{ marginTop: "16px" }}>
+        <h3 style={{ marginBottom: "12px" }}>{t("tokenMarket.sellerReviews") || "Seller Reviews"}</h3>
+        {reviewLoading && <div className="loading-state">{t("common.loading")}</div>}
+        {!reviewLoading && sellerReviews && sellerReviews.total > 0 && (
+          <>
+            <div className="detail-row" style={{ marginBottom: "12px" }}>
+              <span className="detail-key">{t("tokenMarket.avgRating") || "Avg Rating"}</span>
+              <span className="detail-value">
+                {"★".repeat(Math.round(sellerReviews.avg_rating))}{"☆".repeat(5 - Math.round(sellerReviews.avg_rating))}
+                {" "}
+                <strong>{sellerReviews.avg_rating.toFixed(1)}</strong>
+                {" "}({sellerReviews.total} {t("tokenMarket.reviews") || "reviews"})
+              </span>
+            </div>
+            <div className="review-list">
+              {sellerReviews.reviews.map((r) => (
+                <div key={r.review_id} className="review-item" style={{ padding: "8px 0", borderBottom: "1px solid var(--border-color)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                    <span style={{ fontWeight: 600 }}>{r.reviewer_name || "Anonymous"}</span>
+                    <span>{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</span>
+                  </div>
+                  {r.comment && <p style={{ fontSize: "13px", color: "var(--text-secondary)" }}>{r.comment}</p>}
+                  <span style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>{r.created_at}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+        {!reviewLoading && (!sellerReviews || sellerReviews.total === 0) && (
+          <p style={{ color: "var(--text-secondary)" }}>{t("tokenMarket.noReviews") || "No reviews yet"}</p>
+        )}
       </div>
     </div>
   );

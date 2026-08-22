@@ -150,6 +150,47 @@ func (s *Service) FetchCloudBilling() (*CloudBilling, error) {
 	return result.Data, nil
 }
 
+type ActiveGrant struct {
+	GrantID          string  `json:"grant_id"`
+	GrantorUserID    string  `json:"grantor_user_id"`
+	ChannelID        string  `json:"channel_id"`
+	TokenFingerprint string  `json:"token_fingerprint"`
+	GrantedQuotaUSD  float64 `json:"granted_quota_usd"`
+	UsedQuotaUSD     float64 `json:"used_quota_usd"`
+	RemainingQuota   float64 `json:"remaining_quota"`
+	GrantedTokens    int64   `json:"granted_tokens"`
+	UsedTokens       int64   `json:"used_tokens"`
+	RemainingTokens  int64   `json:"remaining_tokens"`
+	Status           string  `json:"status"`
+	ExpiresAt        string  `json:"expires_at"`
+}
+
+func (s *Service) FetchActiveGrants() ([]ActiveGrant, error) {
+	if !s.IsLoggedIn() {
+		return nil, fmt.Errorf("not logged in")
+	}
+	req, err := http.NewRequest(http.MethodGet, platformAPIBaseURL()+"/token-market/grants/active", nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+s.GetPlatformToken())
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	var result struct {
+		Data []ActiveGrant `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	if resp.StatusCode >= 400 {
+		return nil, fmt.Errorf("fetch active grants failed")
+	}
+	return result.Data, nil
+}
+
 func (s *Service) FetchCloudOptimizationConfig() (string, error) {
 	if !s.IsLoggedIn() {
 		return "", fmt.Errorf("not logged in")
@@ -425,11 +466,12 @@ type CloudBilling struct {
 }
 
 type RelayGateway struct {
-	GatewayID string `json:"gateway_id"`
-	Name      string `json:"name"`
-	Host      string `json:"host"`
-	Port      int    `json:"port"`
-	Region    string `json:"region"`
+	GatewayID          string `json:"gateway_id"`
+	Name               string `json:"name"`
+	Host               string `json:"host"`
+	Port               int    `json:"port"`
+	Region             string `json:"region"`
+	SupportsFederation bool   `json:"supports_federation"`
 }
 
 type CloudPlan struct {

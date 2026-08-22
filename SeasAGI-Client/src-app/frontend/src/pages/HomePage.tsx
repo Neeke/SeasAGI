@@ -4,7 +4,6 @@ import { useAppStore } from "../stores/appStore";
 import { useTeamStore } from "../stores/teamStore";
 import * as cmd from "../utils/commands";
 import { useTranslation } from "../i18n";
-import type { RelayGateway } from "../utils/types";
 import { formatPlanTier, normalizePlanTier } from "../utils/plan";
 
 /* --- Team Cost Snapshot (local store) --- */
@@ -40,205 +39,6 @@ function TeamCostSnapshot() {
   );
 }
 
-function TunnelStatus() {
-  const { t } = useTranslation();
-  const auth = useAppStore((s) => s.auth);
-  const cloudBilling = useAppStore((s) => s.cloudBilling);
-  const relayEnabled = useAppStore((s) => s.relayEnabled);
-  const setRelayEnabled = useAppStore((s) => s.setRelayEnabled);
-  const [relayGateways, setRelayGateways] = useState<RelayGateway[]>([]);
-  const [selectedRelay, setSelectedRelay] = useState("");
-  const [enabledRelay, setEnabledRelay] = useState("");
-  const [loadingRelay, setLoadingRelay] = useState(false);
-  const [testingRelay, setTestingRelay] = useState(false);
-  const [relayResult, setRelayResult] = useState<{ type: "ok" | "fail"; message: string } | null>(null);
-
-  const canUseRemoteRelay = cloudBilling?.relay_enabled === true;
-
-  useEffect(() => {
-    if (!canUseRemoteRelay) {
-      setRelayGateways([]);
-      setSelectedRelay("");
-      setEnabledRelay("");
-      setLoadingRelay(false);
-      setTestingRelay(false);
-      setRelayResult(null);
-      return;
-    }
-
-    let cancelled = false;
-    (async () => {
-      setLoadingRelay(true);
-      try {
-        const gws = cloudBilling?.relay_gateways || [];
-        const saved = await cmd.getSelectedRelayGateway();
-        if (cancelled) return;
-        setRelayGateways(gws);
-        const savedRelay = gws.some((gateway) => gateway.gateway_id === saved) ? saved : "";
-        setSelectedRelay(savedRelay);
-        setEnabledRelay(savedRelay);
-      } catch (e: any) {
-        if (cancelled) return;
-        setRelayGateways([]);
-        setRelayResult({
-          type: "fail",
-          message: e?.message || t("home.relayLoadFailed"),
-        });
-      } finally {
-        if (!cancelled) {
-          setLoadingRelay(false);
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [canUseRemoteRelay, cloudBilling?.relay_gateways]);
-
-  const handleSelectRelay = (gatewayId: string) => {
-    setSelectedRelay(gatewayId);
-    setRelayResult(null);
-  };
-
-  const handleTestAndEnable = async () => {
-    if (!selectedRelay) {
-      setRelayResult({
-        type: "fail",
-        message: t("home.selectRelayFirst"),
-      });
-      return;
-    }
-
-    setTestingRelay(true);
-    setRelayResult(null);
-    try {
-      const result = await cmd.testRelayGateway(selectedRelay);
-      if (result?.success) {
-        setEnabledRelay(selectedRelay);
-        setRelayResult({
-          type: "ok",
-          message: result.message || t("home.relayEnabled"),
-        });
-      } else {
-        setRelayResult({
-          type: "fail",
-          message: result?.error || t("home.relayTestFailed"),
-        });
-      }
-    } catch (e: any) {
-      setRelayResult({
-        type: "fail",
-        message: e?.message || t("home.relayTestFailed"),
-      });
-    } finally {
-      setTestingRelay(false);
-    }
-  };
-
-  const handleDisableRelay = async () => {
-    setRelayEnabled(false);
-    await cmd.saveRelayGateway("");
-    setEnabledRelay("");
-    setRelayResult({
-      type: "ok",
-      message: t("home.relayDisabled"),
-    });
-  };
-
-  const handleEnableRelay = async () => {
-    setRelayEnabled(true);
-    if (enabledRelay) {
-      setRelayResult(null);
-    }
-  };
-
-  const selectedGateway = relayGateways.find((gateway) => gateway.gateway_id === selectedRelay);
-  const enabledGateway = relayGateways.find((gateway) => gateway.gateway_id === enabledRelay);
-
-  return (
-    <div className="status-card">
-      <label>{t("home.remoteAcceleration")}</label>
-      {canUseRemoteRelay ? (
-        loadingRelay ? (
-          <div className="loading">{t("home.loading")}</div>
-        ) : (
-          <>
-            <div className="relay-mode-toggle">
-              <label className="relay-radio-label">
-                <input
-                  type="radio"
-                  name="relayMode"
-                  checked={!relayEnabled}
-                  onChange={handleDisableRelay}
-                />
-                <span>{t("home.relayOff")}</span>
-              </label>
-              <label className="relay-radio-label">
-                <input
-                  type="radio"
-                  name="relayMode"
-                  checked={relayEnabled}
-                  onChange={handleEnableRelay}
-                />
-                <span>{t("home.relayOn")}</span>
-              </label>
-            </div>
-            {relayEnabled && relayGateways.length > 0 && (
-              <>
-                <select
-                  value={selectedRelay}
-                  onChange={(e) => handleSelectRelay(e.target.value)}
-                  disabled={testingRelay}
-                >
-                  <option value="">{t("home.notSet")}</option>
-                  {relayGateways.map((gw) => (
-                    <option key={gw.gateway_id} value={gw.gateway_id}>
-                      {gw.name} ({gw.region}) - {gw.host}:{gw.port}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  onClick={handleTestAndEnable}
-                  className="btn-primary"
-                  disabled={!selectedRelay || testingRelay}
-                >
-                  {testingRelay ? t("home.testingRelay") : t("home.testAndEnable")}
-                </button>
-                {selectedGateway && (
-                  <code className="mono-sm">
-                    {selectedGateway.host}:{selectedGateway.port}
-                  </code>
-                )}
-                {enabledGateway && (
-                  <div className="text-dim">
-                    {t("home.currentRelayEnabled", {
-                      name: enabledGateway.name,
-                      address: `${enabledGateway.host}:${enabledGateway.port}`,
-                    })}
-                  </div>
-                )}
-              </>
-            )}
-            {relayEnabled && relayGateways.length === 0 && (
-              <div className="text-dim">{t("home.noRelayAvailable")}</div>
-            )}
-          </>
-        )
-      ) : (
-        <div className="text-dim">
-          {auth.is_logged_in ? t("home.remoteAccelerationProOnly") : t("home.loginToUnlock")}
-        </div>
-      )}
-      {relayResult && (
-        <div className={`test-result ${relayResult.type === "ok" ? "test-ok" : "test-fail"}`}>
-          {relayResult.message}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export function HomePage() {
   const navigate = useNavigate();
   const auth = useAppStore((s) => s.auth);
@@ -254,6 +54,10 @@ export function HomePage() {
   const setCloudBilling = useAppStore((s) => s.setCloudBilling);
   const setCloudUsage = useAppStore((s) => s.setCloudUsage);
   const setDefaultComboName = useAppStore((s) => s.setDefaultComboName);
+  const activeGrants = useAppStore((s) => s.activeGrants);
+  const selectedGrant = useAppStore((s) => s.selectedGrant);
+  const setActiveGrants = useAppStore((s) => s.setActiveGrants);
+  const setSelectedGrant = useAppStore((s) => s.setSelectedGrant);
   const { t } = useTranslation();
 
   const [loadingCloud, setLoadingCloud] = useState(false);
@@ -289,6 +93,36 @@ export function HomePage() {
       if (name) setDefaultComboName(name);
     }).catch(() => {});
   }, [setDefaultComboName]);
+
+  // P8: Fetch active grants and load selected grant
+  useEffect(() => {
+    if (auth.is_logged_in) {
+      cmd.fetchActiveGrants().then((grants) => {
+        setActiveGrants(grants || []);
+      }).catch(() => {});
+      cmd.getSelectedGrant().then((sg) => {
+        if (sg && sg.grant_id) {
+          setSelectedGrant(sg);
+        }
+      }).catch(() => {});
+    } else {
+      setActiveGrants([]);
+      setSelectedGrant(null);
+    }
+  }, [auth.is_logged_in, setActiveGrants, setSelectedGrant]);
+
+  const handleSelectGrant = async (grantID: string) => {
+    const relayGW = cloudBilling?.relay_gateways?.[0];
+    if (!relayGW) return;
+    const relayURL = `http://${relayGW.host}:${relayGW.port}`;
+    await cmd.setSelectedGrant(grantID, relayURL);
+    setSelectedGrant({ grant_id: grantID, relay_url: relayURL });
+  };
+
+  const handleClearGrant = async () => {
+    await cmd.clearSelectedGrant();
+    setSelectedGrant(null);
+  };
 
   const handleToggleGateway = async () => {
     try {
@@ -484,6 +318,43 @@ export function HomePage() {
         <TeamCostSnapshot />
       )}
 
+      {auth.is_logged_in && activeGrants.length > 0 && (
+        <div className="section section-card">
+          <div className="section-heading">
+            <h2>Token Grants</h2>
+            <p className="hint">Active grants from token market purchases</p>
+          </div>
+          {selectedGrant && (
+            <div className="snapshot-item" style={{ marginBottom: 12, padding: 8, background: "var(--color-bg-secondary, #f5f5f5)", borderRadius: 8 }}>
+              <span className="snapshot-label">Selected Grant</span>
+              <span className="snapshot-value">
+                <strong>{String(selectedGrant.grant_id || "").slice(0, 16)}...</strong>
+                <button className="btn-secondary btn-sm" style={{ marginLeft: 8 }} onClick={handleClearGrant}>Clear</button>
+              </span>
+            </div>
+          )}
+          <div className="snapshot-grid">
+            {activeGrants.map((g) => (
+              <div key={g.grant_id} className="snapshot-item" style={{ flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
+                <span className="snapshot-label">Grant {String(g.grant_id).slice(0, 12)}...</span>
+                <span className="snapshot-value">
+                  <strong>${(g.remaining_quota || 0).toFixed(2)}</strong> remaining
+                </span>
+                <span className="snapshot-sub">{(g.remaining_tokens || 0).toLocaleString()} tokens left</span>
+                <button
+                  className={selectedGrant?.grant_id === g.grant_id ? "btn-primary btn-sm" : "btn-secondary btn-sm"}
+                  style={{ marginTop: 4 }}
+                  onClick={() => handleSelectGrant(g.grant_id)}
+                  disabled={!cloudBilling?.relay_gateways?.length}
+                >
+                  {selectedGrant?.grant_id === g.grant_id ? "Selected" : "Select"}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="page-hero">
         <div className="page-hero-head">
           <div className="page-hero-copy">
@@ -531,8 +402,6 @@ export function HomePage() {
             </button>
           </div>
         )}
-
-        <TunnelStatus />
 
         <div className="status-card">
           <div className="status-card-copy">

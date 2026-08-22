@@ -34,8 +34,6 @@ export function ChannelPage() {
 
   const [showAPIKey, setShowAPIKey] = useState(false);
 
-  const relayEnabled = useAppStore((s) => s.relayEnabled);
-
   // Auto-sync platform channels from cloud on mount when logged in
   useEffect(() => {
     if (!auth.is_logged_in) return;
@@ -61,9 +59,7 @@ export function ChannelPage() {
     setTesting(ch.channel_id);
     setTestResult(null);
     try {
-      const result = relayEnabled
-        ? await cmd.testCustomChannel(ch.channel_id)
-        : await cmd.testChannelDirect(ch.channel_id);
+      const result = await cmd.testChannelDirect(ch.channel_id);
       if (result && result.success) {
         setTestResult({ channelId: ch.channel_id, success: true, message: result.message || "connected" });
       } else {
