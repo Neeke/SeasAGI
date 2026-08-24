@@ -283,7 +283,7 @@ export namespace auth {
 	    strategy: string;
 	    sticky_uses: number;
 	    quick_strategy: string;
-	    task_profile: {[key: string]: any};
+	    task_profile: Record<string, any>;
 	    steps: [];
 	    status: string;
 	    source: string;
@@ -363,7 +363,7 @@ export namespace config {
 	    min_interval_ms: number;
 	    max_concurrent: number;
 	    max_wait_ms: number;
-	    channel_overrides?: {[key: string]: ChannelRateLimit};
+	    channel_overrides?: Record<string, ChannelRateLimit>;
 	
 	    static createFrom(source: any = {}) {
 	        return new RateLimitConfig(source);
@@ -377,8 +377,26 @@ export namespace config {
 	        this.min_interval_ms = source["min_interval_ms"];
 	        this.max_concurrent = source["max_concurrent"];
 	        this.max_wait_ms = source["max_wait_ms"];
-	        this.channel_overrides = source["channel_overrides"];
+	        this.channel_overrides = this.convertValues(source["channel_overrides"], ChannelRateLimit, true);
 	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
 	}
 	export class OptimizationConfig {
 	    mode: string;
@@ -504,7 +522,7 @@ export namespace config {
 	    strategy: string;
 	    sticky_uses: number;
 	    quick_strategy?: string;
-	    task_profile?: {[key: string]: any};
+	    task_profile?: Record<string, any>;
 	    status?: string;
 	    source?: string;
 	    version?: number;
@@ -652,7 +670,7 @@ export namespace config {
 	    enabled: boolean;
 	    health_status: string;
 	    source?: string;
-	    provider_specific_config: {[key: string]: string};
+	    provider_specific_config: Record<string, string>;
 	    supported_modalities?: string[];
 	    models?: string[];
 	    api_key?: string;
@@ -713,6 +731,7 @@ export namespace config {
 		    return a;
 		}
 	}
+	
 	
 	
 	
@@ -866,7 +885,7 @@ export namespace mcp {
 	    name: string;
 	    command: string;
 	    args?: string[];
-	    env?: {[key: string]: string};
+	    env?: Record<string, string>;
 	    transport: string;
 	    url?: string;
 	    enabled: boolean;
@@ -920,7 +939,7 @@ export namespace presets {
 	    region?: string;
 	    category: string;
 	    models?: string[];
-	    extra_config?: {[key: string]: string};
+	    extra_config?: Record<string, string>;
 	
 	    static createFrom(source: any = {}) {
 	        return new ProviderPreset(source);
@@ -1154,7 +1173,7 @@ export namespace usage {
 	    total_input_tokens: number;
 	    total_output_tokens: number;
 	    total_cost_usd: number;
-	    by_channel: {[key: string]: ChannelUsage};
+	    by_channel: Record<string, ChannelUsage>;
 	
 	    static createFrom(source: any = {}) {
 	        return new DailyUsage(source);
@@ -1167,8 +1186,26 @@ export namespace usage {
 	        this.total_input_tokens = source["total_input_tokens"];
 	        this.total_output_tokens = source["total_output_tokens"];
 	        this.total_cost_usd = source["total_cost_usd"];
-	        this.by_channel = source["by_channel"];
+	        this.by_channel = this.convertValues(source["by_channel"], ChannelUsage, true);
 	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
 	}
 	export class ModelPricing {
 	    model: string;

@@ -23,11 +23,11 @@ export function ApplyPromptPreset(arg1:string,arg2:string):Promise<void>;
 
 export function ApplyRecommendation(arg1:string,arg2:string):Promise<void>;
 
-export function ChatCompletion(arg1:Array<{[key: string]: any}>,arg2:string):Promise<{[key: string]: any}>;
+export function ChatCompletion(arg1:Array<Record<string, any>>,arg2:string):Promise<Record<string, any>>;
 
-export function ChatCompletionForChannel(arg1:string,arg2:Array<{[key: string]: any}>,arg3:string):Promise<{[key: string]: any}>;
+export function ChatCompletionForChannel(arg1:string,arg2:Array<Record<string, any>>,arg3:string):Promise<Record<string, any>>;
 
-export function CheckUpdate():Promise<{[key: string]: any}>;
+export function CheckUpdate():Promise<Record<string, any>>;
 
 export function ClearLogs():Promise<void>;
 
@@ -37,9 +37,9 @@ export function ConfirmAction(arg1:string,arg2:string):Promise<boolean>;
 
 export function CopyToClipboard(arg1:string):Promise<void>;
 
-export function CreateCheckoutSession(arg1:string,arg2:Array<number>):Promise<{[key: string]: any}>;
+export function CreateCheckoutSession(arg1:string,arg2:Array<number>):Promise<Record<string, any>>;
 
-export function CreateEvalSuite(arg1:{[key: string]: any}):Promise<{[key: string]: any}>;
+export function CreateEvalSuite(arg1:Record<string, any>):Promise<Record<string, any>>;
 
 export function DeleteCloudCombo(arg1:string):Promise<void>;
 
@@ -61,99 +61,99 @@ export function ExchangeOAuthCode(arg1:string,arg2:string,arg3:string,arg4:strin
 
 export function ExportConfig():Promise<string>;
 
-export function FetchActiveGrants():Promise<Array<{[key: string]: any}>>;
+export function FetchActiveGrants():Promise<Array<Record<string, any>>>;
 
-export function FetchCloudCombos():Promise<Array<{[key: string]: any}>>;
+export function FetchCloudCombos():Promise<Array<Record<string, any>>>;
 
-export function FetchFreeChannels():Promise<Array<{[key: string]: any}>>;
+export function FetchFreeChannels():Promise<Array<Record<string, any>>>;
 
-export function FetchModelStats():Promise<Array<{[key: string]: any}>>;
+export function FetchModelStats():Promise<Array<Record<string, any>>>;
 
-export function FetchModelsFromURL(arg1:string,arg2:string):Promise<{[key: string]: any}>;
+export function FetchModelsFromURL(arg1:string,arg2:string):Promise<Record<string, any>>;
 
 export function GetAppConfig():Promise<config.AppConfig>;
 
-export function GetAppInfo():Promise<{[key: string]: any}>;
+export function GetAppInfo():Promise<Record<string, any>>;
 
 export function GetAuthState():Promise<auth.AuthInfo>;
 
-export function GetByokPolicies():Promise<Array<{[key: string]: any}>>;
+export function GetByokPolicies():Promise<Array<Record<string, any>>>;
 
-export function GetCloudBilling():Promise<{[key: string]: any}>;
+export function GetCloudBilling():Promise<Record<string, any>>;
 
-export function GetCloudSyncStatus():Promise<{[key: string]: any}>;
+export function GetCloudSyncStatus():Promise<Record<string, any>>;
 
-export function GetCloudUsage():Promise<{[key: string]: any}>;
+export function GetCloudUsage():Promise<Record<string, any>>;
 
 export function GetComboByName(arg1:string):Promise<config.ModelCombo>;
 
-export function GetComboRouteMetrics():Promise<Array<{[key: string]: any}>>;
+export function GetComboRouteMetrics():Promise<Array<Record<string, any>>>;
 
 export function GetDailyUsage(arg1:number):Promise<Array<usage.DailyUsage>>;
 
 export function GetDefaultComboName():Promise<string>;
 
-export function GetEvalScorecard(arg1:string):Promise<{[key: string]: any}>;
+export function GetEvalScorecard(arg1:string):Promise<Record<string, any>>;
 
 export function GetLocalAccessToken():Promise<string>;
 
 export function GetLocale():Promise<string>;
 
-export function GetLogRotationConfig():Promise<{[key: string]: any}>;
+export function GetLogRotationConfig():Promise<Record<string, any>>;
 
-export function GetMCPAuditLog():Promise<Array<{[key: string]: any}>>;
+export function GetMCPAuditLog():Promise<Array<Record<string, any>>>;
 
-export function GetMCPGatewayTools():Promise<Array<{[key: string]: any}>>;
+export function GetMCPGatewayTools():Promise<Array<Record<string, any>>>;
 
-export function GetMITMEnvHint():Promise<{[key: string]: string}>;
+export function GetMITMEnvHint():Promise<Record<string, string>>;
 
-export function GetMITMRecentIntercepts(arg1:number):Promise<Array<{[key: string]: any}>>;
+export function GetMITMRecentIntercepts(arg1:number):Promise<Array<Record<string, any>>>;
 
 export function GetMITMRules():Promise<Array<string>>;
 
-export function GetMITMStatus():Promise<{[key: string]: any}>;
+export function GetMITMStatus():Promise<Record<string, any>>;
 
-export function GetMITMTargets():Promise<Array<{[key: string]: any}>>;
+export function GetMITMTargets():Promise<Array<Record<string, any>>>;
 
-export function GetOAuthConnections():Promise<Array<{[key: string]: any}>>;
+export function GetOAuthConnections():Promise<Array<Record<string, any>>>;
 
-export function GetOAuthProviders():Promise<Array<{[key: string]: any}>>;
+export function GetOAuthProviders():Promise<Array<Record<string, any>>>;
 
 export function GetOAuthToken(arg1:string):Promise<string>;
 
-export function GetOfficialComboTemplates():Promise<Array<{[key: string]: any}>>;
+export function GetOfficialComboTemplates():Promise<Array<Record<string, any>>>;
 
-export function GetOptimizationConfig():Promise<{[key: string]: any}>;
+export function GetOptimizationConfig():Promise<Record<string, any>>;
 
-export function GetOptimizationPlan(arg1:string,arg2:string):Promise<{[key: string]: any}>;
+export function GetOptimizationPlan(arg1:string,arg2:string):Promise<Record<string, any>>;
 
-export function GetPerfAuditReport():Promise<{[key: string]: any}>;
+export function GetPerfAuditReport():Promise<Record<string, any>>;
 
-export function GetPlans():Promise<Array<{[key: string]: any}>>;
+export function GetPlans():Promise<Array<Record<string, any>>>;
 
 export function GetPlatformAPIBaseURL():Promise<string>;
 
 export function GetPlatformToken():Promise<string>;
 
-export function GetPluginAuditLog():Promise<Array<{[key: string]: any}>>;
+export function GetPluginAuditLog():Promise<Array<Record<string, any>>>;
 
-export function GetPluginHooks():Promise<Array<{[key: string]: any}>>;
+export function GetPluginHooks():Promise<Array<Record<string, any>>>;
 
 export function GetPresetByName(arg1:string):Promise<presets.ProviderPreset>;
 
-export function GetProviderHealthMetrics(arg1:string):Promise<Array<{[key: string]: any}>>;
+export function GetProviderHealthMetrics(arg1:string):Promise<Array<Record<string, any>>>;
 
-export function GetProviderHealthSummary():Promise<Array<{[key: string]: any}>>;
+export function GetProviderHealthSummary():Promise<Array<Record<string, any>>>;
 
-export function GetQuickStrategies():Promise<Array<{[key: string]: any}>>;
+export function GetQuickStrategies():Promise<Array<Record<string, any>>>;
 
-export function GetRateLimitConfig():Promise<{[key: string]: any}>;
+export function GetRateLimitConfig():Promise<Record<string, any>>;
 
-export function GetRecommendedCombos():Promise<Array<{[key: string]: any}>>;
+export function GetRecommendedCombos():Promise<Array<Record<string, any>>>;
 
-export function GetRuntimeStatus():Promise<{[key: string]: any}>;
+export function GetRuntimeStatus():Promise<Record<string, any>>;
 
-export function GetSelectedGrant():Promise<{[key: string]: any}>;
+export function GetSelectedGrant():Promise<Record<string, any>>;
 
 export function GetSession(arg1:string,arg2:string):Promise<sessions.Session>;
 
@@ -163,21 +163,21 @@ export function GetSyncConfig():Promise<sync.SyncConfig>;
 
 export function GetSyncStatus():Promise<sync.SyncStatus>;
 
-export function GetTaskProfiles():Promise<Array<{[key: string]: any}>>;
+export function GetTaskProfiles():Promise<Array<Record<string, any>>>;
 
-export function GetTotalUsage():Promise<{[key: string]: any}>;
+export function GetTotalUsage():Promise<Record<string, any>>;
 
-export function GetTunnelStatus():Promise<{[key: string]: any}>;
+export function GetTunnelStatus():Promise<Record<string, any>>;
 
 export function GetTunnelURL():Promise<string>;
 
-export function GetUsageSummary():Promise<{[key: string]: any}>;
+export function GetUsageSummary():Promise<Record<string, any>>;
 
 export function HandleDeepLink(arg1:string):Promise<void>;
 
-export function ImageGeneration(arg1:string,arg2:string,arg3:{[key: string]: any}):Promise<{[key: string]: any}>;
+export function ImageGeneration(arg1:string,arg2:string,arg3:Record<string, any>):Promise<Record<string, any>>;
 
-export function ImageGenerationForChannel(arg1:string,arg2:string,arg3:string,arg4:{[key: string]: any}):Promise<{[key: string]: any}>;
+export function ImageGenerationForChannel(arg1:string,arg2:string,arg3:string,arg4:Record<string, any>):Promise<Record<string, any>>;
 
 export function ImportConfig(arg1:string):Promise<void>;
 
@@ -195,7 +195,7 @@ export function ListChannels():Promise<Array<config.Channel>>;
 
 export function ListComboTemplates():Promise<Array<config.ModelCombo>>;
 
-export function ListEvalSuites():Promise<Array<{[key: string]: any}>>;
+export function ListEvalSuites():Promise<Array<Record<string, any>>>;
 
 export function ListLogs(arg1:number,arg2:number):Promise<Array<logs.RequestLog>>;
 
@@ -207,7 +207,7 @@ export function ListModelCombos():Promise<Array<config.ModelCombo>>;
 
 export function ListModelPricing():Promise<Array<usage.ModelPricing>>;
 
-export function ListPlugins():Promise<Array<{[key: string]: any}>>;
+export function ListPlugins():Promise<Array<Record<string, any>>>;
 
 export function ListPresetsByCategory(arg1:string):Promise<Array<presets.ProviderPreset>>;
 
@@ -227,9 +227,9 @@ export function OpenInBrowser(arg1:string):Promise<void>;
 
 export function PerformUpdate():Promise<void>;
 
-export function PreviewComboOptimization(arg1:string,arg2:string):Promise<{[key: string]: any}>;
+export function PreviewComboOptimization(arg1:string,arg2:string):Promise<Record<string, any>>;
 
-export function PushCloudCombo(arg1:string,arg2:string,arg3:string,arg4:string,arg5:number,arg6:string,arg7:{[key: string]: any},arg8:string):Promise<{[key: string]: any}>;
+export function PushCloudCombo(arg1:string,arg2:string,arg3:string,arg4:string,arg5:number,arg6:string,arg7:Record<string, any>,arg8:string):Promise<Record<string, any>>;
 
 export function ReadCurrentPrompt(arg1:string):Promise<string>;
 
@@ -247,9 +247,9 @@ export function ResetLocalAccessToken():Promise<string>;
 
 export function RevokeOAuthToken(arg1:string):Promise<void>;
 
-export function RunDiagnostics():Promise<{[key: string]: any}>;
+export function RunDiagnostics():Promise<Record<string, any>>;
 
-export function RunEvalSuite(arg1:string):Promise<{[key: string]: any}>;
+export function RunEvalSuite(arg1:string):Promise<Record<string, any>>;
 
 export function SaveComboTemplate(arg1:config.ModelCombo):Promise<void>;
 
@@ -265,9 +265,9 @@ export function SavePromptPreset(arg1:prompts.PromptPreset):Promise<void>;
 
 export function ScanSkillsDir():Promise<Array<skills.Skill>>;
 
-export function SearchNotion(arg1:string,arg2:string):Promise<{[key: string]: any}>;
+export function SearchNotion(arg1:string,arg2:string):Promise<Record<string, any>>;
 
-export function SearchObsidian(arg1:string,arg2:string,arg3:string):Promise<Array<{[key: string]: any}>>;
+export function SearchObsidian(arg1:string,arg2:string,arg3:string):Promise<Array<Record<string, any>>>;
 
 export function SearchSessions(arg1:string,arg2:string,arg3:number):Promise<Array<sessions.Session>>;
 
@@ -275,21 +275,21 @@ export function SelectDirectory():Promise<string>;
 
 export function SetAutoLaunch(arg1:boolean):Promise<void>;
 
-export function SetByokPolicy(arg1:{[key: string]: any}):Promise<{[key: string]: any}>;
+export function SetByokPolicy(arg1:Record<string, any>):Promise<Record<string, any>>;
 
 export function SetDefaultComboName(arg1:string):Promise<void>;
 
 export function SetLocale(arg1:string):Promise<void>;
 
-export function SetLogRotationConfig(arg1:{[key: string]: any}):Promise<void>;
+export function SetLogRotationConfig(arg1:Record<string, any>):Promise<void>;
 
 export function SetMITMManager(arg1:mitm.Manager):Promise<void>;
 
-export function SetOptimizationConfig(arg1:{[key: string]: any}):Promise<void>;
+export function SetOptimizationConfig(arg1:Record<string, any>):Promise<void>;
 
 export function SetPlatformAPIBaseURL(arg1:string):Promise<void>;
 
-export function SetRateLimitConfig(arg1:{[key: string]: any}):Promise<void>;
+export function SetRateLimitConfig(arg1:Record<string, any>):Promise<void>;
 
 export function SetSelectedGrant(arg1:string,arg2:string):Promise<void>;
 
@@ -309,11 +309,11 @@ export function StopMITM():Promise<void>;
 
 export function StopTunnel():Promise<void>;
 
-export function SyncCustomChannelsToCloud(arg1:Array<{[key: string]: any}>):Promise<{[key: string]: any}>;
+export function SyncCustomChannelsToCloud(arg1:Array<Record<string, any>>):Promise<Record<string, any>>;
 
 export function SyncLocalDataToCloud():Promise<void>;
 
-export function SyncOptimizationConfigFromCloud():Promise<{[key: string]: any}>;
+export function SyncOptimizationConfigFromCloud():Promise<Record<string, any>>;
 
 export function SyncOptimizationConfigToCloud():Promise<void>;
 
@@ -323,11 +323,11 @@ export function SyncPull():Promise<void>;
 
 export function SyncPush():Promise<void>;
 
-export function TestChannelDirect(arg1:string):Promise<{[key: string]: any}>;
+export function TestChannelDirect(arg1:string):Promise<Record<string, any>>;
 
-export function TestCustomChannel(arg1:string):Promise<{[key: string]: any}>;
+export function TestCustomChannel(arg1:string):Promise<Record<string, any>>;
 
-export function TestMITMDomain(arg1:string):Promise<{[key: string]: any}>;
+export function TestMITMDomain(arg1:string):Promise<Record<string, any>>;
 
 export function ToggleMCPServer(arg1:string,arg2:boolean):Promise<void>;
 
@@ -337,7 +337,7 @@ export function ToggleSkill(arg1:string,arg2:boolean):Promise<void>;
 
 export function UninstallSkill(arg1:string):Promise<void>;
 
-export function UpdateCloudCombo(arg1:string,arg2:string,arg3:string,arg4:string,arg5:number,arg6:string,arg7:string,arg8:{[key: string]: any},arg9:string):Promise<void>;
+export function UpdateCloudCombo(arg1:string,arg2:string,arg3:string,arg4:string,arg5:number,arg6:string,arg7:string,arg8:Record<string, any>,arg9:string):Promise<void>;
 
 export function UpdateDefaultModel(arg1:string,arg2:string):Promise<void>;
 
@@ -345,6 +345,6 @@ export function UpdateRoutingSettings(arg1:string,arg2:number):Promise<void>;
 
 export function UpdateSyncConfig(arg1:sync.SyncConfig):Promise<void>;
 
-export function VideoGeneration(arg1:string,arg2:string,arg3:{[key: string]: any}):Promise<{[key: string]: any}>;
+export function VideoGeneration(arg1:string,arg2:string,arg3:Record<string, any>):Promise<Record<string, any>>;
 
-export function VideoGenerationForChannel(arg1:string,arg2:string,arg3:string,arg4:{[key: string]: any}):Promise<{[key: string]: any}>;
+export function VideoGenerationForChannel(arg1:string,arg2:string,arg3:string,arg4:Record<string, any>):Promise<Record<string, any>>;

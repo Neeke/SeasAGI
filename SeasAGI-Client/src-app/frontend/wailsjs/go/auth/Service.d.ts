@@ -3,13 +3,13 @@
 import {auth} from '../models';
 import {context} from '../models';
 
-export function CreateByokPolicy(arg1:{[key: string]: any}):Promise<{[key: string]: any}>;
+export function CreateByokPolicy(arg1:Record<string, any>):Promise<Record<string, any>>;
 
 export function DeleteCloudCombo(arg1:string):Promise<void>;
 
 export function FetchActiveGrants():Promise<Array<auth.ActiveGrant>>;
 
-export function FetchByokPolicies():Promise<Array<{[key: string]: any}>>;
+export function FetchByokPolicies():Promise<Array<Record<string, any>>>;
 
 export function FetchCloudBilling():Promise<auth.CloudBilling>;
 
@@ -21,17 +21,17 @@ export function FetchCloudOptimizationConfig():Promise<string>;
 
 export function FetchCloudUsage():Promise<auth.CloudUsage>;
 
-export function FetchFreeChannels(arg1:context.Context):Promise<Array<{[key: string]: any}>>;
+export function FetchFreeChannels(arg1:context.Context):Promise<Array<Record<string, any>>>;
 
 export function FetchOfficialComboTemplates(arg1:context.Context):Promise<Array<auth.CloudComboTemplate>>;
 
 export function FetchPlans():Promise<Array<auth.CloudPlan>>;
 
-export function FetchPlatformChannels(arg1:context.Context):Promise<Array<{[key: string]: any}>>;
+export function FetchPlatformChannels(arg1:context.Context):Promise<Array<Record<string, any>>>;
 
-export function FetchProviderHealthMetrics(arg1:string):Promise<Array<{[key: string]: any}>>;
+export function FetchProviderHealthMetrics(arg1:string):Promise<Array<Record<string, any>>>;
 
-export function FetchProviderHealthSummary():Promise<Array<{[key: string]: any}>>;
+export function FetchProviderHealthSummary():Promise<Array<Record<string, any>>>;
 
 export function FetchRecommendedCombos():Promise<Array<auth.CloudCombo>>;
 
@@ -47,7 +47,7 @@ export function Logout():Promise<void>;
 
 export function PlatformAPIBaseURL():Promise<string>;
 
-export function PushCloudCombo(arg1:string,arg2:string,arg3:string,arg4:string,arg5:number,arg6:string,arg7:{[key: string]: any},arg8:Array<number>):Promise<auth.CloudUserCombo>;
+export function PushCloudCombo(arg1:string,arg2:string,arg3:string,arg4:string,arg5:number,arg6:string,arg7:Record<string, any>,arg8:Array<number>):Promise<auth.CloudUserCombo>;
 
 export function PushCloudOptimizationConfig(arg1:string):Promise<void>;
 
@@ -55,4 +55,4 @@ export function Register(arg1:string,arg2:string,arg3:string):Promise<void>;
 
 export function SyncCloudCombosToLocal():Promise<Array<auth.CloudUserCombo>>;
 
-export function UpdateCloudCombo(arg1:string,arg2:string,arg3:string,arg4:string,arg5:number,arg6:string,arg7:string,arg8:{[key: string]: any},arg9:Array<number>):Promise<void>;
+export function UpdateCloudCombo(arg1:string,arg2:string,arg3:string,arg4:string,arg5:number,arg6:string,arg7:string,arg8:Record<string, any>,arg9:Array<number>):Promise<void>;

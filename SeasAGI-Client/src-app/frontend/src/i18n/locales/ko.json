@@ -1257,7 +1257,6 @@
   "diagnostics.none": "없음",
   "diagnostics.detected": "감지됨",
   "diagnostics.mitmRunning": "MITM 실행 중",
-  "diagnostics.running": "실행 중",
   "diagnostics.stopped": "중지됨",
   "diagnostics.egressIp": "출구 IP",
   "diagnostics.currentIp": "현재 출구 IP",

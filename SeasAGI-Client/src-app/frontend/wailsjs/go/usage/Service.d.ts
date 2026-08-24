@@ -8,7 +8,7 @@ export function GetDailyUsage(arg1:number):Promise<Array<usage.DailyUsage>>;
 
 export function GetModelStats():Promise<Array<usage.ModelStatsEntry>>;
 
-export function GetTotalUsage():Promise<{[key: string]: any}>;
+export function GetTotalUsage():Promise<Record<string, any>>;
 
 export function GetUsageSummary():Promise<usage.UsageSummary>;
 

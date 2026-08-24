@@ -1277,7 +1277,6 @@
   "diagnostics.none": "无",
   "diagnostics.detected": "检测到",
   "diagnostics.mitmRunning": "MITM 运行",
-  "diagnostics.running": "运行中",
   "diagnostics.stopped": "已停止",
   "diagnostics.egressIp": "出口 IP",
   "diagnostics.currentIp": "当前出口 IP",

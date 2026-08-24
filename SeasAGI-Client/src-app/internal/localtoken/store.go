@@ -8,8 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"time"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 const tokenLength = 32
@@ -26,7 +24,7 @@ func NewStore() (*Store, error) {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return nil, err
 	}
-	db, err := sql.Open("sqlite3", path+"?_journal_mode=WAL&_busy_timeout=5000")
+	db, err := openSQLite(path)
 	if err != nil {
 		return nil, err
 	}

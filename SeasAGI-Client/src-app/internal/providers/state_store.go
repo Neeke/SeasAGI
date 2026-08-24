@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 // StateStore persists PenaltyManager and CooldownManager state to SQLite.
@@ -34,7 +32,7 @@ func NewStateStore(dbPath string) (*StateStore, error) {
 		return nil, fmt.Errorf("state store: mkdir: %w", err)
 	}
 
-	db, err := sql.Open("sqlite3", dbPath+"?_journal_mode=WAL&_busy_timeout=5000")
+	db, err := openSQLite(dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("state store: open: %w", err)
 	}

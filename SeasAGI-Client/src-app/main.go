@@ -88,12 +88,15 @@ func runDesktop() {
 	cfg, _ := config.LoadOrDefault()
 	localTokenStore, err := localtoken.NewStore()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to initialize local token store: %v\n", err)
-		os.Exit(1)
+		fmt.Fprintf(os.Stderr, "Warning: local token store init failed: %v — continuing without persistence\n", err)
+	} else {
+		defer localTokenStore.Close()
 	}
-	defer localTokenStore.Close()
 
-	accessToken, _ := localTokenStore.GetOrCreate()
+	var accessToken string
+	if localTokenStore != nil {
+		accessToken, _ = localTokenStore.GetOrCreate()
+	}
 	lifecycleCtx, lifecycleCancel := context.WithCancel(context.Background())
 	var shutdownOnce gsync.Once
 
@@ -150,18 +153,18 @@ func runDesktop() {
 			gatewaySvc.Stop()
 		})
 	}
-		defer shutdownDeps()
+	defer shutdownDeps()
 
-		// 兜底处理桌面进程退出信号，确保 MITM 接管在进程结束时回滚为未接管状态。
-		desktopSigCh := make(chan os.Signal, 1)
-		signal.Notify(desktopSigCh, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)
-		defer signal.Stop(desktopSigCh)
-		go func() {
-			<-desktopSigCh
-			atomic.StoreInt32(&quitting, 1)
-			shutdownDeps()
-			os.Exit(0)
-		}()
+	// 兜底处理桌面进程退出信号，确保 MITM 接管在进程结束时回滚为未接管状态。
+	desktopSigCh := make(chan os.Signal, 1)
+	signal.Notify(desktopSigCh, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)
+	defer signal.Stop(desktopSigCh)
+	go func() {
+		<-desktopSigCh
+		atomic.StoreInt32(&quitting, 1)
+		shutdownDeps()
+		os.Exit(0)
+	}()
 
 	appMenu := buildAppMenu(app, gatewaySvc)
 

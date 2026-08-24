@@ -5,8 +5,6 @@ import (
 	"log"
 	"sync"
 	"time"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 type Record struct {
@@ -36,7 +34,7 @@ type TraceStore struct {
 
 func InitStore(dbPath string) {
 	storeOnce.Do(func() {
-		db, err := sql.Open("sqlite3", dbPath+"?_journal_mode=WAL&_busy_timeout=5000")
+		db, err := openSQLite(dbPath)
 		if err != nil {
 			log.Printf("trace store open error: %v", err)
 			return

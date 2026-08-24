@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
 	"gopkg.in/yaml.v3"
 )
 
@@ -84,7 +83,7 @@ func (s *Store) DBPath() string {
 
 func (s *Store) openDB() {
 	_ = os.MkdirAll(filepath.Dir(s.dbPath), 0755)
-	db, err := sql.Open("sqlite3", s.dbPath+"?_journal_mode=WAL&_busy_timeout=5000")
+	db, err := openSQLite(s.dbPath)
 	if err != nil {
 		return
 	}

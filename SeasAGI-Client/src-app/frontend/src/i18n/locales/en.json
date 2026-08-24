@@ -1277,7 +1277,6 @@
   "diagnostics.none": "None",
   "diagnostics.detected": "Detected",
   "diagnostics.mitmRunning": "MITM Running",
-  "diagnostics.running": "Running",
   "diagnostics.stopped": "Stopped",
   "diagnostics.egressIp": "Egress IP",
   "diagnostics.currentIp": "Current Egress IP",
