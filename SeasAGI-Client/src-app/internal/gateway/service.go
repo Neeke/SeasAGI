@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"bytes"
 	"context"
 	"crypto/subtle"
 	"encoding/json"
@@ -52,6 +53,8 @@ type Service struct {
 	oauthRefresher *providers.OAuthTokenRefresher
 	// Per-channel concurrency limiter (P2-23)
 	concurrencyLimiter *providers.ConcurrencyLimiter
+	// HTTP client for grant relay routing
+	grantHTTPClient *http.Client
 }
 
 // ComboRouteMetrics tracks route-level metrics per combo
@@ -445,6 +448,21 @@ func (s *Service) handleChatCompletions(w http.ResponseWriter, r *http.Request) 
 			AppliedConstraints: constraintsJSON,
 		})
 	}()
+
+	// P8: Grant routing — if user has an active grant, route through enterprise relay
+	grantRelayURL := s.configSvc.GetSelectedGrantRelayURL()
+	grantID := s.configSvc.GetSelectedGrantID()
+	if grantRelayURL != "" && grantID != "" {
+		resp, err := s.forwardViaGrant(r.Context(), grantRelayURL, grantID, bodyBytes)
+		if err == nil {
+			status = "success"
+			selectedChannelID = "grant_" + grantID
+			defer resp.Body.Close()
+			s.proxyResponse(w, resp)
+			return
+		}
+		// Grant routing failed, fall through to normal BYOK routing
+	}
 
 	resp, usedStep, attempts, forwardErr := s.forwardRequest(r.Context(), plan, req, sessionKey)
 	routeSteps = attempts
@@ -1008,4 +1026,40 @@ func flattenMessagesContent(messages []map[string]any) []map[string]any {
 		}
 	}
 	return messages
+}
+
+// forwardViaGrant routes a chat completions request through the enterprise relay gateway
+// using the user's active Token Market grant. The relay gateway resolves the grant's
+// escrow API key and forwards the request to the upstream provider.
+func (s *Service) forwardViaGrant(ctx context.Context, relayURL, grantID string, bodyBytes []byte) (*http.Response, error) {
+	if s.grantHTTPClient == nil {
+		s.grantHTTPClient = &http.Client{Timeout: 120 * time.Second}
+	}
+
+	url := strings.TrimRight(relayURL, "/") + "/relay/chat/completions"
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(bodyBytes))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+s.authSvc.GetPlatformToken())
+	req.Header.Set("X-Grant-Id", grantID)
+
+	resp, err := s.grantHTTPClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		return nil, fmt.Errorf("grant relay returned %d: %s", resp.StatusCode, string(body))
+	}
+	return resp, nil
+}
+
+// proxyResponse copies an upstream HTTP response to the client ResponseWriter.
+func (s *Service) proxyResponse(w http.ResponseWriter, resp *http.Response) {
+	copyHeaders(w.Header(), resp.Header)
+	w.WriteHeader(resp.StatusCode)
+	_, _ = io.Copy(w, resp.Body)
 }

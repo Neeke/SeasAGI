@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,7 +14,7 @@
 <meta name="author" content="SeasAGI">
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <meta name="googlebot" content="index, follow">
-<meta name="language" content="zh-CN, en">
+<meta name="language" content="en, zh-CN">
 <meta name="rating" content="general">
 <meta name="distribution" content="global">
 <meta name="theme-color" content="#0A0F1A">
@@ -28,8 +28,8 @@
 <meta property="og:image" content="https://SeasAGI.SeasX.ai/assets/seasagi-icon.png">
 <meta property="og:image:alt" content="SeasAGI Logo">
 <meta property="og:site_name" content="SeasAGI">
-<meta property="og:locale" content="zh_CN">
-<meta property="og:locale:alternate" content="en_US">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="zh_CN">
 <meta property="og:locale:alternate" content="ja_JP">
 <meta property="og:locale:alternate" content="ko_KR">
 
@@ -41,8 +41,8 @@
 <meta name="twitter:image:alt" content="SeasAGI Logo">
 
 <!-- hreflang -->
-<link rel="alternate" hreflang="zh-CN" href="https://SeasAGI.SeasX.ai/">
-<link rel="alternate" hreflang="en" href="https://SeasAGI.SeasX.ai/en/">
+<link rel="alternate" hreflang="en" href="https://SeasAGI.SeasX.ai/">
+<link rel="alternate" hreflang="zh-CN" href="https://SeasAGI.SeasX.ai/zh/">
 <link rel="alternate" hreflang="ja" href="https://SeasAGI.SeasX.ai/ja/">
 <link rel="alternate" hreflang="ko" href="https://SeasAGI.SeasX.ai/ko/">
 <link rel="alternate" hreflang="x-default" href="https://SeasAGI.SeasX.ai/">
@@ -72,7 +72,7 @@
       "@type": "WebSite",
       "name": "SeasAGI",
       "url": "https://SeasAGI.SeasX.ai/",
-      "inLanguage": "zh-CN"
+      "inLanguage": "en"
     },
     {
       "@type": "SoftwareApplication",
@@ -128,13 +128,13 @@ h1,h2,h3,h4,p{margin:0;}
 button{font-family:inherit;cursor:pointer;}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
 
-/* zh/en/ja/ko toggle */
-.lang-en-i,.lang-ja-i,.lang-ko-i{display:none;}
-body.lang-en .lang-zh-i{display:none;}
-body.lang-en .lang-en-i{display:inline;}
-body.lang-ja .lang-zh-i{display:none;}
+/* zh/en/ja/ko toggle — default: English */
+.lang-zh-i,.lang-ja-i,.lang-ko-i{display:none;}
+body.lang-zh .lang-en-i{display:none;}
+body.lang-zh .lang-zh-i{display:inline;}
+body.lang-ja .lang-en-i{display:none;}
 body.lang-ja .lang-ja-i{display:inline;}
-body.lang-ko .lang-zh-i{display:none;}
+body.lang-ko .lang-en-i{display:none;}
 body.lang-ko .lang-ko-i{display:inline;}
 
 /* buttons */
@@ -330,6 +330,8 @@ body.lang-ko .lang-ko-i{display:inline;}
 .plan-audience-label.professional{background:rgba(6,182,212,.12);color:var(--accent-cyan);}
 .plan-audience-label.team{background:rgba(245,158,11,.12);color:#f59e0b;}
 .plan-audience-label.enterprise-aud{background:rgba(139,92,246,.12);color:#8b5cf6;}
+.price-coming-soon{display:inline-block;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(245,158,11,.12);color:#f59e0b;margin-bottom:8px;}
+.btn-coming-soon{margin-top:auto;width:100%;text-align:center;padding:10px 0;border-radius:var(--radius-sm);font-size:14px;font-weight:700;background:rgba(245,158,11,.08);color:#f59e0b;border:1px dashed rgba(245,158,11,.4);cursor:not-allowed;}
 
 /* channel status */
 .ch-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-bottom:32px;}
@@ -384,7 +386,7 @@ body.lang-ko .lang-ko-i{display:inline;}
       <a href="https://discord.gg/NdMkGtqAA" target="_blank" rel="noopener" aria-label="Discord">💬</a>
     </nav>
     <a class="btn btn-primary btn-sm header-cta" href="#download"><span class="lang-zh-i">下载客户端</span><span class="lang-en-i">Download</span><span class="lang-ja-i">ダウンロード</span><span class="lang-ko-i">다운로드</span></a>
-    <button class="lang-btn" id="langToggle" onclick="toggleLang()">EN</button>
+    <button class="lang-btn" id="langToggle" onclick="toggleLang()">中文</button>
   </div>
 </header>
 
@@ -723,6 +725,7 @@ body.lang-ko .lang-ko-i{display:inline;}
         </article>
         <article class="card price-card price-card-featured">
           <span class="plan-name plan-name-accent">Pro</span>
+          <span class="price-coming-soon"><span class="lang-zh-i">即将开放</span><span class="lang-en-i">Coming Soon</span><span class="lang-ja-i">近日公開</span><span class="lang-ko-i">출시 예정</span></span>
           <span class="plan-price">$9.9<small> <span class="lang-zh-i">/月</span><span class="lang-en-i">/mo</span><span class="lang-ja-i">/月</span><span class="lang-ko-i">/월</span></small></span>
           <span class="plan-audience-label professional"><span class="lang-zh-i">个人开发者</span><span class="lang-en-i">For professionals</span><span class="lang-ja-i">プロフェッショナル向け</span><span class="lang-ko-i">프로페셔널용</span></span>
           <p class="plan-desc"><span class="lang-zh-i">个人效率 · 分析 · 轻量云增值</span><span class="lang-en-i">Personal efficiency, analytics, light cloud</span><span class="lang-ja-i">個人効率 · 分析 · 軽量クラウド</span><span class="lang-ko-i">개인 효율 · 분석 · 경량 클라우드</span></p>
@@ -734,11 +737,11 @@ body.lang-ko .lang-ko-i{display:inline;}
             <li><span class="lang-zh-i">月 1000 万 Token 配额</span><span class="lang-en-i">10M tokens/month quota</span><span class="lang-ja-i">月1000万 Token クォータ</span><span class="lang-ko-i">월 1000만 Token 할당량</span></li>
             <li><span class="lang-zh-i">邮件工单支持</span><span class="lang-en-i">Email ticket support</span><span class="lang-ja-i">メールチケットサポート</span><span class="lang-ko-i">이메일 티켓 지원</span></li>
           </ul>
-          <a class="btn btn-primary price-cta" href="#download"><span class="lang-zh-i">立即订阅</span><span class="lang-en-i">Subscribe Now</span><span class="lang-ja-i">今すぐサブスクライブ</span><span class="lang-ko-i">지금 구독</span></a>
-          <div class="plan-upgrade-path"><a href="#pricing"><span class="lang-zh-i">了解 Teams →</span><span class="lang-en-i">Learn about Teams →</span><span class="lang-ja-i">Teams について →</span><span class="lang-ko-i">Teams 알아보기 →</span></a></div>
+          <span class="btn-coming-soon"><span class="lang-zh-i">即将开放</span><span class="lang-en-i">Coming Soon</span><span class="lang-ja-i">近日公開</span><span class="lang-ko-i">출시 예정</span></span>
         </article>
         <article class="card price-card">
           <span class="plan-name">Teams</span>
+          <span class="price-coming-soon"><span class="lang-zh-i">即将开放</span><span class="lang-en-i">Coming Soon</span><span class="lang-ja-i">近日公開</span><span class="lang-ko-i">출시 예정</span></span>
           <span class="plan-price">$24.9<small> <span class="lang-zh-i">/席位/月</span><span class="lang-en-i">/seat/mo</span><span class="lang-ja-i">/席/月</span><span class="lang-ko-i">/좌석/월</span></small></span>
           <span class="plan-audience-label team"><span class="lang-zh-i">小团队</span><span class="lang-en-i">For small teams</span><span class="lang-ja-i">小規模チーム向け</span><span class="lang-ko-i">소규모 팀용</span></span>
           <p class="plan-desc"><span class="lang-zh-i">协作 · 共享配置 · 集中管理</span><span class="lang-en-i">Collaboration, shared config, central billing</span><span class="lang-ja-i">コラボレーション · 共有設定 · 一元請求</span><span class="lang-ko-i">협업 · 공유 설정 · 중앙 청구</span></p>
@@ -750,11 +753,11 @@ body.lang-ko .lang-ko-i{display:inline;}
             <li><span class="lang-zh-i">集中账单与成本归因</span><span class="lang-en-i">Centralized billing & cost attribution</span><span class="lang-ja-i">一元請求・コスト帰属</span><span class="lang-ko-i">중앙화된 청구 및 비용 귀속</span></li>
             <li><span class="lang-zh-i">基础权限与审计事件</span><span class="lang-en-i">Basic RBAC & audit events</span><span class="lang-ja-i">基本的な RBAC・監査イベント</span><span class="lang-ko-i">기본 RBAC 및 감사 이벤트</span></li>
           </ul>
-          <a class="btn btn-ghost price-cta" href="#download"><span class="lang-zh-i">订阅 Teams</span><span class="lang-en-i">Subscribe Teams</span><span class="lang-ja-i">Teams をサブスクライブ</span><span class="lang-ko-i">Teams 구독</span></a>
-          <div class="plan-upgrade-path"><a href="javascript:void(0)" onclick="showEntForm()"><span class="lang-zh-i">联系 Enterprise 销售 →</span><span class="lang-en-i">Contact Enterprise Sales →</span><span class="lang-ja-i">Enterprise 営業に連絡 →</span><span class="lang-ko-i">Enterprise 영업팀 문의 →</span></a></div>
+          <span class="btn-coming-soon"><span class="lang-zh-i">即将开放</span><span class="lang-en-i">Coming Soon</span><span class="lang-ja-i">近日公開</span><span class="lang-ko-i">출시 예정</span></span>
         </article>
         <article class="card price-card">
           <span class="plan-name">Enterprise</span>
+          <span class="price-coming-soon"><span class="lang-zh-i">即将开放</span><span class="lang-en-i">Coming Soon</span><span class="lang-ja-i">近日公開</span><span class="lang-ko-i">출시 예정</span></span>
           <span class="plan-price"><span class="lang-zh-i" style="font-size:24px;font-weight:700;">联系销售</span><span class="lang-en-i" style="font-size:24px;font-weight:700;">Contact Sales</span><span class="lang-ja-i" style="font-size:24px;font-weight:700;">お問い合わせ</span><span class="lang-ko-i" style="font-size:24px;font-weight:700;">문의하기</span></span>
           <span class="plan-audience-label enterprise-aud"><span class="lang-zh-i">企业</span><span class="lang-en-i">For enterprises</span><span class="lang-ja-i">エンタープライズ向け</span><span class="lang-ko-i">엔터프라이즈용</span></span>
           <p class="plan-desc"><span class="lang-zh-i">治理 · 审计 · 合规 · SLA</span><span class="lang-en-i">Governance, audit, compliance & SLA</span><span class="lang-ja-i">ガバナンス · 監査 · コンプライアンス · SLA</span><span class="lang-ko-i">거버넌스 · 감사 · 컴플라이언스 · SLA</span></p>
@@ -766,7 +769,7 @@ body.lang-ko .lang-ko-i{display:inline;}
             <li><span class="lang-zh-i">审计日志与报表</span><span class="lang-en-i">Audit logs & reports</span><span class="lang-ja-i">監査ログ・レポート</span><span class="lang-ko-i">감사 로그 및 보고서</span></li>
             <li><span class="lang-zh-i">专属客户经理 & SLA</span><span class="lang-en-i">Dedicated account manager & SLA</span><span class="lang-ja-i">専任アカウントマネージャー & SLA</span><span class="lang-ko-i">전담 계정 매니저 & SLA</span></li>
           </ul>
-          <a class="btn btn-ghost price-cta" href="javascript:void(0)" onclick="showEntForm()"><span class="lang-zh-i">联系销售</span><span class="lang-en-i">Contact Sales</span><span class="lang-ja-i">お問い合わせ</span><span class="lang-ko-i">문의하기</span></a>
+          <span class="btn-coming-soon"><span class="lang-zh-i">即将开放</span><span class="lang-en-i">Coming Soon</span><span class="lang-ja-i">近日公開</span><span class="lang-ko-i">출시 예정</span></span>
         </article>
       </div>
     </div>
@@ -939,11 +942,11 @@ body.lang-ko .lang-ko-i{display:inline;}
 // header scroll shadow
 (function(){var h=document.querySelector(".site-header");if(h){function s(){h.classList.toggle("scrolled",window.scrollY>8);}window.addEventListener("scroll",s,{passive:true});s();}})();
 
-// language toggle (zh → en → ja → ko → zh)
-var _langCycle=["zh","en","ja","ko"];
-var _langBtn={zh:"EN",en:"日本語",ja:"한국어",ko:"中文"};
-var _langHtml={zh:"zh-CN",en:"en",ja:"ja",ko:"ko"};
-function toggleLang(){var b=document.body;var cur="zh";for(var i=0;i<_langCycle.length;i++){if(b.classList.contains("lang-"+_langCycle[i])){cur=_langCycle[i];break;}}for(var j=0;j<_langCycle.length;j++){b.classList.remove("lang-"+_langCycle[j]);}var idx=_langCycle.indexOf(cur);var nxt=_langCycle[(idx+1)%_langCycle.length];if(nxt!=="zh"){b.classList.add("lang-"+nxt);}document.getElementById("langToggle").textContent=_langBtn[nxt];document.documentElement.lang=_langHtml[nxt];}
+// language toggle (en → zh → ja → ko → en)
+var _langCycle=["en","zh","ja","ko"];
+var _langBtn={en:"中文",zh:"日本語",ja:"한국어",ko:"English"};
+var _langHtml={en:"en",zh:"zh-CN",ja:"ja",ko:"ko"};
+function toggleLang(){var b=document.body;var cur="en";for(var i=0;i<_langCycle.length;i++){if(b.classList.contains("lang-"+_langCycle[i])){cur=_langCycle[i];break;}}for(var j=0;j<_langCycle.length;j++){b.classList.remove("lang-"+_langCycle[j]);}var idx=_langCycle.indexOf(cur);var nxt=_langCycle[(idx+1)%_langCycle.length];if(nxt!=="en"){b.classList.add("lang-"+nxt);}document.getElementById("langToggle").textContent=_langBtn[nxt];document.documentElement.lang=_langHtml[nxt];}
 
 // enterprise modal
 function showEntForm(){document.getElementById("entModal").classList.add("open")}
