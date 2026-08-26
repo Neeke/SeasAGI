@@ -309,6 +309,12 @@ func (s *Service) handleChatCompletions(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// DLP (Data Loss Prevention): Advanced masking would be applied here on
+	// req.Messages before forwarding to the upstream provider, using
+	// security.NewDLPMatcher().MaskMessagesAdvanced(req.Messages). This masks
+	// PII, PEM private key blocks, and secret assignment values (password=,
+	// secret=, api_key=, token=) to prevent leakage to third-party LLMs.
+
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
 		writeJSONError(w, http.StatusBadRequest, "Failed to read request body")
@@ -355,6 +361,12 @@ func (s *Service) handleChatCompletions(w http.ResponseWriter, r *http.Request) 
 			taskType = tt
 		} else if tools, ok := rawBody["tools"].([]any); ok && len(tools) > 0 {
 			taskType = "tools"
+		}
+	}
+	if taskType == "" || taskType == "chat" {
+		// Auto-detect task type from message content when not explicitly set
+		if detected := routing.DetectTaskType(req.Messages); detected != "chat" {
+			taskType = detected
 		}
 	}
 	if taskType == "" {
@@ -666,6 +678,7 @@ func (s *Service) forwardRequest(ctx context.Context, candidates []routing.PlanS
 		}
 
 		executor := providers.ResolveExecutor(providerCfg)
+		attemptStart := time.Now()
 		upstreamResp, err := executor.ChatCompletions(ctx, providerCfg, &providers.UpstreamRequest{
 			Model:    step.UpstreamModel,
 			Messages: req.Messages,
@@ -676,6 +689,7 @@ func (s *Service) forwardRequest(ctx context.Context, candidates []routing.PlanS
 
 		if err == nil {
 			cb.RecordSuccess()
+			routing.RecordLatency(step.Channel.ChannelID, float64(time.Since(attemptStart).Milliseconds()))
 			s.recordPenaltySuccess(step)
 			s.resolver.RecordSessionStep(sessionKey, step)
 			attempt.Status = "success"

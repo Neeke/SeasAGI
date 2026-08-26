@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"sync"
@@ -131,7 +132,14 @@ func (p *Proxy) handleConnect(w http.ResponseWriter, r *http.Request) {
 }
 
 // interceptConnect 拦截 HTTPS 连接：劫持 TCP 连接 → 包装 TLS（使用动态签发的证书）→ 读取 HTTP 请求 → 转发到 gateway。
+// 对配置了证书 pin 的域名跳过拦截，改为透传，避免 MITM 破坏 pin 校验。
 func (p *Proxy) interceptConnect(w http.ResponseWriter, r *http.Request, host string) {
+	// 若该域名设置了证书 pin，则跳过 MITM 拦截，改为透传，以保留上游证书的完整性
+	if len(GetPins(host)) > 0 {
+		p.passthroughConnect(w, r, host)
+		return
+	}
+
 	hijacker, ok := w.(http.Hijacker)
 	if !ok {
 		http.Error(w, "hijacking not supported", http.StatusInternalServerError)
@@ -219,18 +227,60 @@ func (p *Proxy) serveInterceptedTLS(tlsConn net.Conn, originalHost string) {
 }
 
 // passthroughConnect 透传 HTTPS CONNECT 隧道（不拦截）。
+// 如果该域名配置了证书 pin，则先与上游建立 TLS 连接并校验 pin，
+// 校验失败则关闭连接并记录告警；通过后透传原始 TLS 流量。
 func (p *Proxy) passthroughConnect(w http.ResponseWriter, r *http.Request, host string) {
 	// CONNECT 请求的 r.Host 包含 host:port
 	targetAddr := r.Host
 	if targetAddr == "" {
 		targetAddr = host + ":443"
 	}
+
+	// 若该域名设置了证书 pin，先主动与上游握手以校验 pin
+	pinned := len(GetPins(host)) > 0
+	var upstreamTLSConn *tls.Conn
+	if pinned {
+		dialer := &net.Dialer{Timeout: 30 * time.Second}
+		rawConn, err := dialer.Dial("tcp", targetAddr)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			return
+		}
+		upstreamTLSConn = tls.Client(rawConn, &tls.Config{
+			ServerName:         host,
+			InsecureSkipVerify: false,
+		})
+		if err := upstreamTLSConn.Handshake(); err != nil {
+			_ = upstreamTLSConn.Close()
+			http.Error(w, err.Error(), http.StatusBadGateway)
+			return
+		}
+		state := upstreamTLSConn.ConnectionState()
+		if err := CheckPin(host, &state); err != nil {
+			log.Printf("mitm: certificate pin check failed for %s: %v", host, err)
+			_ = upstreamTLSConn.Close()
+			http.Error(w, "certificate pin verification failed", http.StatusBadGateway)
+			return
+		}
+		// pin 校验通过，恢复为裸 TCP 隧道：关闭 TLS 层但保留底层 TCP 连接供 io.Copy
+		// 这里直接复用已建立的 TLS 连接做双向透传即可
+	}
+
 	targetConn, err := net.DialTimeout("tcp", targetAddr, 30*time.Second)
 	if err != nil {
+		if upstreamTLSConn != nil {
+			_ = upstreamTLSConn.Close()
+		}
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
 	defer targetConn.Close()
+
+	// 若已建立 pin 校验的 TLS 连接，则使用它替换裸 TCP 连接
+	if upstreamTLSConn != nil {
+		targetConn.Close()
+		targetConn = upstreamTLSConn
+	}
 
 	hijacker, ok := w.(http.Hijacker)
 	if !ok {

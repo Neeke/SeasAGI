@@ -167,6 +167,7 @@ func (r *Resolver) ResolveChatPlan(model string, taskType string) (string, []Pla
 
 		// Apply task-type-specific sorting
 		steps = r.sortByTaskType(steps, taskType)
+		steps = degradeSlowChannels(steps)
 
 		strategy := combo.Strategy
 		if strategy == "" {
@@ -218,6 +219,7 @@ func (r *Resolver) ResolveChatPlan(model string, taskType string) (string, []Pla
 
 	// Apply task-type-specific sorting for non-combo paths
 	steps = r.sortByTaskType(steps, taskType)
+	steps = degradeSlowChannels(steps)
 
 	cfg := r.configSvc.GetConfig()
 	strategy := cfg.RoutingStrategy
@@ -648,6 +650,9 @@ func estimateChannelLatencyMs(channelType string) float64 {
 }
 
 func estimatePlanStepLatencyMs(step PlanStep) float64 {
+	if p95 := GetP95Latency(step.Channel.ChannelID); p95 > 0 {
+		return p95
+	}
 	// Prefer model-name heuristics when available; otherwise fall back to channel heuristic.
 	model := strings.ToLower(strings.TrimSpace(step.UpstreamModel))
 	switch {
