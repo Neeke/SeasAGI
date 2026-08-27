@@ -106,8 +106,20 @@ export function FetchCloudCombos() {
   return window['go']['main']['App']['FetchCloudCombos']();
 }
 
+export function FetchEnterpriseChannels() {
+  return window['go']['main']['App']['FetchEnterpriseChannels']();
+}
+
 export function FetchFreeChannels() {
   return window['go']['main']['App']['FetchFreeChannels']();
+}
+
+export function FetchMITMTargetsFromEnterprise() {
+  return window['go']['main']['App']['FetchMITMTargetsFromEnterprise']();
+}
+
+export function FetchModelCatalog() {
+  return window['go']['main']['App']['FetchModelCatalog']();
 }
 
 export function FetchModelStats() {

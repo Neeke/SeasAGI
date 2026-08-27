@@ -16,6 +16,7 @@ interface FreeChannel {
 }
 
 type MarketViewMode = "card" | "list";
+type FreeFilterTab = "all" | "keyless" | "recurring-monthly" | "one-time-initial";
 
 export function TokenMarketPage() {
   const { t } = useTranslation();
@@ -29,6 +30,7 @@ export function TokenMarketPage() {
   const [total, setTotal] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
   const [freeChannels, setFreeChannels] = useState<FreeChannel[]>([]);
+  const [freeFilterTab, setFreeFilterTab] = useState<FreeFilterTab>("all");
   const [viewMode, setViewMode] = useState<MarketViewMode>("card");
   // P11: 搜索/筛选/排序
   const [search, setSearch] = useState("");
@@ -110,6 +112,29 @@ export function TokenMarketPage() {
     return { activeCount, fixedCount, avgPrice };
   }, [marketListings]);
 
+  const filteredFreeChannels = useMemo(() => {
+    if (freeFilterTab === "all") return freeChannels;
+    return freeChannels.filter((ch) => ch.free_type === freeFilterTab);
+  }, [freeChannels, freeFilterTab]);
+
+  const freeStats = useMemo(() => {
+    const keyless = freeChannels.filter((ch) => ch.free_type === "keyless").length;
+    const recurring = freeChannels.filter((ch) => ch.free_type === "recurring-monthly").length;
+    const oneTime = freeChannels.filter((ch) => ch.free_type === "one-time-initial").length;
+    const totalModels = freeChannels.reduce((sum, ch) => sum + ch.models.length, 0);
+    return { keyless, recurring, oneTime, totalModels };
+  }, [freeChannels]);
+
+  const handleImportFreeChannel = (ch: FreeChannel) => {
+    const params = new URLSearchParams({
+      provider_type: ch.provider_id,
+      display_name: ch.display_name,
+      base_url: ch.base_url,
+      channel_type: "custom",
+    });
+    navigate(`/channels/new?${params}`);
+  };
+
   return (
     <div className="page-container token-market-page">
       <div className="page-header token-market-header">
@@ -156,9 +181,26 @@ export function TokenMarketPage() {
               <h2>{t("tokenMarket.freeChannels")}</h2>
               <p>{t("tokenMarket.freeChannelsHint")}</p>
             </div>
+            <div className="token-market-free-stats">
+              <span className="free-stat-badge free-stat-keyless">永久免费: {freeStats.keyless}</span>
+              <span className="free-stat-badge free-stat-recurring">每月免费: {freeStats.recurring}</span>
+              <span className="free-stat-badge free-stat-onetime">注册赠送: {freeStats.oneTime}</span>
+              <span className="free-stat-badge free-stat-models">免费模型: {freeStats.totalModels}</span>
+            </div>
+          </div>
+          <div className="token-market-free-tabs">
+            {(["all", "keyless", "recurring-monthly", "one-time-initial"] as FreeFilterTab[]).map((tab) => (
+              <button
+                key={tab}
+                className={`free-tab ${freeFilterTab === tab ? "active" : ""}`}
+                onClick={() => setFreeFilterTab(tab)}
+              >
+                {tab === "all" ? "全部" : tab === "keyless" ? "永久免费" : tab === "recurring-monthly" ? "每月免费" : "注册赠送"}
+              </button>
+            ))}
           </div>
           <div className="token-market-free-grid">
-            {freeChannels.map((ch) => (
+            {filteredFreeChannels.map((ch) => (
               <div key={ch.provider_id} className="token-market-free-card">
                 <div className="token-market-free-card-top">
                   <div>
@@ -187,6 +229,12 @@ export function TokenMarketPage() {
                   </div>
                 )}
                 <p className="token-market-free-desc">{ch.description}</p>
+                <button
+                  className="btn btn-sm btn-outline free-import-btn"
+                  onClick={() => handleImportFreeChannel(ch)}
+                >
+                  导入为通道
+                </button>
               </div>
             ))}
           </div>

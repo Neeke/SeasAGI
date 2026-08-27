@@ -21,7 +21,11 @@ export function FetchCloudOptimizationConfig():Promise<string>;
 
 export function FetchCloudUsage():Promise<auth.CloudUsage>;
 
+export function FetchEnterpriseChannels(arg1:context.Context):Promise<Array<Record<string, any>>>;
+
 export function FetchFreeChannels(arg1:context.Context):Promise<Array<Record<string, any>>>;
+
+export function FetchModelCatalog(arg1:context.Context):Promise<Array<Record<string, any>>>;
 
 export function FetchOfficialComboTemplates(arg1:context.Context):Promise<Array<auth.CloudComboTemplate>>;
 

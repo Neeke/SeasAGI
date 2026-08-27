@@ -65,7 +65,13 @@ export function FetchActiveGrants():Promise<Array<Record<string, any>>>;
 
 export function FetchCloudCombos():Promise<Array<Record<string, any>>>;
 
+export function FetchEnterpriseChannels():Promise<Array<Record<string, any>>>;
+
 export function FetchFreeChannels():Promise<Array<Record<string, any>>>;
+
+export function FetchMITMTargetsFromEnterprise():Promise<Record<string, any>>;
+
+export function FetchModelCatalog():Promise<Array<Record<string, any>>>;
 
 export function FetchModelStats():Promise<Array<Record<string, any>>>;
 

@@ -122,6 +122,9 @@ type WailsAppApi = {
   SetLogRotationConfig(config: Record<string, any>): Promise<void>;
   GetCloudSyncStatus(): Promise<Record<string, any>>;
   FetchFreeChannels(): Promise<Record<string, any>[]>;
+  FetchEnterpriseChannels(): Promise<Record<string, any>[]>;
+  FetchModelCatalog(): Promise<Record<string, any>[]>;
+  FetchMITMTargetsFromEnterprise(): Promise<Record<string, any>>;
   GetRateLimitConfig(): Promise<Record<string, any>>;
   SetRateLimitConfig(config: Record<string, any>): Promise<void>;
 };
@@ -615,6 +618,10 @@ export async function getMITMTargets(): Promise<Record<string, any>[]> {
   return getAppApi().GetMITMTargets();
 }
 
+export async function fetchMITMTargetsFromEnterprise(): Promise<Record<string, any>> {
+  return getAppApi().FetchMITMTargetsFromEnterprise();
+}
+
 export async function searchNotion(apiKey: string, query: string): Promise<Record<string, any>> {
   return getAppApi().SearchNotion(apiKey, query);
 }
@@ -649,6 +656,14 @@ export async function getCloudSyncStatus(): Promise<Record<string, any>> {
 
 export async function fetchFreeChannels(): Promise<Record<string, any>[]> {
   return getAppApi().FetchFreeChannels();
+}
+
+export async function fetchEnterpriseChannels(): Promise<Record<string, any>[]> {
+  return getAppApi().FetchEnterpriseChannels();
+}
+
+export async function fetchModelCatalog(): Promise<Record<string, any>[]> {
+  return getAppApi().FetchModelCatalog();
 }
 
 export async function getRateLimitConfig(): Promise<Record<string, any>> {

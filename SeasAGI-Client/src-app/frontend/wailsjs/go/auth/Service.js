@@ -38,8 +38,16 @@ export function FetchCloudUsage() {
   return window['go']['auth']['Service']['FetchCloudUsage']();
 }
 
+export function FetchEnterpriseChannels(arg1) {
+  return window['go']['auth']['Service']['FetchEnterpriseChannels'](arg1);
+}
+
 export function FetchFreeChannels(arg1) {
   return window['go']['auth']['Service']['FetchFreeChannels'](arg1);
+}
+
+export function FetchModelCatalog(arg1) {
+  return window['go']['auth']['Service']['FetchModelCatalog'](arg1);
 }
 
 export function FetchOfficialComboTemplates(arg1) {

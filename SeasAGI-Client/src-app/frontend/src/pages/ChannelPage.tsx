@@ -33,6 +33,24 @@ export function ChannelPage() {
   const [syncingCustom, setSyncingCustom] = useState(false);
 
   const [showAPIKey, setShowAPIKey] = useState(false);
+  const [modelCatalog, setModelCatalog] = useState<Record<string, any>[]>([]);
+
+  // Fetch model catalog from enterprise server for auto-complete (7.2.4)
+  useEffect(() => {
+    if (!auth.is_logged_in) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const catalog = await cmd.fetchModelCatalog();
+        if (!cancelled && catalog && !catalog.some((m) => m.error)) {
+          setModelCatalog(catalog);
+        }
+      } catch {
+        // silent fail - catalog not available
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [auth.is_logged_in]);
 
   // Auto-sync platform channels from cloud on mount when logged in
   useEffect(() => {
@@ -340,6 +358,67 @@ export function ChannelPage() {
               <p className="hint" style={{ marginTop: 4, fontSize: 12 }}>
                 {t("channel.modelsHint")}
               </p>
+              {modelCatalog.length > 0 && editing.provider_type && editing.provider_type !== "custom" && (() => {
+                const providerModels = modelCatalog.filter((m) => {
+                  const mp = (m.provider || m.category || "").toLowerCase();
+                  const pt = editing.provider_type.toLowerCase();
+                  return mp === pt || (pt === "qwen" && (mp === "alibaba" || mp === "qwen")) ||
+                         (pt === "bailian" && (mp === "alibaba" || mp === "bailian")) ||
+                         (pt === "gemini" && mp === "google") ||
+                         (pt === "azure_openai" && mp === "openai");
+                });
+                if (providerModels.length === 0) return null;
+                const currentModels = new Set(editing.models || []);
+                const unselected = providerModels.filter((m) => !currentModels.has(m.model_id));
+                return (
+                  <div style={{ marginTop: 6, padding: "8px 10px", background: "var(--bg-surface, #f5f5f5)", borderRadius: 6, fontSize: 12 }}>
+                    <div style={{ fontWeight: 600, marginBottom: 4 }}>
+                      {t("channel.catalogSuggestion") || "Catalog models for this provider:"} ({providerModels.length})
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                      {providerModels.slice(0, 12).map((m) => {
+                        const selected = currentModels.has(m.model_id);
+                        return (
+                          <button
+                            key={m.model_id}
+                            type="button"
+                            onClick={() => {
+                              const models = editing.models || [];
+                              if (selected) {
+                                setEditing({ ...editing, models: models.filter((id) => id !== m.model_id) });
+                              } else {
+                                setEditing({ ...editing, models: [...models, m.model_id] });
+                              }
+                            }}
+                            style={{
+                              padding: "2px 8px", borderRadius: 4, fontSize: 11, cursor: "pointer",
+                              border: selected ? "1px solid var(--accent, #22C55E)" : "1px solid var(--border-subtle, #ccc)",
+                              background: selected ? "rgba(34,197,94,0.1)" : "transparent",
+                              color: selected ? "var(--accent, #22C55E)" : "inherit",
+                            }}
+                          >
+                            {m.display_name || m.model_id}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {unselected.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const models = editing.models || [];
+                          const newModels = [...new Set([...models, ...unselected.map((m) => m.model_id)])];
+                          setEditing({ ...editing, models: newModels });
+                        }}
+                        style={{ marginTop: 6, fontSize: 11, padding: "3px 10px", cursor: "pointer" }}
+                        className="btn-text"
+                      >
+                        + {t("channel.addAllCatalog") || "Add all catalog models"} ({unselected.length})
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="form-group">

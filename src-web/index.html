@@ -237,6 +237,18 @@ body.lang-ko .lang-ko-i{display:inline;}
 .bento-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
 .bento-card{transition:transform .15s ease,border-color .2s ease;}
 .bento-card:hover{transform:translateY(-3px);border-color:rgba(34,197,94,.4);}
+/* feature grid */
+.feature-grid{display:grid;gap:24px;}
+.feature-grid.cols-3{grid-template-columns:repeat(3,1fr);}
+.feature-grid.cols-4{grid-template-columns:repeat(4,1fr);}
+/* model cards */
+.model-card{display:flex;flex-direction:column;gap:6px;padding:20px;position:relative;}
+.model-tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;margin-bottom:4px;width:fit-content;}
+.model-tag.flagship{background:rgba(34,197,94,.15);color:#16a34a;}
+.model-tag.free{background:rgba(59,130,246,.15);color:#2563eb;}
+.model-card h3{font-size:15px;font-weight:600;margin:0;}
+.model-meta{font-size:12px;color:#6b7280;margin:0;}
+.model-caps{font-size:12px;color:#6b7280;margin:0;}
 
 /* stats */
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;}
@@ -490,7 +502,7 @@ body.lang-ko .lang-ko-i{display:inline;}
         <div class="feature-text">
           <span class="eyebrow">UNIFIED GATEWAY</span>
           <h3 class="feature-title"><span class="lang-zh-i">一个端点，兼容所有 Provider</span><span class="lang-en-i">One endpoint, all providers</span><span class="lang-ja-i">ひとつのエンドポイント、全 Provider 互換</span><span class="lang-ko-i">하나의 엔드포인트, 모든 Provider 호환</span></h3>
-          <p class="feature-desc"><span class="lang-zh-i">暴露 OpenAI 兼容的 localhost:4318/v1，无需修改现有客户端。内置 8 个执行器 + 6 个转换器，自动适配协议差异。</span><span class="lang-en-i">Expose OpenAI-compatible localhost:4318/v1 with zero client changes. 8 executors + 6 translators auto-adapt protocol differences.</span><span class="lang-ja-i">OpenAI 互換の localhost:4318/v1 を公開し、既存のクライアントを変更不要。内蔵の 8 つのエグゼキューター + 6 つのトランスレーターがプロトコルの違いを自動適応します。</span><span class="lang-ko-i">OpenAI 호환 localhost:4318/v1을 노출하여 기존 클라이언트 변경 없이 사용 가능. 내장 8개 실행기 + 6개 변환기가 프로토콜 차이를 자동 적응합니다.</span></p>
+          <p class="feature-desc"><span class="lang-zh-i">暴露 OpenAI 兼容的 localhost:4318/v1，无需修改现有客户端。内置 17 个执行器 + 6 个转换器，自动适配协议差异。</span><span class="lang-en-i">Expose OpenAI-compatible localhost:4318/v1 with zero client changes. 17 executors + 6 translators auto-adapt protocol differences.</span><span class="lang-ja-i">OpenAI 互換の localhost:4318/v1 を公開し、既存のクライアントを変更不要。内蔵の 17 つのエグゼキューター + 6 つのトランスレーターがプロトコルの違いを自動適応します。</span><span class="lang-ko-i">OpenAI 호환 localhost:4318/v1을 노출하여 기존 클라이언트 변경 없이 사용 가능. 내장 17개 실행기 + 6개 변환기가 프로토콜 차이를 자동 적응합니다.</span></p>
         </div>
         <div class="feature-visual">
           <div class="fv fv-gateway">
@@ -557,9 +569,108 @@ body.lang-ko .lang-ko-i{display:inline;}
         <article class="card bento-card"><span class="icon-box"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#22C55E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7v10l10 5 10-5V7L12 2z"></path><path d="M2 7l10 5 10-5"></path><path d="M12 22V12"></path></svg></span><h3 class="card-title"><span class="lang-zh-i">TLS 指纹伪装 + 智能熔断</span><span class="lang-en-i">TLS Fingerprint + Smart Breaker</span><span class="lang-ja-i">TLS フィンガープリント偽装 + スマートブレーカー</span><span class="lang-ko-i">TLS 핑거프린트 위장 + 스마트 브레이커</span></h3><p class="card-desc"><span class="lang-zh-i">自动适配更接近真实客户端的 TLS 指纹，异常时自动熔断与恢复，通道更稳。</span><span class="lang-en-i">More realistic TLS fingerprints with automatic breaker and recovery for stable channels.</span><span class="lang-ja-i">よりリアルなクライアントに近い TLS フィンガープリントを自動適応し、異常時に自動的にブレーカーと復旧でチャネルを安定化。</span><span class="lang-ko-i">더 실제 클라이언트에 가까운 TLS 핑거프린트를 자동 적응하고, 이상 시 자동 브레이커 및 복구로 채널을 안정화.</span></p></article>
         <article class="card bento-card"><span class="icon-box"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#22C55E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path></svg></span><h3 class="card-title"><span class="lang-zh-i">Eval 评估 + 性能审计</span><span class="lang-en-i">Eval + Performance Audit</span><span class="lang-ja-i">Eval 評価 + パフォーマンス監査</span><span class="lang-ko-i">Eval 평가 + 성능 감사</span></h3><p class="card-desc"><span class="lang-zh-i">上线前量化效果，运行中持续看延迟和瓶颈，让路由决策有数据支撑。</span><span class="lang-en-i">Measure quality before rollout and keep latency and bottlenecks visible in production.</span><span class="lang-ja-i">リリース前に効果を定量化し、実行中はレイテンシとボトルネックを継続的に可視化し、ルーティングの意思決定をデータで裏付け。</span><span class="lang-ko-i">릴리스 전 효과를 정량화하고, 실행 중 레이턴시와 병목을 지속적으로 시각화하여, 라우팅 의사결정을 데이터로 뒷받침.</span></p></article>
         <article class="card bento-card"><span class="icon-box"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#22C55E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><path d="M14 2v6h6"></path><path d="M8 13h8M8 17h5"></path></svg></span><h3 class="card-title"><span class="lang-zh-i">Plugin Hook + MCP Gateway</span><span class="lang-en-i">Plugin Hook + MCP Gateway</span><span class="lang-ja-i">Plugin Hook + MCP Gateway</span><span class="lang-ko-i">Plugin Hook + MCP Gateway</span></h3><p class="card-desc"><span class="lang-zh-i">14 个 Hook + 20 个 MCP 工具，把路由、拦截和自动化能力开放出来，按业务流程扩展。</span><span class="lang-en-i">14 hooks + 20 MCP tools. Open routing, interception, and automation for custom workflow extension.</span><span class="lang-ja-i">14 個の Hook + 20 個の MCP ツールで、ルーティング、インターセプト、自動化機能を開放し、ビジネスフローに応じて拡張。</span><span class="lang-ko-i">14개 Hook + 20개 MCP 도구로, 라우팅, 인터셉트 및 자동화 기능을 개방하여, 비즈니스 워크플로우에 맞게 확장.</span></p></article>
-        <article class="card bento-card"><span class="icon-box"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#22C55E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"></path></svg></span><h3 class="card-title"><span class="lang-zh-i">Notion / Obsidian 集成</span><span class="lang-en-i">Notion / Obsidian Integration</span><span class="lang-ja-i">Notion / Obsidian 連携</span><span class="lang-ko-i">Notion / Obsidian 연동</span></h3><p class="card-desc"><span class="lang-zh-i">把 AI 结果直接沉淀进团队知识库，减少复制粘贴，让对话进入生产流程。</span><span class="lang-en-i">Send AI output straight into your team knowledge base, reduce copy-paste, turn conversations into assets.</span><span class="lang-ja-i">AI の結果をチームのナレッジベースに直接蓄積し、コピーペーストを削減し、対話をプロダクションフローへ。</span><span class="lang-ko-i">AI 결과를 팀 지식 베이스에 직접 축���하고, 복사-붙여넣기를 줄이며, 대화를 프로덕션 워크플로우로 전환.</span></p></article>
         <article class="card bento-card"><span class="icon-box"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#22C55E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"></path><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"></path></svg></span><h3 class="card-title"><span class="lang-zh-i">Open Core 云端</span><span class="lang-en-i">Open-Core Cloud</span><span class="lang-ja-i">Open Core クラウド</span><span class="lang-ko-i">Open Core 클라우드</span></h3><p class="card-desc"><span class="lang-zh-i">Server 分社区版（AGPL 3.0 基础控制面 + 中继）与企业版（计费、治理、Admin Dashboard），客户端可独立运行。</span><span class="lang-en-i">Server split into Community (AGPL 3.0 basic control + relay) and Enterprise (billing, governance, admin dashboard).</span><span class="lang-ja-i">Server はコミュニティ版（AGPL 3.0 基礎コントロールプレーン + リレー）とエンタープライズ版（課金、ガバナンス、Admin Dashboard）に分かれ、クライアントは単独で動作可能。</span><span class="lang-ko-i">Server는 커뮤니티 버전(AGPL 3.0 기초 컨트롤 플레인 + 릴레이)과 엔터프라이즈 버전(과금, 거버넌스, Admin Dashboard)으로 나뉘며, 클라이언트는 독립 실행 가능.</span></p></article>
         <article class="card bento-card"><span class="icon-box"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#22C55E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"></path><path d="M3 6h18M16 10a4 4 0 01-8 0"></path></svg></span><h3 class="card-title"><span class="lang-zh-i">Token 市场</span><span class="lang-en-i">Token Market</span><span class="lang-ja-i">Token マーケット</span><span class="lang-ko-i">Token 마켓</span></h3><p class="card-desc"><span class="lang-zh-i">闲置 API Key 一键上架（一口价 / 折扣），扫码交易，平台 10% 佣金，管理后台风控审计。</span><span class="lang-en-i">List unused keys at fixed price or discount, QR code trading, 10% commission, admin risk control & audit.</span><span class="lang-ja-i">未使用の API Key をワンクリックで出品（固定価格 / 割引）、QR コード取引、プラットフォーム 10% 手数��、管理画面でリスクコントロールと監査。</span><span class="lang-ko-i">미사용 API Key를 원클릭으로 등록(고정가 / 할인), QR 코드 거래, 플랫폼 10% 수수료, 관리 화면에서 리스크 통제 및 감사.</span></p></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- MITM One-Click Proxy -->
+  <section class="section" id="mitm">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">MITM PROXY</span>
+        <h2 class="section-title"><span class="lang-zh-i">一键接管所有 AI 编程工具</span><span class="lang-en-i">One-Click Proxy for All AI Coding Tools</span><span class="lang-ja-i">すべての AI コーディングツールをワンクリックで接管</span><span class="lang-ko-i">모든 AI 코딩 도구를 원클릭으로 제어</span></h2>
+        <p class="section-desc"><span class="lang-zh-i">无需修改 IDE 配置，MITM 代理自动拦截 Cursor、Copilot、Claude Code、Trae 等工具的 API 流量，透明路由到本地网关，实现多 Provider 切换与成本管控。</span><span class="lang-en-i">No IDE config changes needed. MITM proxy transparently intercepts API traffic from Cursor, Copilot, Claude Code, Trae and more, routing to your local gateway for multi-provider switching and cost control.</span><span class="lang-ja-i">IDE 設定の変更不要。MITM プロキシが Cursor、Copilot、Claude Code、Trae などの API トラフィックを透過的に傍受し、ローカルゲートウェイへルーティングしてマルチプロバイダー切替とコスト管理を実現。</span><span class="lang-ko-i">IDE 설정 변경 불필요. MITM 프록시가 Cursor, Copilot, Claude Code, Trae 등의 API 트래픽을 투명하게 가로채 로컬 게이트웨이로 라우팅하여 멀티 프로바이더 전환과 비용 관리를 구현.</span></p>
+      </div>
+      <div class="feature-grid cols-3">
+        <div class="card bento-card">
+          <h3 class="card-title"><span class="lang-zh-i">15+ 接管目标</span><span class="lang-en-i">15+ Proxy Targets</span><span class="lang-ja-i">15+ プロキシターゲット</span><span class="lang-ko-i">15+ 프록시 타겟</span></h3>
+          <p class="card-desc"><span class="lang-zh-i">Cursor / GitHub Copilot / Codex / Zed / Claude Code / Trae / Windsurf / Continue / Cline / Augment / Codeium / Cody 等</span><span class="lang-en-i">Cursor / GitHub Copilot / Codex / Zed / Claude Code / Trae / Windsurf / Continue / Cline / Augment / Codeium / Cody and more</span><span class="lang-ja-i">Cursor / GitHub Copilot / Codex / Zed / Claude Code / Trae / Windsurf / Continue / Cline / Augment / Codeium / Cody など</span><span class="lang-ko-i">Cursor / GitHub Copilot / Codex / Zed / Claude Code / Trae / Windsurf / Continue / Cline / Augment / Codeium / Cody 등</span></p>
+        </div>
+        <div class="card bento-card">
+          <h3 class="card-title"><span class="lang-zh-i">CA 证书信任</span><span class="lang-en-i">CA Certificate Trust</span><span class="lang-ja-i">CA 証明書信頼</span><span class="lang-ko-i">CA 인증서 신뢰</span></h3>
+          <p class="card-desc"><span class="lang-zh-i">一键安装根证书 → 自动签发域名证书 → 透明 HTTPS 代理，全程本地完成，无需手动配置。</span><span class="lang-en-i">One-click root CA install → auto domain certificate signing → transparent HTTPS proxy, all local, zero manual config.</span><span class="lang-ja-i">ワンクリックでルート CA インストール → ドメイン証明書の自動署名 → 透過 HTTPS プロキシ。すべてローカルで完結、手動設定不要。</span><span class="lang-ko-i">원클릭 루트 CA 설치 → 자동 도메인 인증서 서명 → 투명 HTTPS 프록시. 모두 로컬에서 완료, 수동 설정 불필요.</span></p>
+        </div>
+        <div class="card bento-card">
+          <h3 class="card-title"><span class="lang-zh-i">23+ 域名拦截</span><span class="lang-en-i">23+ Domain Interception</span><span class="lang-ja-i">23+ ドメイン傍受</span><span class="lang-ko-i">23+ 도메인 가로채기</span></h3>
+          <p class="card-desc"><span class="lang-zh-i">覆盖 OpenAI / Anthropic / Google / DeepSeek / 智谱 / 月之暗面 / MiniMax / 小米 / 字节 / 腾讯 / 阿里 / 百度 等全部主流厂商 API 域名。</span><span class="lang-en-i">Covers OpenAI / Anthropic / Google / DeepSeek / Zhipu / Moonshot / MiniMax / Xiaomi / ByteDance / Tencent / Alibaba / Baidu and more.</span><span class="lang-ja-i">OpenAI / Anthropic / Google / DeepSeek / 智谱 / Moonshot / MiniMax / Xiaomi / ByteDance / Tencent / Alibaba / Baidu など主要 API ドメインをカバー。</span><span class="lang-ko-i">OpenAI / Anthropic / Google / DeepSeek / Zhipu / Moonshot / MiniMax / Xiaomi / ByteDance / Tencent / Alibaba / Baidu 등 주요 API 도메인 커버.</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Token Market -->
+  <section class="section" id="token-market">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">MARKETPLACE</span>
+        <h2 class="section-title"><span class="lang-zh-i">开发者间的 Token 交易市场</span><span class="lang-en-i">Token Marketplace for Developers</span><span class="lang-ja-i">開発者向け Token 取引市場</span><span class="lang-ko-i">개발자를 위한 Token 거래 마켓</span></h2>
+        <p class="section-desc"><span class="lang-zh-i">闲置 API 额度一键上架出售，其他用户按量购买。让闲置算力变现，降低 AI 开发成本。</span><span class="lang-en-i">List unused API quota for sale, others buy on-demand. Turn idle compute into revenue, lower your AI development costs.</span><span class="lang-ja-i">未使用の API クォータをワンクリックで出品、他のユーザーがオンデマンドで購入。アイドル計算リソースを収益化し、AI 開発コストを削減。</span><span class="lang-ko-i">미사용 API 할당량을 원클릭으로 등록, 다른 사용자가 온디맨드로 구매. 유휴 컴퓨팅 자원을 수익화하고 AI 개발 비용을 절감.</span></p>
+      </div>
+      <div class="feature-grid cols-3">
+        <div class="card bento-card">
+          <h3 class="card-title"><span class="lang-zh-i">卖家信誉体系</span><span class="lang-en-i">Seller Reputation</span><span class="lang-ja-i">出品者レピュテーション</span><span class="lang-ko-i">판매자 신뢰도</span></h3>
+          <p class="card-desc"><span class="lang-zh-i">钻石 / 黄金 / 白银 / 青铜四级信誉，基于可用率、响应速度、历史交易量自动评级。</span><span class="lang-en-i">Diamond / Gold / Silver / Bronze tiers, auto-rated by availability, response speed, and historical volume.</span><span class="lang-ja-i">ダイヤモンド / ゴールド / シルバー / ブロンズの 4 段階レピュテーション。可用性、応答速度、取引履歴に基づき自動評価。</span><span class="lang-ko-i">다이아몬드 / 골드 / 실버 / 브론즈 4단계 신뢰도. 가용성, 응답 속도, 거래 이력 기반 자동 평가.</span></p>
+        </div>
+        <div class="card bento-card">
+          <h3 class="card-title"><span class="lang-zh-i">自动结算</span><span class="lang-en-i">Auto Settlement</span><span class="lang-ja-i">自動決済</span><span class="lang-ko-i">자동 정산</span></h3>
+          <p class="card-desc"><span class="lang-zh-i">按 Token 用量实时计费，平台 10% 佣金，自动分账，支持 Stripe 支付与提现。</span><span class="lang-en-i">Real-time billing by token usage, 10% platform commission, auto-split, Stripe payments and withdrawals.</span><span class="lang-ja-i">Token 使用量に基づくリアルタイム課金、プラットフォーム 10% 手数料、自動分割、Stripe 決済と出金に対応。</span><span class="lang-ko-i">Token 사용량 기반 실시간 과금, 플랫폼 10% 수수료, 자동 분할, Stripe 결제 및 출금 지원.</span></p>
+        </div>
+        <div class="card bento-card">
+          <h3 class="card-title"><span class="lang-zh-i">免费通道导入</span><span class="lang-en-i">Free Channel Import</span><span class="lang-ja-i">無料チャネルインポート</span><span class="lang-ko-i">무료 채널 가져오기</span></h3>
+          <p class="card-desc"><span class="lang-zh-i">28+ 免费通道种子（GLM-4-Flash / OpenRouter free / DuckDuckGo 等），一键导入为本地通道，零成本体验。</span><span class="lang-en-i">28+ free channel seeds (GLM-4-Flash / OpenRouter free / DuckDuckGo etc.), one-click import as local channels, zero-cost experience.</span><span class="lang-ja-i">28+ 無料チャネルシード（GLM-4-Flash / OpenRouter free / DuckDuckGo など）、ワンクリックでローカルチャネルにインポート、ゼロコストで体験。</span><span class="lang-ko-i">28+ 무료 채널 시드(GLM-4-Flash / OpenRouter free / DuckDuckGo 등), 원클릭으로 로컬 채널 가져오기, 무료 체험.</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Latest Models -->
+  <section class="section" id="models">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">MODELS</span>
+        <h2 class="section-title"><span class="lang-zh-i">最新模型矩阵</span><span class="lang-en-i">Latest Model Matrix</span><span class="lang-ja-i">最新モデルマトリックス</span><span class="lang-ko-i">최신 모델 매트릭스</span></h2>
+        <p class="section-desc"><span class="lang-zh-i">覆盖 11 家厂商 70+ 模型，从旗舰推理到轻量快速，从永久免费到企业级</span><span class="lang-en-i">70+ models from 11 providers, from flagship reasoning to lightweight fast, from permanently free to enterprise-grade</span><span class="lang-ja-i">11 社 70 以上のモデル、旗艦推論から軽量高速まで、永久無料からエンタープライズ級まで</span><span class="lang-ko-i">11개사 70+ 모델, 플래그십 추론부터 경량 고속까지, 영구 무료부터 엔터프라이즈급까지</span></p>
+      </div>
+      <div class="feature-grid cols-4">
+        <div class="card model-card"><span class="model-tag flagship">Flagship</span><h3>GPT-5.6 Sol</h3><p class="model-meta">OpenAI · 1M ctx</p><p class="model-caps">chat · vision · tools · reasoning</p></div>
+        <div class="card model-card"><span class="model-tag flagship">Flagship</span><h3>Claude Opus 5</h3><p class="model-meta">Anthropic · 200K ctx</p><p class="model-caps">chat · vision · tools · reasoning</p></div>
+        <div class="card model-card"><span class="model-tag flagship">Flagship</span><h3>Gemini 3.1 Pro</h3><p class="model-meta">Google · 2M ctx</p><p class="model-caps">chat · vision · tools · reasoning</p></div>
+        <div class="card model-card"><span class="model-tag flagship">Flagship</span><h3>Qwen3.8-Max</h3><p class="model-meta">Alibaba · 1M ctx</p><p class="model-caps">chat · vision · tools</p></div>
+        <div class="card model-card"><span class="model-tag flagship">Flagship</span><h3>Kimi K3</h3><p class="model-meta">Moonshot · 256K ctx</p><p class="model-caps">chat · tools · reasoning</p></div>
+        <div class="card model-card"><span class="model-tag flagship">Flagship</span><h3>MiMo-V2.5-Pro</h3><p class="model-meta">Xiaomi · 1M ctx</p><p class="model-caps">chat · tools · agent</p></div>
+        <div class="card model-card"><span class="model-tag flagship">Flagship</span><h3>Doubao-Seed-2.1-Pro</h3><p class="model-meta">ByteDance · 256K ctx</p><p class="model-caps">chat · vision · tools · reasoning</p></div>
+        <div class="card model-card"><span class="model-tag flagship">Flagship</span><h3>Hunyuan Hy3</h3><p class="model-meta">Tencent · 256K ctx</p><p class="model-caps">chat · reasoning · tools</p></div>
+        <div class="card model-card"><span class="model-tag flagship">Flagship</span><h3>GLM-5</h3><p class="model-meta">Zhipu · 128K ctx</p><p class="model-caps">chat · tools</p></div>
+        <div class="card model-card"><span class="model-tag flagship">Flagship</span><h3>MiniMax-M3</h3><p class="model-meta">MiniMax · 1M ctx</p><p class="model-caps">chat · tools</p></div>
+        <div class="card model-card"><span class="model-tag flagship">Flagship</span><h3>DeepSeek V4 Pro</h3><p class="model-meta">DeepSeek · 1M ctx</p><p class="model-caps">chat · reasoning</p></div>
+        <div class="card model-card"><span class="model-tag flagship">Flagship</span><h3>Grok 4</h3><p class="model-meta">xAI · 256K ctx</p><p class="model-caps">chat · vision · tools</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Free Models -->
+  <section class="section section-surface" id="free-models">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">FREE</span>
+        <h2 class="section-title"><span class="lang-zh-i">免费模型专区</span><span class="lang-en-i">Free Models Zone</span><span class="lang-ja-i">無料モデルゾーン</span><span class="lang-ko-i">무료 모델 존</span></h2>
+        <p class="section-desc"><span class="lang-zh-i">永久免费、注册赠送、每月 recurring、keyless 通道 — 多种免费方式零成本体验 AI</span><span class="lang-en-i">Permanently free, sign-up bonus, monthly recurring, keyless channels — experience AI at zero cost</span><span class="lang-ja-i">永久無料、登録ボーナス、月次再提供、Keyless チャネル — ゼロコストで AI を体験</span><span class="lang-ko-i">영구 무료, 가입 보너스, 월간 반복, Keyless 채널 — 제로 비용으로 AI 경험</span></p>
+      </div>
+      <div class="feature-grid cols-4">
+        <div class="card model-card"><span class="model-tag free">永久免费</span><h3>GLM-4-Flash</h3><p class="model-meta">Zhipu · 128K ctx</p><p class="model-caps">无限制 · keyless</p></div>
+        <div class="card model-card"><span class="model-tag free">永久免费</span><h3>GLM-4.5-Flash</h3><p class="model-meta">Zhipu · 128K ctx</p><p class="model-caps">无限制 · keyless</p></div>
+        <div class="card model-card"><span class="model-tag free">Free</span><h3>Nemotron 3 Ultra</h3><p class="model-meta">OpenRouter · 1M ctx</p><p class="model-caps">20 req/min · 200 req/day</p></div>
+        <div class="card model-card"><span class="model-tag free">Free</span><h3>GLM 5.2</h3><p class="model-meta">OpenRouter · 256K ctx</p><p class="model-caps">20 req/min · 200 req/day</p></div>
+        <div class="card model-card"><span class="model-tag free">Free</span><h3>Inkling</h3><p class="model-meta">OpenRouter · 262K ctx</p><p class="model-caps">20 req/min · 200 req/day</p></div>
+        <div class="card model-card"><span class="model-tag free">Free</span><h3>Laguna S 2.1</h3><p class="model-meta">OpenRouter · 262K ctx</p><p class="model-caps">20 req/min · 200 req/day</p></div>
+        <div class="card model-card"><span class="model-tag free">注册赠送</span><h3>DeepSeek</h3><p class="model-meta">全模型 · 500万 tokens</p><p class="model-caps">one-time-initial</p></div>
+        <div class="card model-card"><span class="model-tag free">注册赠送</span><h3>Xiaomi MiMo</h3><p class="model-meta">全模型 · $2 额度</p><p class="model-caps">one-time-initial</p></div>
+        <div class="card model-card"><span class="model-tag free">Keyless</span><h3>DuckDuckGo AI</h3><p class="model-meta">web-cookie · 无限制</p><p class="model-caps">GPT-4o · Llama · Claude</p></div>
+        <div class="card model-card"><span class="model-tag free">Keyless</span><h3>Felo</h3><p class="model-meta">web-cookie · 无限制</p><p class="model-caps">多模型路由</p></div>
+        <div class="card model-card"><span class="model-tag free">每月免费</span><h3>ERNIE Speed</h3><p class="model-meta">Baidu · recurring</p><p class="model-caps">monthly recurring</p></div>
+        <div class="card model-card"><span class="model-tag free">每月免费</span><h3>Hunyuan Lite</h3><p class="model-meta">Tencent · recurring</p><p class="model-caps">monthly recurring</p></div>
       </div>
     </div>
   </section>
@@ -573,8 +684,10 @@ body.lang-ko .lang-ko-i{display:inline;}
         <p class="section-desc"><span class="lang-zh-i">开源、透明、可审计。从个人开发者到企业团队，SeasAGI 提供清晰的边界与可扩展的治理。</span><span class="lang-en-i">Open source, transparent, auditable. From solo developers to enterprise teams, SeasAGI provides clear boundaries and extensible governance.</span><span class="lang-ja-i">オープンソース、透明性、監査可能性。個人開発者からエンタープライズチームまで、SeasAGI は明確な境界と拡張可能なガバナンスを提供します。</span><span class="lang-ko-i">오픈소스, 투명성, 감사 가능. 개인 개발자부터 엔터프라이즈 팀까지, SeasAGI는 명확한 경계와 확장 가능한 거버넌스를 제공합니다.</span></p>
       </div>
       <div class="stats-row">
-        <div class="card stat-card"><span class="stat-num">8</span><span class="stat-label"><span class="lang-zh-i">Provider 执行器</span><span class="lang-en-i">Provider Executors</span><span class="lang-ja-i">Provider エグゼキューター</span><span class="lang-ko-i">Provider 실행기</span></span></div>
+        <div class="card stat-card"><span class="stat-num">17</span><span class="stat-label"><span class="lang-zh-i">Provider 执行器</span><span class="lang-en-i">Provider Executors</span><span class="lang-ja-i">Provider エグゼキューター</span><span class="lang-ko-i">Provider 실행기</span></span></div>
         <div class="card stat-card"><span class="stat-num">6</span><span class="stat-label"><span class="lang-zh-i">协议转换器</span><span class="lang-en-i">Protocol Translators</span><span class="lang-ja-i">プロトコルトランスレーター</span><span class="lang-ko-i">프로토콜 변환기</span></span></div>
+        <div class="card stat-card"><span class="stat-num">28+</span><span class="stat-label"><span class="lang-zh-i">免费通道种子</span><span class="lang-en-i">Free Channel Seeds</span><span class="lang-ja-i">無料チャネルシード</span><span class="lang-ko-i">무료 채널 시드</span></span></div>
+        <div class="card stat-card"><span class="stat-num">15+</span><span class="stat-label"><span class="lang-zh-i">MITM 接管目标</span><span class="lang-en-i">MITM Targets</span><span class="lang-ja-i">MITM ターゲット</span><span class="lang-ko-i">MITM 타겟</span></span></div>
         <div class="card stat-card"><span class="stat-num">2</span><span class="stat-label"><span class="lang-zh-i">开源许可证</span><span class="lang-en-i">Open Licenses</span><span class="lang-ja-i">オープンソースライセンス</span><span class="lang-ko-i">오픈소스 라이선스</span></span></div>
         <div class="card stat-card"><span class="stat-num">4</span><span class="stat-label"><span class="lang-zh-i">界面语言</span><span class="lang-en-i">UI Languages</span><span class="lang-ja-i">UI 言語</span><span class="lang-ko-i">UI 언어</span></span></div>
       </div>
@@ -603,7 +716,7 @@ body.lang-ko .lang-ko-i{display:inline;}
             <li><span class="adv-mark">✓</span> <span class="lang-zh-i">会话粘滞路由（SHA1 + 30min TTL）</span><span class="lang-en-i">Session sticky routing (SHA1 + 30min TTL)</span><span class="lang-ja-i">セッション粘着ルーティング（SHA1 + 30分 TTL）</span><span class="lang-ko-i">세션 스티키 라우팅 (SHA1 + 30분 TTL)</span></li>
             <li><span class="adv-mark">✓</span> <span class="lang-zh-i">动态 429 惩罚降级 + 排序预设</span><span class="lang-en-i">Dynamic 429 penalty + sort presets</span><span class="lang-ja-i">動的 429 ペナルティ + ソートプリセット</span><span class="lang-ko-i">동적 429 페널티 + 정렬 프리셋</span></li>
             <li><span class="adv-mark">✓</span> <span class="lang-zh-i">完整多租户 + Stripe 支付 + 套餐门控</span><span class="lang-en-i">Full multi-tenant + Stripe + plan gating</span><span class="lang-ja-i">完全なマルチテナント + Stripe + プランゲーティング</span><span class="lang-ko-i">완전한 멀티테넌트 + Stripe + 플랜 게이팅</span></li>
-            <li><span class="adv-mark">✓</span> <span class="lang-zh-i">8 执行器 + 6 协议翻译 + 多模态扁平化</span><span class="lang-en-i">8 executors + 6 translators + content flattening</span><span class="lang-ja-i">8 実行器 + 6 変換器 + コンテンツフラット化</span><span class="lang-ko-i">8 실행기 + 6 변환기 + 콘텐츠 평탄화</span></li>
+            <li><span class="adv-mark">✓</span> <span class="lang-zh-i">17 执行器 + 6 协议翻译 + 多模态扁平化</span><span class="lang-en-i">17 executors + 6 translators + content flattening</span><span class="lang-ja-i">17 実行器 + 6 変換器 + コンテンツフラット化</span><span class="lang-ko-i">17 실행기 + 6 변환기 + 콘텐츠 평탄화</span></li>
             <li><span class="adv-mark">✓</span> <span class="lang-zh-i">MITM 一键接管 AI API 流量</span><span class="lang-en-i">One-click MITM proxy for AI API traffic</span><span class="lang-ja-i">AI API トラフィックのワンクリック MITM プロキシ</span><span class="lang-ko-i">AI API 트래픽 원클릭 MITM 프록시</span></li>
             <li><span class="adv-mark">✓</span> <span class="lang-zh-i">RTK / Caveman Token 压缩 + 语义缓存</span><span class="lang-en-i">RTK/Caveman token compression + semantic cache</span><span class="lang-ja-i">RTK/Caveman Token 圧縮 + セマンティックキャッシュ</span><span class="lang-ko-i">RTK/Caveman Token 압축 + 시맨틱 캐시</span></li>
             <li><span class="adv-mark">✓</span> <span class="lang-zh-i">Fusion 路由 + 模型族回退 + Reasoning Replay</span><span class="lang-en-i">Fusion routing + model-family fallback + reasoning replay</span><span class="lang-ja-i">Fusion ルーティング + モデルファミリーフォールバック + Reasoning Replay</span><span class="lang-ko-i">Fusion 라우팅 + 모델 패밀리 폴백 + Reasoning Replay</span></li>
@@ -681,7 +794,6 @@ body.lang-ko .lang-ko-i{display:inline;}
             <tr><td><span class="lang-zh-i">TLS 指纹伪装 / 智能熔断</span><span class="lang-en-i">TLS Fingerprint / Smart Breaker</span><span class="lang-ja-i">TLS フィンガープリント / スマートブレーカー</span><span class="lang-ko-i">TLS 핑거프린트 / 스마트 브레이커</span></td><td class="cmp-yes">✓</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
             <tr><td><span class="lang-zh-i">Eval 评估 / 性能审计</span><span class="lang-en-i">Eval / Performance Audit</span><span class="lang-ja-i">Eval / パフォーマンス監査</span><span class="lang-ko-i">Eval / 성능 감사</span></td><td class="cmp-yes">✓</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
             <tr><td><span class="lang-zh-i">Plugin Hook / MCP Gateway</span><span class="lang-en-i">Plugin Hook / MCP Gateway</span><span class="lang-ja-i">Plugin Hook / MCP Gateway</span><span class="lang-ko-i">Plugin Hook / MCP Gateway</span></td><td class="cmp-yes">✓ 14+20</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
-            <tr><td><span class="lang-zh-i">Notion / Obsidian 集成</span><span class="lang-en-i">Notion / Obsidian Integration</span><span class="lang-ja-i">Notion / Obsidian 統合</span><span class="lang-ko-i">Notion / Obsidian 통합</span></td><td class="cmp-yes">✓</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
             <tr><td>i18n</td><td class="cmp-yes">✓ 4 <span class="lang-zh-i">语言</span><span class="lang-en-i">languages</span><span class="lang-ja-i">言語</span><span class="lang-ko-i">언어</span></td><td class="cmp-no">✗</td><td class="cmp-no">✗</td><td class="cmp-no">✗</td></tr>
           </tbody>
         </table>
@@ -716,7 +828,7 @@ body.lang-ko .lang-ko-i{display:inline;}
             <li><span class="lang-zh-i">SeasAGI-Client 全量免费</span><span class="lang-en-i">SeasAGI-Client fully free</span><span class="lang-ja-i">SeasAGI-Client 完全無料</span><span class="lang-ko-i">SeasAGI-Client 완전 무료</span></li>
             <li><span class="lang-zh-i">任意个数本地通道</span><span class="lang-en-i">Unlimited local channels</span><span class="lang-ja-i">無制限のローカルチャネル</span><span class="lang-ko-i">무제한 로컬 채널</span></li>
             <li><span class="lang-zh-i">智能路由 / 会话粘滞</span><span class="lang-en-i">Smart routing / session sticky</span><span class="lang-ja-i">スマートルーティング / セッションスティッキー</span><span class="lang-ko-i">스마트 라우팅 / 세션 스티키</span></li>
-            <li><span class="lang-zh-i">8 执行器 + 6 协议翻译</span><span class="lang-en-i">8 executors + 6 translators</span><span class="lang-ja-i">8エグゼキューター + 6トランスレーター</span><span class="lang-ko-i">8개 실행기 + 6개 번역기</span></li>
+            <li><span class="lang-zh-i">17 执行器 + 6 协议翻译</span><span class="lang-en-i">17 executors + 6 translators</span><span class="lang-ja-i">17エグゼキューター + 6トランスレーター</span><span class="lang-ko-i">17개 실행기 + 6개 번역기</span></li>
             <li><span class="lang-zh-i">Playground / 日志 / 诊断</span><span class="lang-en-i">Playground / logs / diagnostics</span><span class="lang-ja-i">Playground / ログ / 診断</span><span class="lang-ko-i">Playground / 로그 / 진단</span></li>
             <li><span class="lang-zh-i">社区版云端可选自托管</span><span class="lang-en-i">Community server self-host option</span><span class="lang-ja-i">コミュニティ版セルフホストオプション</span><span class="lang-ko-i">커뮤니티 서버 자체 호스팅 옵션</span></li>
           </ul>
@@ -784,10 +896,10 @@ body.lang-ko .lang-ko-i{display:inline;}
         <p class="section-desc"><span class="lang-zh-i">实时查看云端各 Provider 通道的健康状态和性价比</span><span class="lang-en-i">Real-time health status and cost-performance of cloud provider channels</span><span class="lang-ja-i">クラウドプロバイダーの各チャネルの健全性とコストパフォーマンスをリアルタイムで確認</span><span class="lang-ko-i">클라우드 프로바이더 채널의 실시간 상태 및 비용 효율성 확인</span></p>
       </div>
       <div class="ch-stats">
-        <div class="card stat-card"><span class="stat-num">32</span><span class="stat-label"><span class="lang-zh-i">在线通道</span><span class="lang-en-i">Online Channels</span><span class="lang-ja-i">オンラインチャネル</span><span class="lang-ko-i">온라인 채널</span></span></div>
+        <div class="card stat-card"><span class="stat-num">48</span><span class="stat-label"><span class="lang-zh-i">在线通道</span><span class="lang-en-i">Online Channels</span><span class="lang-ja-i">オンラインチャネル</span><span class="lang-ko-i">온라인 채널</span></span></div>
         <div class="card stat-card"><span class="stat-num">99.2%</span><span class="stat-label"><span class="lang-zh-i">可用率</span><span class="lang-en-i">Availability</span><span class="lang-ja-i">可用率</span><span class="lang-ko-i">가용성</span></span></div>
         <div class="card stat-card"><span class="stat-num">&lt;200ms</span><span class="stat-label"><span class="lang-zh-i">平均延迟</span><span class="lang-en-i">Avg Latency</span><span class="lang-ja-i">平均レイテンシ</span><span class="lang-ko-i">평균 지연</span></span></div>
-        <div class="card stat-card"><span class="stat-num">18</span><span class="stat-label"><span class="lang-zh-i">覆盖区域</span><span class="lang-en-i">Regions</span><span class="lang-ja-i">カバレッジエリア</span><span class="lang-ko-i">커버 리전</span></span></div>
+        <div class="card stat-card"><span class="stat-num">24</span><span class="stat-label"><span class="lang-zh-i">覆盖区域</span><span class="lang-en-i">Regions</span><span class="lang-ja-i">カバレッジエリア</span><span class="lang-ko-i">커버 리전</span></span></div>
       </div>
       <div style="overflow-x:auto">
         <table class="cht-tbl">
@@ -802,18 +914,24 @@ body.lang-ko .lang-ko-i{display:inline;}
             <th><span class="lang-zh-i">区域</span><span class="lang-en-i">Region</span><span class="lang-ja-i">リージョン</span><span class="lang-ko-i">리전</span></th>
           </tr></thead>
           <tbody>
-            <tr><td>OpenAI</td><td>GPT-4o</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>120ms</td><td>$2.50/M</td><td>$10.00/M</td><td>US</td></tr>
-            <tr><td>OpenAI</td><td>GPT-4o-mini</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>95ms</td><td>$0.15/M</td><td>$0.60/M</td><td>US</td></tr>
-            <tr><td>Anthropic</td><td>Claude 3.5 Sonnet</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>180ms</td><td>$3.00/M</td><td>$15.00/M</td><td>US</td></tr>
-            <tr><td>Anthropic</td><td>Claude 3 Haiku</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>150ms</td><td>$0.25/M</td><td>$1.25/M</td><td>US</td></tr>
-            <tr><td>Google</td><td>Gemini 1.5 Pro</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>110ms</td><td>$1.25/M</td><td>$5.00/M</td><td>US</td></tr>
-            <tr><td>Google</td><td>Gemini 1.5 Flash</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>85ms</td><td>$0.075/M</td><td>$0.30/M</td><td>US</td></tr>
-            <tr><td>DeepSeek</td><td>DeepSeek V3</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>160ms</td><td>$0.27/M</td><td>$1.10/M</td><td>CN</td></tr>
-            <tr><td>DeepSeek</td><td>DeepSeek Coder</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>140ms</td><td>$0.14/M</td><td>$0.28/M</td><td>CN</td></tr>
-            <tr><td>Qwen</td><td>Qwen Max</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>130ms</td><td>$2.00/M</td><td>$6.00/M</td><td>CN</td></tr>
-            <tr><td>Qwen</td><td>Qwen Plus</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>100ms</td><td>$0.80/M</td><td>$2.00/M</td><td>CN</td></tr>
+            <tr><td>OpenAI</td><td>GPT-5.4</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>120ms</td><td>$5.00/M</td><td>$20.00/M</td><td>US</td></tr>
+            <tr><td>OpenAI</td><td>GPT-5.4-mini</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>95ms</td><td>$0.50/M</td><td>$2.00/M</td><td>US</td></tr>
+            <tr><td>Anthropic</td><td>Claude Sonnet 5</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>180ms</td><td>$3.00/M</td><td>$15.00/M</td><td>US</td></tr>
+            <tr><td>Anthropic</td><td>Claude Opus 4.8</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>200ms</td><td>$15.00/M</td><td>$75.00/M</td><td>US</td></tr>
+            <tr><td>Google</td><td>Gemini 3.1 Pro</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>110ms</td><td>$2.50/M</td><td>$10.00/M</td><td>US</td></tr>
+            <tr><td>Google</td><td>Gemini 3.5 Flash</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>85ms</td><td>$0.15/M</td><td>$0.60/M</td><td>US</td></tr>
+            <tr><td>DeepSeek</td><td>DeepSeek V4 Pro</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>160ms</td><td>$0.27/M</td><td>$1.10/M</td><td>CN</td></tr>
+            <tr><td>Alibaba</td><td>Qwen3.8-Max</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>130ms</td><td>$2.00/M</td><td>$6.00/M</td><td>CN</td></tr>
+            <tr><td>Zhipu</td><td>GLM-5</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>120ms</td><td>$1.00/M</td><td>$3.00/M</td><td>CN</td></tr>
+            <tr><td>Zhipu</td><td>GLM-4-Flash</td><td><span class="dot on"></span><span class="lang-zh-i">免费</span><span class="lang-en-i">Free</span><span class="lang-ja-i">無料</span><span class="lang-ko-i">무료</span></td><td>100ms</td><td>—</td><td>—</td><td>CN</td></tr>
+            <tr><td>Moonshot</td><td>Kimi K3</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>150ms</td><td>$0.60/M</td><td>$2.50/M</td><td>CN</td></tr>
+            <tr><td>MiniMax</td><td>MiniMax-M3</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>140ms</td><td>$1.00/M</td><td>$3.00/M</td><td>CN</td></tr>
+            <tr><td>Xiaomi</td><td>MiMo-V2.5-Pro</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>170ms</td><td>$1.00/M</td><td>$3.00/M</td><td>CN</td></tr>
+            <tr><td>ByteDance</td><td>Doubao-Seed-2.1-Pro</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>130ms</td><td>$0.85/M</td><td>$4.30/M</td><td>CN</td></tr>
+            <tr><td>Tencent</td><td>Hunyuan Hy3</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>150ms</td><td>$1.20/M</td><td>$4.00/M</td><td>CN</td></tr>
             <tr><td>Mistral</td><td>Mistral Large</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>170ms</td><td>$2.00/M</td><td>$6.00/M</td><td>EU</td></tr>
-            <tr><td>Meta</td><td>Llama 3.1 405B</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>190ms</td><td>$2.00/M</td><td>$6.00/M</td><td>US</td></tr>
+            <tr><td>xAI</td><td>Grok 4</td><td><span class="dot on"></span><span class="lang-zh-i">在线</span><span class="lang-en-i">Online</span><span class="lang-ja-i">オンライン</span><span class="lang-ko-i">온라인</span></td><td>160ms</td><td>$5.00/M</td><td>$15.00/M</td><td>US</td></tr>
+            <tr><td>OpenRouter</td><td>openrouter/free</td><td><span class="dot on"></span><span class="lang-zh-i">免费</span><span class="lang-en-i">Free</span><span class="lang-ja-i">無料</span><span class="lang-ko-i">무료</span></td><td>200ms</td><td>—</td><td>—</td><td>US</td></tr>
           </tbody>
         </table>
       </div>
@@ -848,7 +966,15 @@ body.lang-ko .lang-ko-i{display:inline;}
         </details>
         <details class="faq-item">
           <summary><span><span class="lang-zh-i">支持哪些 Provider？</span><span class="lang-en-i">Which providers are supported?</span><span class="lang-ja-i">どの Provider に対応していますか？</span><span class="lang-ko-i">어떤 Provider를 지원하나요?</span></span><span class="faq-icon" aria-hidden="true"></span></summary>
-          <p><span class="lang-zh-i">OpenAI、Azure、Anthropic、Gemini、Ollama、DeepSeek、Grok，以及通用 Relay。通过转换器自动适配 OpenAI Chat、Responses、Anthropic、Gemini、Vertex 等协议。</span><span class="lang-en-i">OpenAI, Azure, Anthropic, Gemini, Ollama, DeepSeek, Grok, and generic Relay. Translators auto-adapt OpenAI Chat, Responses, Anthropic, Gemini, Vertex protocols.</span><span class="lang-ja-i">OpenAI、Azure、Anthropic、Gemini、Ollama、DeepSeek、Grok、および汎用 Relay に対応しています。トランスレータが OpenAI Chat、Responses、Anthropic、Gemini、Vertex などのプロトコルを自動適応します。</span><span class="lang-ko-i">OpenAI, Azure, Anthropic, Gemini, Ollama, DeepSeek, Grok 및 범용 Relay를 지원합니다. 트랜스레이터가 OpenAI Chat, Responses, Anthropic, Gemini, Vertex 등의 프로토콜을 자동으로 변환합니다.</span></p>
+          <p><span class="lang-zh-i">17 个 Provider 执行器：OpenAI、Azure、Anthropic、Gemini、DeepSeek、Grok、Mistral、OpenRouter、Vertex、Ollama，以及国产厂商 智谱 GLM、月之暗面 Kimi、MiniMax、小米 MiMo、字节豆包、腾讯混元、阿里通义。另有 28+ 免费通道种子（含 GLM-4-Flash 永久免费、OpenRouter free 系列、DuckDuckGo 等 keyless 通道）。</span><span class="lang-en-i">17 provider executors: OpenAI, Azure, Anthropic, Gemini, DeepSeek, Grok, Mistral, OpenRouter, Vertex, Ollama, plus Chinese providers Zhipu GLM, Moonshot Kimi, MiniMax, Xiaomi MiMo, ByteDance Doubao, Tencent Hunyuan, Alibaba Qwen. Plus 28+ free channel seeds (GLM-4-Flash, OpenRouter free series, DuckDuckGo keyless, etc.).</span><span class="lang-ja-i">17 のプロバイダー実行エンジン：OpenAI、Azure、Anthropic、Gemini、DeepSeek、Grok、Mistral、OpenRouter、Vertex、Ollama、および中国プロバイダー（智谱 GLM、Moonshot Kimi、MiniMax、Xiaomi MiMo、ByteDance Doubao、Tencent Hunyuan、Alibaba Qwen）。さらに 28 以上の無料チャネルシード（GLM-4-Flash、OpenRouter free シリーズ、DuckDuckGo など）。</span><span class="lang-ko-i">17개 프로바이더 실행기: OpenAI, Azure, Anthropic, Gemini, DeepSeek, Grok, Mistral, OpenRouter, Vertex, Ollama 및 중국 프로바이더(Zhipu GLM, Moonshot Kimi, MiniMax, Xiaomi MiMo, ByteDance Doubao, Tencent Hunyuan, Alibaba Qwen). 추가로 28+ 무료 채널 시드(GLM-4-Flash, OpenRouter free 시리즈, DuckDuckGo 등).</span></p>
+        </details>
+        <details class="faq-item">
+          <summary><span><span class="lang-zh-i">有哪些免费模型可用？</span><span class="lang-en-i">What free models are available?</span><span class="lang-ja-i">利用できる無料モデルは？</span><span class="lang-ko-i">어떤 무료 모델을 사용할 수 있나요?</span></span><span class="faq-icon" aria-hidden="true"></span></summary>
+          <p><span class="lang-zh-i">永久免费：GLM-4-Flash / GLM-4.5-Flash（无限制）；OpenRouter free 系列：Nemotron 3 Ultra、GLM 5.2、Inkling、Laguna S（20 req/min, 200 req/day）；Keyless 通道：DuckDuckGo AI Chat、Felo、AI Horde、OpenCode Free；注册赠送：DeepSeek 500万 tokens、小米 $2、字节 50万/模型、阿里 100万/模型。</span><span class="lang-en-i">Permanently free: GLM-4-Flash / GLM-4.5-Flash (unlimited); OpenRouter free series: Nemotron 3 Ultra, GLM 5.2, Inkling, Laguna S (20 req/min, 200 req/day); Keyless channels: DuckDuckGo AI Chat, Felo, AI Horde, OpenCode Free; Sign-up bonus: DeepSeek 5M tokens, Xiaomi $2, ByteDance 500K/model, Alibaba 1M/model.</span><span class="lang-ja-i">永久無料：GLM-4-Flash / GLM-4.5-Flash（無制限）；OpenRouter free シリーズ：Nemotron 3 Ultra、GLM 5.2、Inkling、Laguna S（20 req/min, 200 req/day）；Keyless チャネル：DuckDuckGo AI Chat、Felo、AI Horde、OpenCode Free；登録ボーナス：DeepSeek 500万 tokens、Xiaomi $2、ByteDance 50万/モデル、Alibaba 100万/モデル。</span><span class="lang-ko-i">영구 무료: GLM-4-Flash / GLM-4.5-Flash(무제한); OpenRouter free 시리즈: Nemotron 3 Ultra, GLM 5.2, Inkling, Laguna S(20 req/min, 200 req/day); Keyless 채널: DuckDuckGo AI Chat, Felo, AI Horde, OpenCode Free; 가입 보너스: DeepSeek 500만 tokens, Xiaomi $2, ByteDance 50만/모델, Alibaba 100만/모델.</span></p>
+        </details>
+        <details class="faq-item">
+          <summary><span><span class="lang-zh-i">MITM 一键接管是什么？</span><span class="lang-en-i">What is the MITM one-click proxy?</span><span class="lang-ja-i">MITM ワンクリック接管とは？</span><span class="lang-ko-i">MITM 원클릭 제어란?</span></span><span class="faq-icon" aria-hidden="true"></span></summary>
+          <p><span class="lang-zh-i">MITM 一键接管让你无需修改 IDE 配置，通过本地代理透明拦截 Cursor、GitHub Copilot、Claude Code、Trae、Windsurf 等 15+ AI 编程工具的 API 流量，将其路由到本地网关。支持 23+ 厂商域名拦截（含国产厂商），一键安装 CA 证书即可使用。</span><span class="lang-en-i">MITM one-click proxy lets you transparently intercept API traffic from Cursor, GitHub Copilot, Claude Code, Trae, Windsurf and 15+ AI coding tools without changing IDE configs. Routes to your local gateway. Supports 23+ provider domains including Chinese vendors. Just install the CA certificate and go.</span><span class="lang-ja-i">MITM ワンクリック接管により、IDE 設定を変更することなく、Cursor、GitHub Copilot、Claude Code、Trae、Windsurf など 15 以上の AI コーディングツールの API トラフィックを透過的に傍受し、ローカルゲートウェイにルーティングできます。23 以上のプロバイダードメイン（中国プロバイダー含む）に対応。CA 証明書をインストールするだけですぐに使えます。</span><span class="lang-ko-i">MITM 원클릭 제어를 통해 IDE 설정 변경 없이 Cursor, GitHub Copilot, Claude Code, Trae, Windsurf 등 15+ AI 코딩 도구의 API 트래픽을 투명하게 가로채 로컬 게이트웨이로 라우팅할 수 있습니다. 23+ 프로바이더 도메인(중국 프로바이더 포함) 지원. CA 인증서 설치만으로 바로 사용 가능.</span></p>
         </details>
         <details class="faq-item">
           <summary><span><span class="lang-zh-i">会话粘滞是什么？为什么需要？</span><span class="lang-en-i">What is session sticky routing?</span><span class="lang-ja-i">セッションスティッキールーティングとは何ですか？</span><span class="lang-ko-i">세션 스티키 라우팅이란 무엇인가요?</span></span><span class="faq-icon" aria-hidden="true"></span></summary>

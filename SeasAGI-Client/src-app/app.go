@@ -493,10 +493,11 @@ func (a *App) GetPluginAuditLog() []map[string]any {
 
 // === UI-Batch 5: MITM Target + Notion/Obsidian ===
 
-// GetMITMTargets 返回所有 MITM 目标预设。
+// GetMITMTargets 返回所有 MITM 目标预设（含动态拉取的企业端目标）。
 func (a *App) GetMITMTargets() []map[string]any {
-	result := make([]map[string]any, 0, len(mitm.AllTargets))
-	for _, t := range mitm.AllTargets {
+	targets := mitm.MergedTargets()
+	result := make([]map[string]any, 0, len(targets))
+	for _, t := range targets {
 		hosts := make([]string, 0, len(t.Hosts))
 		hosts = append(hosts, t.Hosts...)
 		models := make([]map[string]any, 0, len(t.DefaultModels))
@@ -518,6 +519,19 @@ func (a *App) GetMITMTargets() []map[string]any {
 		})
 	}
 	return result
+}
+
+// FetchMITMTargetsFromEnterprise 从企业服务端动态拉取 MITM 目标列表。
+// 拉取成功后与本地预设合并（企业端优先），后续 GetMITMTargets 调用即返回合并结果。
+func (a *App) FetchMITMTargetsFromEnterprise() map[string]any {
+	token := ""
+	if a.authSvc.IsLoggedIn() {
+		token = a.authSvc.GetPlatformToken()
+	}
+	if err := mitm.FetchTargetsFromEnterprise(a.ctx, token); err != nil {
+		return map[string]any{"ok": false, "error": err.Error()}
+	}
+	return map[string]any{"ok": true}
 }
 
 // SearchNotion 在 Notion 中搜索页面和数据库。
@@ -660,7 +674,7 @@ func (a *App) SyncPlatformChannels() error {
 	return a.configSvc.UpsertPlatformChannels(convertPlatformChannels(platformChannels))
 }
 
-// FetchFreeChannels 从平台 API 拉取免费通道种子列表，供 Token 市场展示。
+// FetchFreeChannels 从企业服务端（优先）或平台 API 拉取免费通道种子列表，供 Token 市场展示。
 func (a *App) FetchFreeChannels() []map[string]any {
 	if !a.authSvc.IsLoggedIn() {
 		return []map[string]any{}
@@ -670,6 +684,37 @@ func (a *App) FetchFreeChannels() []map[string]any {
 		return []map[string]any{{"error": err.Error()}}
 	}
 	return seeds
+}
+
+// FetchEnterpriseChannels 从企业服务端拉取通道列表，含 provider_type、base_url、models。
+// 客户端据此将企业服务端配置的通道同步到本地。
+func (a *App) FetchEnterpriseChannels() []map[string]any {
+	if !a.authSvc.IsLoggedIn() {
+		return []map[string]any{}
+	}
+	channels, err := a.authSvc.FetchEnterpriseChannels(a.ctx)
+	if err != nil {
+		return []map[string]any{{"error": err.Error()}}
+	}
+	if channels == nil {
+		return []map[string]any{}
+	}
+	return channels
+}
+
+// FetchModelCatalog 从企业服务端拉取模型目录，供通道配置页面按 provider 自动补全模型列表。
+func (a *App) FetchModelCatalog() []map[string]any {
+	if !a.authSvc.IsLoggedIn() {
+		return []map[string]any{}
+	}
+	models, err := a.authSvc.FetchModelCatalog(a.ctx)
+	if err != nil {
+		return []map[string]any{{"error": err.Error()}}
+	}
+	if models == nil {
+		return []map[string]any{}
+	}
+	return models
 }
 
 func (a *App) CreateCheckoutSession(planID string, quantity ...int) (map[string]any, error) {

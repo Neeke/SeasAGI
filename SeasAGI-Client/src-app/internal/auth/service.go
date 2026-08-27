@@ -178,7 +178,8 @@ func (s *Service) FetchPlatformChannels(ctx context.Context) ([]map[string]inter
 	return result.Data, nil
 }
 
-// FetchFreeChannels 从平台 API 拉取免费通道种子列表。
+// FetchFreeChannels 从企业服务端（优先）或平台 API 拉取免费通道种子列表。
+// 企业服务端配置了 ENTERPRISE_API_BASE_URL 时优先使用，降级使用开源平台 API。
 func (s *Service) FetchFreeChannels(ctx context.Context) ([]map[string]interface{}, error) {
 	if !s.IsLoggedIn() {
 		return nil, nil
@@ -190,7 +191,68 @@ func (s *Service) FetchFreeChannels(ctx context.Context) ([]map[string]interface
 	reqCtx, cancel := context.WithTimeout(ctx, 8*time.Second)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, platformAPIBaseURL()+"/free-channels", nil)
+	// 优先从企业服务端拉取
+	enterpriseURL := enterpriseAPIBaseURL()
+	if enterpriseURL != "" {
+		data, err := s.fetchFreeChannelsFrom(reqCtx, enterpriseURL)
+		if err == nil && len(data) > 0 {
+			return data, nil
+		}
+		// 企业服务端失败或无数据，降级到平台 API
+	}
+
+	// 降级：从开源平台 API 拉取
+	return s.fetchFreeChannelsFrom(reqCtx, platformAPIBaseURL())
+}
+
+// FetchEnterpriseChannels 从企业服务端拉取通道列表（含 provider_type, base_url, models）。
+func (s *Service) FetchEnterpriseChannels(ctx context.Context) ([]map[string]interface{}, error) {
+	if !s.IsLoggedIn() {
+		return nil, nil
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	enterpriseURL := enterpriseAPIBaseURL()
+	if enterpriseURL == "" {
+		return nil, nil
+	}
+
+	reqCtx, cancel := context.WithTimeout(ctx, 8*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, enterpriseURL+"/channels", nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+s.GetPlatformToken())
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		Data  []map[string]interface{} `json:"data"`
+		Error string                   `json:"error"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	if resp.StatusCode >= 400 {
+		if result.Error == "" {
+			result.Error = "fetch enterprise channels failed"
+		}
+		return nil, errors.New(result.Error)
+	}
+	return result.Data, nil
+}
+
+// fetchFreeChannelsFrom 从指定 base URL 拉取免费通道种子列表。
+func (s *Service) fetchFreeChannelsFrom(ctx context.Context, baseURL string) ([]map[string]interface{}, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, baseURL+"/free-channels", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -218,6 +280,53 @@ func (s *Service) FetchFreeChannels(ctx context.Context) ([]map[string]interface
 	return result.Data, nil
 }
 
+// FetchModelCatalog 从企业服务端拉取模型目录列表。
+// 返回每个模型的元数据（provider、display_name、capabilities、价格等），
+// 供通道配置页面按 provider 自动补全可用模型。
+func (s *Service) FetchModelCatalog(ctx context.Context) ([]map[string]interface{}, error) {
+	if !s.IsLoggedIn() {
+		return nil, nil
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	enterpriseURL := enterpriseAPIBaseURL()
+	if enterpriseURL == "" {
+		return nil, nil
+	}
+
+	reqCtx, cancel := context.WithTimeout(ctx, 8*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, enterpriseURL+"/models", nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+s.GetPlatformToken())
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		Data  []map[string]interface{} `json:"data"`
+		Error string                   `json:"error"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	if resp.StatusCode >= 400 {
+		if result.Error == "" {
+			result.Error = "fetch model catalog failed"
+		}
+		return nil, errors.New(result.Error)
+	}
+	return result.Data, nil
+}
+
 func (s *Service) PlatformAPIBaseURL() string {
 	return platformAPIBaseURL()
 }
@@ -230,4 +339,10 @@ func platformAPIBaseURL() string {
 		return value
 	}
 	return "https://seasagi.seasx.ai/api/v1"
+}
+
+// enterpriseAPIBaseURL 返回企业服务端 API 基础 URL。
+// 通过 ENTERPRISE_API_BASE_URL 环境变量配置，未配置时返回空字符串（表示使用开源平台 API）。
+func enterpriseAPIBaseURL() string {
+	return os.Getenv("ENTERPRISE_API_BASE_URL")
 }
