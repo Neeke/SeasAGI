@@ -8,7 +8,7 @@
 [![macOS](https://img.shields.io/badge/platform-macOS-blue)](https://github.com/SeasX/SeasAGI)
 [![Linux](https://img.shields.io/badge/platform-Linux-blue)](https://github.com/SeasX/SeasAGI)
 [![Windows](https://img.shields.io/badge/platform-Windows-blue)](https://github.com/SeasX/SeasAGI)
-[![License](https://img.shields.io/badge/license-AGPL%20v3-green)](LICENSE)
+[![License](https://img.shields.io/badge/license-GPL%20v3-green)](LICENSE)
 
 客户端子项目，保留桌面端主线源码与客户端构建脚本。
 

@@ -15,7 +15,7 @@ SeasAGI is a layered AI gateway platform consisting of three sub-projects:
 | Sub-project | License | Build | Description |
 |-------------|---------|-------|-------------|
 | `SeasAGI-Client/` | **GPL 3.0** fully open-source | [![Build status](https://ci.appveyor.com/api/projects/status/github/SeasX/SeasAGI?svg=true)](https://ci.appveyor.com/project/SeasX/SeasAGI) | Native desktop client (Wails + Go + React), local unified gateway, API Keys never uploaded |
-| `SeasAGI-Server/` | **AGPL 3.0** open-source self-hostable | [![Build status](https://ci.appveyor.com/api/projects/status/github/SeasX/SeasAGI?svg=true)](https://ci.appveyor.com/project/SeasX/SeasAGI) | Community edition cloud control plane, basic auth / Combo CRUD / basic usage / basic relay forwarding |
+| `SeasAGI-Server/` | **AGPL 3.0** open-source self-hostable | [![Build status](https://ci.appveyor.com/api/projects/status/github/SeasX/SeasAGI?svg=true)](https://ci.appveyor.com/project/SeasX/SeasAGI) | Community edition cloud control plane: auth / channels / provider resource pools / model catalog / Combo CRUD / usage / embedded admin dashboard / basic relay forwarding |
 | `SeasAGI-Server-Enterprise/` | Closed-source | — | Enterprise edition cloud, includes Stripe billing / multi-tenant governance / Combo governance approval / admin dashboard. See [Enterprise README](SeasAGI-Server-Enterprise/README.md) |
 
 The client can **run independently** — all local gateway features work without a Server. The cloud is an optional value-add service providing remote accelerated channels, usage sync, team collaboration, and enterprise governance.
@@ -46,13 +46,18 @@ The client can **run independently** — all local gateway features work without
 
 | Capability | Description |
 |------------|-------------|
-| Basic Auth | Login / Register / Token refresh |
-| Basic Channel Management | Platform channel CRUD |
+| Basic Auth | Login / Register / Token refresh (bcrypt + JWT HS256) |
+| Basic Channel Management | Platform channel CRUD, API Keys encrypted with AES-256-GCM |
+| Provider Resource Pools | Per-channel API Key / region / environment resources with health + weight + priority selection |
+| Model Catalog | Model metadata (context window / price / modalities) loaded from `model-catalog.yaml` |
 | Basic Combo | User-level Combo CRUD + official template fetch |
 | Basic Usage Statistics | User usage, per-model/channel grouping, timeline, error distribution |
 | Basic Tenant Management | Members, invite links, custom channel sync, config snapshots |
+| Embedded Admin Dashboard | `/admin` SPA — Dashboard / Users / Usage / Relay Gateways / Channels / Combos / Token Market |
+| SQLite Backup | Online backup (`VACUUM INTO`) / SHA-256 verify / restore |
 | Basic Admin API | User / Plan / Channel / Combo / Relay Gateway management |
-| Relay Basic Forwarding | Request passthrough, health check, rate limiting, trace |
+| i18n | zh-CN / en / ja / ko |
+| Relay Basic Forwarding | Request passthrough, health check, rate limiting, trace, model catalog |
 
 ---
 
@@ -117,12 +122,17 @@ SeasAGI/
 ├── SeasAGI-Server/                Open-source server community edition (AGPL 3.0)
 │   ├── platform-api/               Community control plane
 │   ├── relay-gateway/              Community relay data plane
+│   ├── src-admin/                  Admin dashboard frontend (7 pages)
+│   ├── data/                       Model catalog (model-catalog.yaml)
+│   ├── locales/                    i18n language files (zh-CN/en/ja/ko)
 │   ├── deploy/                     Deploy scripts + systemd + nginx
 │   └── scripts/                    Build scripts
-├── src-web/                      Official website (static HTML)
+├── src-web/                       Official website (static HTML)
 │   ├── index.html                  Landing page
 │   └── assets/                     Icons & images
-├── build-all.sh                   One-click build script
+├── test-all.sh                    Full test suite entry
+├── test-client.sh                 Client tests
+├── test-server.sh                 Server tests
 ├── SeasAGI.v5.md                  One-page summary
 ```
 
