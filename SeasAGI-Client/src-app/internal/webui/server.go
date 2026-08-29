@@ -6,10 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
-	"log"
 	"net"
 	"net/http"
 	"sync"
+
+	"github.com/SeasAGI/SeasAGI-Client/internal/logging"
 )
 
 type Server struct {
@@ -75,9 +76,9 @@ func (s *Server) Start(ctx context.Context) error {
 	}()
 
 	go func() {
-		log.Printf("SeasAGI Web UI listening on http://127.0.0.1:%d", s.port)
+		logging.Infof("SeasAGI Web UI listening on http://127.0.0.1:%d", s.port)
 		if err := s.server.Serve(listener); err != nil && err != http.ErrServerClosed {
-			log.Printf("Web UI server error: %v", err)
+			logging.Errorf("Web UI server error: %v", err)
 		}
 	}()
 

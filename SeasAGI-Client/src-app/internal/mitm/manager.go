@@ -4,9 +4,10 @@ import (
 	"context"
 	"crypto/x509"
 	"fmt"
-	"log"
 	"sync"
 	"time"
+
+	"github.com/SeasAGI/SeasAGI-Client/internal/logging"
 )
 
 // Manager 编排 MITM 生命周期的启动和停止，确保失败时按逆序回滚。
@@ -56,7 +57,7 @@ func (m *Manager) Start(ctx context.Context) error {
 	// 残留系统代理清理（崩溃恢复场景）
 	if m.sysProxy != nil {
 		if active, _ := m.sysProxy.IsActive(); active {
-			log.Println("mitm: detected residual system proxy, clearing before start")
+			logging.Info("mitm: detected residual system proxy, clearing before start")
 			_ = m.sysProxy.Clear()
 		}
 	}
@@ -119,7 +120,7 @@ func (m *Manager) Start(ctx context.Context) error {
 	healthCtx, healthCancel := context.WithCancel(context.Background())
 	m.healthCancel = healthCancel
 	m.healthProbe = NewHealthProbe(m.proxy, 10*time.Second, func() {
-		log.Println("mitm: proxy unhealthy, auto-stopping")
+		logging.Warning("mitm: proxy unhealthy, auto-stopping")
 		_ = m.Stop()
 	})
 	go m.healthProbe.Run(healthCtx)

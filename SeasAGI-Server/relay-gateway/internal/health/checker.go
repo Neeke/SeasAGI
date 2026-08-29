@@ -1,13 +1,13 @@
 package health
 
 import (
-	"log"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/channel"
+	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/logging"
 )
 
 type Checker struct {
@@ -87,14 +87,14 @@ func (h *Checker) checkOne(baseURL, apiKey string) (bool, int, string) {
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("Health check failed for %s: %v", baseURL, err)
+		logging.Errorf("health check failed for %s: %v", baseURL, err)
 		return false, 0, err.Error()
 	}
 	defer resp.Body.Close()
 
 	healthy := resp.StatusCode >= 200 && resp.StatusCode < 400
 	if !healthy {
-		log.Printf("Health check unhealthy for %s: status %d", baseURL, resp.StatusCode)
+		logging.Warningf("health check unhealthy for %s: status %d", baseURL, resp.StatusCode)
 	}
 	return healthy, resp.StatusCode, ""
 }

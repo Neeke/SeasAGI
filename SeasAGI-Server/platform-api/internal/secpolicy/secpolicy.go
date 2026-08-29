@@ -3,9 +3,10 @@ package secpolicy
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"log"
 	"os"
 	"strings"
+
+	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/logging"
 )
 
 // weakPatterns are substrings that indicate a placeholder or default secret.
@@ -32,12 +33,12 @@ func ensureSecrets() {
 		if os.Getenv(name) == "" {
 			b := make([]byte, 32)
 			if _, err := rand.Read(b); err != nil {
-				log.Printf("WARNING: failed to auto-generate %s: %v", name, err)
+				logging.Warningf("failed to auto-generate %s: %v", name, err)
 				continue
 			}
 			val := hex.EncodeToString(b)
 			os.Setenv(name, val)
-			log.Printf("WARNING: %s not set — auto-generated a random secret. Set it explicitly in production via .env.", name)
+			logging.Warningf("%s not set — auto-generated a random secret. Set it explicitly in production via .env.", name)
 		}
 	}
 }
@@ -63,16 +64,16 @@ func ValidateStartup() {
 		reason := weakSecretReason(name, val)
 		if reason != "" {
 			if isDebug {
-				log.Printf("WARNING: weak secret %s: %s", name, reason)
+				logging.Warningf("weak secret %s: %s", name, reason)
 			} else {
-				log.Printf("FATAL: weak secret %s: %s", name, reason)
+				logging.Errorf("FATAL: weak secret %s: %s", name, reason)
 				weak = true
 			}
 		}
 	}
 
 	if weak && !isDebug {
-		log.Fatal("Startup aborted: weak or default secrets detected in production mode. Set strong secrets in your .env file before starting.")
+		logging.Fatal("Startup aborted: weak or default secrets detected in production mode. Set strong secrets in your .env file before starting.")
 	}
 }
 

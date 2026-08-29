@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -13,6 +11,7 @@ import (
 
 	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/channel"
 	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/health"
+	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/logging"
 	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/middleware"
 	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/ops"
 	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/policy"
@@ -29,9 +28,9 @@ func Execute() error {
 	store := channel.NewStore()
 	defer store.Close()
 	if err := store.LoadModelCatalog(); err != nil {
-		log.Printf("Warning: model catalog load failed: %v", err)
+		logging.Warningf("model catalog load failed: %v", err)
 	} else {
-		log.Println("Model catalog loaded")
+		logging.Info("Model catalog loaded")
 	}
 	relay.SetChannelStore(store)
 	middleware.SetChannelStatsProvider(func() []middleware.ChannelStat {
@@ -119,7 +118,7 @@ func Execute() error {
 		_ = server.Shutdown(context.Background())
 	}()
 
-	fmt.Printf("Relay gateway starting on :%s (rate limit: %.0f rpm, health check: %ds)\n", port, ratePerMin, checkInterval)
+	logging.Infof("Relay gateway starting on :%s (rate limit: %.0f rpm, health check: %ds)", port, ratePerMin, checkInterval)
 	err := server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		return err

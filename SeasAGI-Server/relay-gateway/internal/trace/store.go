@@ -2,9 +2,10 @@ package trace
 
 import (
 	"database/sql"
-	"log"
 	"sync"
 	"time"
+
+	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/logging"
 )
 
 type Record struct {
@@ -36,7 +37,7 @@ func InitStore(dbPath string) {
 	storeOnce.Do(func() {
 		db, err := openSQLite(dbPath)
 		if err != nil {
-			log.Printf("trace store open error: %v", err)
+			logging.Errorf("trace store open error: %v", err)
 			return
 		}
 		if _, err := db.Exec(`CREATE TABLE IF NOT EXISTS trace_records (
@@ -53,7 +54,7 @@ func InitStore(dbPath string) {
 			client_ip TEXT NOT NULL DEFAULT '',
 			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 		)`); err != nil {
-			log.Printf("trace store init error: %v", err)
+			logging.Errorf("trace store init error: %v", err)
 			return
 		}
 		db.Exec(`CREATE INDEX IF NOT EXISTS idx_trace_user ON trace_records(user_id, created_at)`)

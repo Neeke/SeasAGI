@@ -27,6 +27,7 @@ import (
 	"github.com/SeasAGI/SeasAGI-Client/internal/discovery"
 	"github.com/SeasAGI/SeasAGI-Client/internal/gateway"
 	"github.com/SeasAGI/SeasAGI-Client/internal/localtoken"
+	"github.com/SeasAGI/SeasAGI-Client/internal/logging"
 	"github.com/SeasAGI/SeasAGI-Client/internal/logs"
 	"github.com/SeasAGI/SeasAGI-Client/internal/mcp"
 	"github.com/SeasAGI/SeasAGI-Client/internal/mitm"
@@ -70,12 +71,12 @@ func runWebUI() {
 	defer cancel()
 
 	if err := srv.Start(ctx); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to start Web UI: %v\n", err)
+		logging.Errorf("Failed to start Web UI: %v", err)
 		os.Exit(1)
 	}
 
-	fmt.Printf("SeasAGI Web UI: %s\n", srv.URL())
-	fmt.Println("Press Ctrl+C to stop")
+	logging.Infof("SeasAGI Web UI: %s", srv.URL())
+	logging.Info("Press Ctrl+C to stop")
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
@@ -88,7 +89,7 @@ func runDesktop() {
 	cfg, _ := config.LoadOrDefault()
 	localTokenStore, err := localtoken.NewStore()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: local token store init failed: %v — continuing without persistence\n", err)
+		logging.Warningf("local token store init failed: %v — continuing without persistence", err)
 	} else {
 		defer localTokenStore.Close()
 	}
@@ -108,7 +109,7 @@ func runDesktop() {
 	mitmCADir := filepath.Join(mustHomeDir(), ".seasagi", "mitm")
 	mitmCA, mitmCAErr := mitm.NewCA(mitmCADir)
 	if mitmCAErr != nil {
-		fmt.Printf("[WARN] MITM CA init failed: %v\n", mitmCAErr)
+		logging.Warningf("MITM CA init failed: %v", mitmCAErr)
 	}
 	mitmRules := mitm.NewDefaultRules()
 	mitmGatewayURL := fmt.Sprintf("http://127.0.0.1:%d", cfg.ListenPort)

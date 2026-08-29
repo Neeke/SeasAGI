@@ -2,16 +2,16 @@ package auth
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/database"
 	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/i18n"
+	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/logging"
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -165,7 +165,7 @@ func Middleware() gin.HandlerFunc {
 func getJWTSecret() string {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		log.Fatal("JWT_SECRET environment variable is required. Set it in production!")
+		logging.Fatal("JWT_SECRET environment variable is required. Set it in production!")
 	}
 	return secret
 }
@@ -173,7 +173,7 @@ func getJWTSecret() string {
 func getJWTRefreshSecret() string {
 	secret := os.Getenv("JWT_REFRESH_SECRET")
 	if secret == "" {
-		log.Fatal("JWT_REFRESH_SECRET environment variable is required. Set it in production!")
+		logging.Fatal("JWT_REFRESH_SECRET environment variable is required. Set it in production!")
 	}
 	return secret
 }

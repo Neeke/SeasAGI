@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -10,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/auth"
 	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/i18n"
+	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/logging"
 )
 
 func AuthRequired() gin.HandlerFunc {
@@ -68,7 +68,7 @@ func Logger() gin.HandlerFunc {
 			model = c.Query("model")
 		}
 
-		log.Printf("trace_id=%s method=%s path=%s status=%d latency_ms=%d user_id=%s device_id=%s channel_id=%s model=%s client_ip=%s",
+		logging.Infof("trace_id=%s method=%s path=%s status=%d latency_ms=%d user_id=%s device_id=%s channel_id=%s model=%s client_ip=%s",
 			traceID,
 			c.Request.Method,
 			c.Request.URL.Path,

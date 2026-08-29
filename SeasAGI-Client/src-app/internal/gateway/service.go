@@ -15,6 +15,7 @@ import (
 	"github.com/SeasAGI/SeasAGI-Client/internal/auth"
 	"github.com/SeasAGI/SeasAGI-Client/internal/config"
 	"github.com/SeasAGI/SeasAGI-Client/internal/keychain"
+	"github.com/SeasAGI/SeasAGI-Client/internal/logging"
 	"github.com/SeasAGI/SeasAGI-Client/internal/logs"
 	"github.com/SeasAGI/SeasAGI-Client/internal/protocol"
 	"github.com/SeasAGI/SeasAGI-Client/internal/providers"
@@ -127,10 +128,10 @@ func NewService(
 	stateStore, err := providers.NewStateStore("")
 	if err != nil {
 		// Non-fatal: continue without persistence
-		fmt.Printf("warning: state store init failed: %v\n", err)
+		logging.Warningf("state store init failed: %v", err)
 	} else {
 		if err := stateStore.LoadAll(penaltyMgr, cooldownMgr); err != nil {
-			fmt.Printf("warning: state restore failed: %v\n", err)
+			logging.Warningf("state restore failed: %v", err)
 		}
 	}
 

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"log"
 	"mime"
 	"net/http"
 	"os"
@@ -25,6 +24,7 @@ import (
 	combotemplate "github.com/SeasAGI/SeasAGI-Server/platform-api/internal/combotemplate"
 	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/database"
 	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/device"
+	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/logging"
 	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/modelcatalog"
 	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/providerresource"
 	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/relay"
@@ -46,12 +46,12 @@ func Execute() error {
 		return fmt.Errorf("database init failed: %w", err)
 	}
 	defer database.Close()
-	log.Println("Database initialized")
+	logging.Info("Database initialized")
 
 	if err := modelcatalog.LoadAndSyncCatalog(); err != nil {
-		log.Printf("Warning: model catalog sync failed: %v", err)
+		logging.Warningf("model catalog sync failed: %v", err)
 	} else {
-		log.Println("Model catalog synced")
+		logging.Info("Model catalog synced")
 	}
 
 	r := gin.New()
@@ -181,7 +181,7 @@ func Execute() error {
 		_ = server.Shutdown(ctx)
 	}()
 
-	fmt.Printf("Platform API starting on :%s\n", port)
+	logging.Infof("Platform API starting on :%s", port)
 	err := server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		return err
@@ -192,7 +192,7 @@ func Execute() error {
 func registerAdminUI(r *gin.Engine) {
 	sub, err := fs.Sub(adminAssets, "admin_dist")
 	if err != nil {
-		log.Printf("Warning: admin UI assets not found: %v", err)
+		logging.Warningf("admin UI assets not found: %v", err)
 		return
 	}
 
@@ -299,13 +299,13 @@ func debugLogMiddleware() gin.HandlerFunc {
 		bodyBytes, _ := io.ReadAll(c.Request.Body)
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
-		log.Printf("[DEBUG] >>> %s %s", c.Request.Method, c.Request.URL.String())
+		logging.Debugf(">>> %s %s", c.Request.Method, c.Request.URL.String())
 		if len(bodyBytes) > 0 {
 			bodyStr := string(bodyBytes)
 			if len(bodyStr) > 2048 {
 				bodyStr = bodyStr[:2048] + "... (truncated)"
 			}
-			log.Printf("[DEBUG] >>> Request Body: %s", bodyStr)
+			logging.Debugf(">>> Request Body: %s", bodyStr)
 		}
 
 		blw := &bodyLogWriter{body: bytes.NewBufferString(""), ResponseWriter: c.Writer}
@@ -316,7 +316,7 @@ func debugLogMiddleware() gin.HandlerFunc {
 		if len(respBody) > 2048 {
 			respBody = respBody[:2048] + "... (truncated)"
 		}
-		log.Printf("[DEBUG] <<< %d %s", c.Writer.Status(), respBody)
+		logging.Debugf("<<< %d %s", c.Writer.Status(), respBody)
 	}
 }
 

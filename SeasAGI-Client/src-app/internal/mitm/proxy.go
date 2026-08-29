@@ -5,11 +5,12 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/SeasAGI/SeasAGI-Client/internal/logging"
 )
 
 // Proxy 是 MITM 拦截代理服务器。它监听本地端口，对命中规则的 HTTPS 请求进行拦截（动态签发证书），
@@ -257,7 +258,7 @@ func (p *Proxy) passthroughConnect(w http.ResponseWriter, r *http.Request, host 
 		}
 		state := upstreamTLSConn.ConnectionState()
 		if err := CheckPin(host, &state); err != nil {
-			log.Printf("mitm: certificate pin check failed for %s: %v", host, err)
+			logging.Warningf("mitm: certificate pin check failed for %s: %v", host, err)
 			_ = upstreamTLSConn.Close()
 			http.Error(w, "certificate pin verification failed", http.StatusBadGateway)
 			return

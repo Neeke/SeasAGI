@@ -4,13 +4,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"sort"
 	"sync"
 	"time"
 
+	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/logging"
 	"gopkg.in/yaml.v3"
 )
 
@@ -517,7 +517,7 @@ func (s *Store) LoadModelCatalog() error {
 			string(caps), string(inMods), string(outMods), string(params), string(meta))
 	}
 
-	log.Printf("Model catalog loaded: %d models from %s", len(cat.Models), catalogPath)
+	logging.Infof("model catalog loaded: %d models from %s", len(cat.Models), catalogPath)
 	return nil
 }
 

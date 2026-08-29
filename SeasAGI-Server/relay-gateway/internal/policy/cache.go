@@ -2,11 +2,12 @@ package policy
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/SeasAGI/SeasAGI-Server/relay-gateway/internal/logging"
 )
 
 type ChannelSnapshot struct {
@@ -74,7 +75,7 @@ func (c *Cache) refreshChannels() {
 	url := c.platformAPIURL + "/api/v1/channels"
 	resp, err := http.Get(url)
 	if err != nil {
-		log.Printf("Channel fetch error: %v", err)
+		logging.Errorf("channel fetch error: %v", err)
 		return
 	}
 	defer resp.Body.Close()
@@ -87,7 +88,7 @@ func (c *Cache) refreshChannels() {
 		Data []ChannelSnapshot `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		log.Printf("Channel decode error: %v", err)
+		logging.Errorf("channel decode error: %v", err)
 		return
 	}
 

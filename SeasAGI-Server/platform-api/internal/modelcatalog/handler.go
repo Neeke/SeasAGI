@@ -4,13 +4,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 
-	"github.com/gin-gonic/gin"
 	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/database"
+	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/logging"
+	"github.com/gin-gonic/gin"
 	"gopkg.in/yaml.v3"
 )
 
@@ -196,12 +196,12 @@ func LoadAndSyncCatalog() error {
 			continue
 		}
 		if err := upsertModel(m); err != nil {
-			log.Printf("modelcatalog: failed to upsert model %s: %v", m.Name, err)
+			logging.Errorf("modelcatalog: failed to upsert model %s: %v", m.Name, err)
 			continue
 		}
 		synced++
 	}
-	log.Printf("modelcatalog: synced %d/%d models from %s", synced, len(catalog.Models), path)
+	logging.Infof("modelcatalog: synced %d/%d models from %s", synced, len(catalog.Models), path)
 	return nil
 }
 

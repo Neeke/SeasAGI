@@ -1,21 +1,21 @@
 package admin
 
 import (
-	"log"
 	"net/http"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/database"
 	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/i18n"
+	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/logging"
+	"github.com/gin-gonic/gin"
 )
 
 func Middleware() gin.HandlerFunc {
 	adminSecret := os.Getenv("ADMIN_SECRET")
 	if adminSecret == "" {
-		log.Fatal("ADMIN_SECRET environment variable is required. Set it in production!")
+		logging.Fatal("ADMIN_SECRET environment variable is required. Set it in production!")
 	}
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
