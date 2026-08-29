@@ -26,6 +26,8 @@ export interface MarketOrder {
   amount: number;
   commission_amount: number;
   settlement_amount: number;
+  commission_rate: number;
+  currency: string;
   status: "pending" | "confirmed" | "cancelled" | "settled";
   scan_code: string;
   trade_confirmed_at: string;
@@ -58,6 +60,8 @@ interface MarketStore {
   commissionPreview: { amount: number; commission: number; payout: number } | null;
   loading: boolean;
   error: string | null;
+  freeChannelsCache: unknown[] | null;
+  freeChannelsCacheTime: number | null;
   setMarketVisible: (visible: boolean) => void;
   setMarketListings: (listings: MarketListing[]) => void;
   setMyListings: (listings: MarketListing[]) => void;
@@ -67,6 +71,8 @@ interface MarketStore {
   setCommissionPreview: (preview: { amount: number; commission: number; payout: number } | null) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  setFreeChannelsCache: (data: unknown[]) => void;
+  reset: () => void;
 }
 
 export const useMarketStore = create<MarketStore>((set) => ({
@@ -79,6 +85,8 @@ export const useMarketStore = create<MarketStore>((set) => ({
   commissionPreview: null,
   loading: false,
   error: null,
+  freeChannelsCache: null,
+  freeChannelsCacheTime: null,
   setMarketVisible: (marketVisible) => set({ marketVisible }),
   setMarketListings: (marketListings) => set({ marketListings }),
   setMyListings: (myListings) => set({ myListings }),
@@ -88,4 +96,18 @@ export const useMarketStore = create<MarketStore>((set) => ({
   setCommissionPreview: (commissionPreview) => set({ commissionPreview }),
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error }),
+  setFreeChannelsCache: (data) => set({ freeChannelsCache: data, freeChannelsCacheTime: Date.now() }),
+  reset: () => set({
+    marketVisible: false,
+    marketListings: [],
+    myListings: [],
+    myOrders: [],
+    mySettlements: [],
+    tradeSession: null,
+    commissionPreview: null,
+    loading: false,
+    error: null,
+    freeChannelsCache: null,
+    freeChannelsCacheTime: null,
+  }),
 }));

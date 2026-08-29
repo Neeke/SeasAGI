@@ -12,23 +12,37 @@ export function TokenMyOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [settlingId, setSettlingId] = useState<string | null>(null);
+  // C6: 分页和状态筛选
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
+  const [, setTotal] = useState(0);
+  const [statusFilter, setStatusFilter] = useState("");
   // P11: 评价功能
   const [reviewOrder, setReviewOrder] = useState<string | null>(null);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (pageNum?: number, status?: string) => {
     setLoading(true);
     setError(null);
     try {
+      const p = pageNum ?? page;
+      const st = status ?? statusFilter;
       const [baseURL, token] = await Promise.all([getPlatformAPIBaseURL(), getPlatformToken()]);
-      const resp = await fetch(`${baseURL}/token-market/orders`, {
+      const params = new URLSearchParams();
+      params.set("page", String(p));
+      params.set("page_size", String(pageSize));
+      if (st) params.set("status", st);
+      const resp = await fetch(`${baseURL}/token-market/orders?${params}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data = await resp.json();
       setMyOrders(data.data || []);
+      setTotal(data.total || 0);
+      setTotalPages(data.total_pages || 1);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -37,7 +51,7 @@ export function TokenMyOrdersPage() {
   };
 
   useEffect(() => {
-    fetchOrders();
+    fetchOrders(1, "");
   }, []);
 
   const handleSettle = async (orderId: string) => {
@@ -114,6 +128,29 @@ export function TokenMyOrdersPage() {
         </div>
       </div>
 
+      {/* C6: Status filter */}
+      <div className="token-market-filters" style={{ display: "flex", gap: "12px", alignItems: "flex-end", marginBottom: "16px" }}>
+        <div className="filter-field">
+          <label className="filter-label" style={{ fontSize: "12px", display: "block", marginBottom: "4px" }}>{t("tokenMarket.status")}</label>
+          <select
+            className="form-input"
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+              fetchOrders(1, e.target.value);
+            }}
+            style={{ width: "140px" }}
+          >
+            <option value="">{t("tokenMarket.all")}</option>
+            <option value="pending">{t("tokenMarket.orderPending")}</option>
+            <option value="confirmed">{t("tokenMarket.orderConfirmed")}</option>
+            <option value="cancelled">{t("tokenMarket.orderCancelled")}</option>
+            <option value="settled">{t("tokenMarket.orderSettled")}</option>
+          </select>
+        </div>
+      </div>
+
       {loading && <div className="loading-state">{t("common.loading")}</div>}
       {error && <div className="form-error">{error}</div>}
 
@@ -125,6 +162,7 @@ export function TokenMyOrdersPage() {
       )}
 
       {!loading && myOrders.length > 0 && (
+        <>
         <table className="data-table">
           <thead>
             <tr>
@@ -191,6 +229,28 @@ export function TokenMyOrdersPage() {
             ))}
           </tbody>
         </table>
+
+        {/* C6: Pagination */}
+        {totalPages > 1 && (
+          <div className="token-market-load-more" style={{ marginTop: "16px", display: "flex", gap: "8px", justifyContent: "center" }}>
+            <button
+              className="btn btn-secondary"
+              disabled={page <= 1}
+              onClick={() => { const np = page - 1; setPage(np); fetchOrders(np); }}
+            >
+              ← Prev
+            </button>
+            <span style={{ padding: "8px 12px", alignSelf: "center" }}>{page} / {totalPages}</span>
+            <button
+              className="btn btn-secondary"
+              disabled={page >= totalPages}
+              onClick={() => { const np = page + 1; setPage(np); fetchOrders(np); }}
+            >
+              Next →
+            </button>
+          </div>
+        )}
+        </>
       )}
 
       {/* P11: 评价弹窗 */}

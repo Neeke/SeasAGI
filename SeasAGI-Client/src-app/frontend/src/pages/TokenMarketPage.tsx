@@ -32,6 +32,10 @@ export function TokenMarketPage() {
   const [freeChannels, setFreeChannels] = useState<FreeChannel[]>([]);
   const [freeFilterTab, setFreeFilterTab] = useState<FreeFilterTab>("all");
   const [viewMode, setViewMode] = useState<MarketViewMode>("card");
+  // F7: Free channel cache from store
+  const freeChannelsCache = useMarketStore((s) => s.freeChannelsCache);
+  const freeChannelsCacheTime = useMarketStore((s) => s.freeChannelsCacheTime);
+  const setFreeChannelsCache = useMarketStore((s) => s.setFreeChannelsCache);
   // P11: 搜索/筛选/排序
   const [search, setSearch] = useState("");
   const [minPrice, setMinPrice] = useState("");
@@ -80,14 +84,22 @@ export function TokenMarketPage() {
 
   useEffect(() => {
     fetchListings(1, false);
-    (async () => {
-      try {
-        const data = await fetchFreeChannels();
-        setFreeChannels(data as FreeChannel[]);
-      } catch {
-        setFreeChannels([]);
-      }
-    })();
+    // F7: Use cached free channels if within 5 minutes
+    const now = Date.now();
+    const cacheAge = now - (freeChannelsCacheTime ?? 0);
+    if (freeChannelsCache && cacheAge < 5 * 60 * 1000) {
+      setFreeChannels(freeChannelsCache as FreeChannel[]);
+    } else {
+      (async () => {
+        try {
+          const data = await fetchFreeChannels();
+          setFreeChannels(data as FreeChannel[]);
+          setFreeChannelsCache(data as unknown[]);
+        } catch {
+          setFreeChannels([]);
+        }
+      })();
+    }
   }, [filterKey]);
 
   const handleSearch = () => {
@@ -131,6 +143,8 @@ export function TokenMarketPage() {
       display_name: ch.display_name,
       base_url: ch.base_url,
       channel_type: "custom",
+      auth_type: ch.auth_type,
+      preset_models: JSON.stringify(ch.models.map((m) => m.model_id)),
     });
     navigate(`/channels/new?${params}`);
   };
@@ -182,10 +196,10 @@ export function TokenMarketPage() {
               <p>{t("tokenMarket.freeChannelsHint")}</p>
             </div>
             <div className="token-market-free-stats">
-              <span className="free-stat-badge free-stat-keyless">永久免费: {freeStats.keyless}</span>
-              <span className="free-stat-badge free-stat-recurring">每月免费: {freeStats.recurring}</span>
-              <span className="free-stat-badge free-stat-onetime">注册赠送: {freeStats.oneTime}</span>
-              <span className="free-stat-badge free-stat-models">免费模型: {freeStats.totalModels}</span>
+              <span className="free-stat-badge free-stat-keyless">{t("tokenMarket.keyless")}: {freeStats.keyless}</span>
+              <span className="free-stat-badge free-stat-recurring">{t("tokenMarket.recurringMonthly")}: {freeStats.recurring}</span>
+              <span className="free-stat-badge free-stat-onetime">{t("tokenMarket.oneTimeInitial")}: {freeStats.oneTime}</span>
+              <span className="free-stat-badge free-stat-models">{t("tokenMarket.freeModels")}: {freeStats.totalModels}</span>
             </div>
           </div>
           <div className="token-market-free-tabs">
@@ -195,7 +209,7 @@ export function TokenMarketPage() {
                 className={`free-tab ${freeFilterTab === tab ? "active" : ""}`}
                 onClick={() => setFreeFilterTab(tab)}
               >
-                {tab === "all" ? "全部" : tab === "keyless" ? "永久免费" : tab === "recurring-monthly" ? "每月免费" : "注册赠送"}
+                {tab === "all" ? t("tokenMarket.all") : tab === "keyless" ? t("tokenMarket.keyless") : tab === "recurring-monthly" ? t("tokenMarket.recurringMonthly") : t("tokenMarket.oneTimeInitial")}
               </button>
             ))}
           </div>
@@ -233,7 +247,7 @@ export function TokenMarketPage() {
                   className="btn btn-sm btn-outline free-import-btn"
                   onClick={() => handleImportFreeChannel(ch)}
                 >
-                  导入为通道
+                  {t("tokenMarket.importAsChannel")}
                 </button>
               </div>
             ))}

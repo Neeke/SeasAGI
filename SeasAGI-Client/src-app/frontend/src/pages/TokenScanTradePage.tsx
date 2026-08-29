@@ -135,7 +135,7 @@ export function TokenScanTradePage() {
             <span className="detail-value price-value">{order.amount}</span>
           </div>
           <div className="detail-row">
-            <span className="detail-key">{t("tokenMarket.commission")}(10%)</span>
+            <span className="detail-key">{t("tokenMarket.commission")} ({order.commission_rate ? (order.commission_rate * 100).toFixed(1) : "0"}%)</span>
             <span className="detail-value">{order.commission_amount}</span>
           </div>
           <div className="detail-row">

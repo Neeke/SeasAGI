@@ -35,9 +35,19 @@ export function TokenListingCreatePage() {
         currency,
       };
       if (saleType === "fixed_price") {
-        body.price = parseFloat(price) || 0;
+        body.price = parseFloat(price);
+        if (!body.price || body.price <= 0) {
+          throw new Error(t("tokenMarket.price") + " must be positive");
+        }
       } else {
-        body.discount_rate = parseFloat(discountRate) || 0;
+        body.discount_rate = parseFloat(discountRate);
+        if (!body.discount_rate || body.discount_rate <= 0 || body.discount_rate > 1) {
+          throw new Error(t("tokenMarket.discountRate") + " must be between 0 and 1");
+        }
+        body.price = parseFloat(price);
+        if (!body.price || body.price <= 0) {
+          throw new Error(t("tokenMarket.price") + " must be positive");
+        }
       }
       if (availableQuota) {
         body.available_quota = parseFloat(availableQuota) || 0;
@@ -125,20 +135,35 @@ export function TokenListingCreatePage() {
             />
           </div>
         ) : (
-          <div className="form-group">
-            <label className="form-label">{t("tokenMarket.discountRate")} (0-1)</label>
-            <input
-              className="form-input"
-              type="number"
-              step="0.01"
-              min="0"
-              max="1"
-              value={discountRate}
-              onChange={(e) => setDiscountRate(e.target.value)}
-              placeholder="0.20"
-              required
-            />
-          </div>
+          <>
+            <div className="form-group">
+              <label className="form-label">{t("tokenMarket.price")} ({currency})</label>
+              <input
+                className="form-input"
+                type="number"
+                step="0.01"
+                min="0"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="0.00"
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">{t("tokenMarket.discountRate")} (0-1)</label>
+              <input
+                className="form-input"
+                type="number"
+                step="0.01"
+                min="0"
+                max="1"
+                value={discountRate}
+                onChange={(e) => setDiscountRate(e.target.value)}
+                placeholder="0.20"
+                required
+              />
+            </div>
+          </>
         )}
 
         <div className="form-group">
