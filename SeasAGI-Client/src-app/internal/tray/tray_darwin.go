@@ -59,9 +59,10 @@ func stopPlatformTray() {
 func rebuildPlatformMenu(showFn, quitFn func(), channels []ChannelInfo, onSwitch func(string)) {
 	C.clearTrayMenu()
 
+	// ponytail: nextTag 单调递增不归零——异步 clearTrayMenu 生效前点击旧菜单项时，
+	// 旧 tag 在新 map 中自然 miss（no-op），不会误触新 handler。
 	menuMu.Lock()
 	menuByTag = make(map[int]func())
-	nextTag = 0
 	menuMu.Unlock()
 
 	{
@@ -81,8 +82,11 @@ func rebuildPlatformMenu(showFn, quitFn func(), channels []ChannelInfo, onSwitch
 		if !ch.Enabled {
 			label = label + " (已禁用)"
 		}
+		menuMu.Lock()
+		active := ch.ID == activeChanID
+		menuMu.Unlock()
 		checked := 0
-		if ch.ID == activeChanID {
+		if active {
 			checked = 1
 		}
 		tag := nextMenuTag(func() {
@@ -113,9 +117,7 @@ func rebuildPlatformMenu(showFn, quitFn func(), channels []ChannelInfo, onSwitch
 }
 
 func setActiveChannel(id string) {
+	menuMu.Lock()
 	activeChanID = id
-}
-
-func getActiveChannel() string {
-	return activeChanID
+	menuMu.Unlock()
 }

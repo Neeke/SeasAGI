@@ -364,10 +364,12 @@ func (s *Service) handleChatCompletions(w http.ResponseWriter, r *http.Request) 
 			taskType = "tools"
 		}
 	}
+	// v0.2.0: 场景化意图识别（Fast Path 启发式），驱动 Combo 按需适配路由
+	intent := routing.DetectIntent(req.Messages)
 	if taskType == "" || taskType == "chat" {
 		// Auto-detect task type from message content when not explicitly set
-		if detected := routing.DetectTaskType(req.Messages); detected != "chat" {
-			taskType = detected
+		if intent.TaskType != "chat" {
+			taskType = intent.TaskType
 		}
 	}
 	if taskType == "" {
@@ -393,7 +395,16 @@ func (s *Service) handleChatCompletions(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	normalizedModel, plan, err := s.resolver.ResolveChatPlan(req.Model, taskType)
+	// 调试注入开关（仅本地 Playground 使用）：命中后在非流式响应附加 _combo_steps/_intent
+	debugTrace := false
+	if rawBody != nil {
+		if v, ok := rawBody["_seasagi_debug"].(bool); ok {
+			debugTrace = v
+			delete(rawBody, "_seasagi_debug") // 不向下游透传
+		}
+	}
+
+	normalizedModel, plan, err := s.resolver.ResolveChatPlan(req.Model, taskType, intent)
 	if err != nil {
 		writeJSONError(w, http.StatusBadRequest, err.Error())
 		return
@@ -446,6 +457,10 @@ func (s *Service) handleChatCompletions(w http.ResponseWriter, r *http.Request) 
 
 	defer func() {
 		duration := float64(time.Since(start).Milliseconds())
+		intentScenario := ""
+		if intent != nil {
+			intentScenario = intent.Scenario
+		}
 		_ = s.logSvc.RecordLog(logs.RequestLog{
 			RequestID:          fmt.Sprintf("req_%d", time.Now().UnixNano()),
 			CreatedAt:          time.Now().UTC().Format(time.RFC3339),
@@ -459,6 +474,7 @@ func (s *Service) handleChatCompletions(w http.ResponseWriter, r *http.Request) 
 			ErrorCode:          errCode,
 			ErrorMessage:       errMessage,
 			AppliedConstraints: constraintsJSON,
+			IntentScenario:     intentScenario,
 		})
 	}()
 
@@ -510,6 +526,10 @@ func (s *Service) handleChatCompletions(w http.ResponseWriter, r *http.Request) 
 	// Record success metrics for the combo
 	s.recordComboMetrics(normalizedModel, len(attempts), true)
 	copyHeaders(w.Header(), resp.Header)
+	injectDebug := debugTrace && !req.Stream
+	if injectDebug {
+		w.Header().Del("Content-Length") // 注入后长度变化，交给 Go 自动分块
+	}
 	w.WriteHeader(resp.StatusCode)
 
 	if req.Stream {
@@ -566,7 +586,34 @@ func (s *Service) handleChatCompletions(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
+	if injectDebug {
+		// ponytail: 仅覆盖普通非流式路径；rtk/reasoning 分支提前 return，不含调试字段
+		respBytes, readErr := io.ReadAll(resp.Body)
+		if readErr == nil {
+			_, _ = w.Write(injectDebugKeys(respBytes, routeSteps, intent))
+			return
+		}
+	}
+
 	_, _ = io.Copy(w, resp.Body)
+}
+
+// injectDebugKeys 在非流式 JSON 响应中附加执行链轨迹与识别意图，供 Playground 诊断展示。
+func injectDebugKeys(body []byte, routeSteps []logs.RouteStep, intent *routing.IntentContext) []byte {
+	var m map[string]any
+	if err := json.Unmarshal(body, &m); err != nil || m == nil {
+		return body
+	}
+	if len(routeSteps) > 0 {
+		m["_combo_steps"] = routeSteps
+	}
+	if intent != nil {
+		m["_intent"] = intent
+	}
+	if out, err := json.Marshal(m); err == nil {
+		return out
+	}
+	return body
 }
 
 func (s *Service) validateToken(r *http.Request) bool {

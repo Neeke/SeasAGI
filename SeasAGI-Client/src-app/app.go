@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -38,6 +39,7 @@ import (
 	"github.com/SeasAGI/SeasAGI-Client/internal/plugin"
 	"github.com/SeasAGI/SeasAGI-Client/internal/presets"
 	"github.com/SeasAGI/SeasAGI-Client/internal/prompts"
+	"github.com/SeasAGI/SeasAGI-Client/internal/routing"
 	"github.com/SeasAGI/SeasAGI-Client/internal/sessions"
 	"github.com/SeasAGI/SeasAGI-Client/internal/skills"
 	"github.com/SeasAGI/SeasAGI-Client/internal/sync"
@@ -286,6 +288,50 @@ func (a *App) GetRuntimeStatus() map[string]any {
 		"default_model":      emptyStringToNil(cfg.DefaultModel),
 		"default_channel_id": emptyStringToNil(cfg.DefaultChannelID),
 	}
+}
+
+// SimulateIntentRouting 意图预测实验室（M4.4）：对给定 Prompt 跑意图检测 + 路由解析，
+// 只返回决策结果，不发起任何上游请求。model 为空时与网关同语义（默认 Combo）。
+func (a *App) SimulateIntentRouting(prompt string, model string) map[string]any {
+	intent := routing.DetectIntent([]map[string]interface{}{{"role": "user", "content": prompt}})
+	result := map[string]any{
+		"intent": map[string]any{
+			"task_type":      intent.TaskType,
+			"scenario":       intent.Scenario,
+			"required_iq":    intent.RequiredIQ,
+			"security_level": intent.SecurityLevel,
+			"tags":           intent.Tags,
+			"confidence":     intent.Confidence,
+		},
+	}
+	if model == "" {
+		model = a.configSvc.GetDefaultComboName()
+	}
+	resolver := routing.NewResolver(a.configSvc)
+	planName, steps, err := resolver.ResolveChatPlan(model, intent.TaskType, intent)
+	if err != nil {
+		result["error"] = err.Error()
+		return result
+	}
+	stepList := make([]map[string]any, 0, len(steps))
+	for i, step := range steps {
+		stepList = append(stepList, map[string]any{
+			"order":          i + 1,
+			"channel_id":     step.Channel.ChannelID,
+			"channel_name":   step.Channel.DisplayName,
+			"upstream_model": step.UpstreamModel,
+			"step_role":      step.StepRole,
+		})
+	}
+	result["model"] = model
+	result["plan_name"] = planName
+	result["steps"] = stepList
+	return result
+}
+
+// GetIntentScenarioStats 意图场景分布统计（M4.5）。
+func (a *App) GetIntentScenarioStats() []map[string]any {
+	return a.logSvc.GetIntentScenarioStats()
 }
 
 // GetComboRouteMetrics returns combo-level route metrics from the gateway
@@ -757,7 +803,7 @@ func (a *App) CreateCheckoutSession(planID string, quantity ...int) (map[string]
 				errMsg = e
 			}
 		}
-		return nil, fmt.Errorf(errMsg)
+		return nil, errors.New(errMsg)
 	}
 	return result, nil
 }
@@ -2043,6 +2089,8 @@ func (a *App) ChatCompletion(messages []map[string]any, model string) (map[strin
 	body := map[string]any{
 		"model":    model,
 		"messages": messages,
+		// 本地网关识别该标记后，在非流式响应中附加 _combo_steps/_intent 诊断字段
+		"_seasagi_debug": true,
 	}
 	bodyBytes, err := json.Marshal(body)
 	if err != nil {

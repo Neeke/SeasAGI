@@ -178,6 +178,10 @@ export function GetEvalScorecard(arg1) {
   return window['go']['main']['App']['GetEvalScorecard'](arg1);
 }
 
+export function GetIntentScenarioStats() {
+  return window['go']['main']['App']['GetIntentScenarioStats']();
+}
+
 export function GetLocalAccessToken() {
   return window['go']['main']['App']['GetLocalAccessToken']();
 }
@@ -576,6 +580,10 @@ export function SetSelectedGrant(arg1, arg2) {
 
 export function ShowMessage(arg1, arg2) {
   return window['go']['main']['App']['ShowMessage'](arg1, arg2);
+}
+
+export function SimulateIntentRouting(arg1, arg2) {
+  return window['go']['main']['App']['SimulateIntentRouting'](arg1, arg2);
 }
 
 export function StartLocalGateway() {

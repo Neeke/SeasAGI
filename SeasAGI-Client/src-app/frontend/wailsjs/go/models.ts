@@ -837,6 +837,7 @@ export namespace logs {
 	    error_code?: string;
 	    error_message?: string;
 	    applied_constraints?: string;
+	    intent_scenario?: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new RequestLog(source);
@@ -856,6 +857,7 @@ export namespace logs {
 	        this.error_code = source["error_code"];
 	        this.error_message = source["error_message"];
 	        this.applied_constraints = source["applied_constraints"];
+	        this.intent_scenario = source["intent_scenario"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

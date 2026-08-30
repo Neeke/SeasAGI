@@ -13,7 +13,3 @@ func rebuildPlatformMenu(showFn, quitFn func(), channels []ChannelInfo, onSwitch
 
 func setActiveChannel(id string) {
 }
-
-func getActiveChannel() string {
-	return ""
-}

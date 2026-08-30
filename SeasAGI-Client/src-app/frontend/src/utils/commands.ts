@@ -18,6 +18,8 @@ type WailsAppApi = {
   PreviewComboOptimization(mode: string, taskType: string): Promise<any>;
   ApplyComboOptimization(toModel: string, preset: string, updateExisting: boolean): Promise<void>;
   GetComboRouteMetrics(): Promise<any[]>;
+  SimulateIntentRouting(prompt: string, model: string): Promise<any>;
+  GetIntentScenarioStats(): Promise<any[]>;
   GetDefaultComboName(): Promise<string>;
   SetDefaultComboName(name: string): Promise<void>;
   GetComboByName(name: string): Promise<ModelCombo>;
@@ -492,6 +494,14 @@ export async function applyComboOptimization(toModel: string, preset: string, up
 
 export async function getComboRouteMetrics(): Promise<any[]> {
   return getAppApi().GetComboRouteMetrics();
+}
+
+export async function simulateIntentRouting(prompt: string, model: string): Promise<any> {
+  return getAppApi().SimulateIntentRouting(prompt, model);
+}
+
+export async function getIntentScenarioStats(): Promise<any[]> {
+  return getAppApi().GetIntentScenarioStats();
 }
 
 export async function getDefaultComboName(): Promise<string> {

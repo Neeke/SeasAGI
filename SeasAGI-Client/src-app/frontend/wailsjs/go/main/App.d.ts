@@ -101,6 +101,8 @@ export function GetDefaultComboName():Promise<string>;
 
 export function GetEvalScorecard(arg1:string):Promise<Record<string, any>>;
 
+export function GetIntentScenarioStats():Promise<Array<Record<string, any>>>;
+
 export function GetLocalAccessToken():Promise<string>;
 
 export function GetLocale():Promise<string>;
@@ -300,6 +302,8 @@ export function SetRateLimitConfig(arg1:Record<string, any>):Promise<void>;
 export function SetSelectedGrant(arg1:string,arg2:string):Promise<void>;
 
 export function ShowMessage(arg1:string,arg2:string):Promise<void>;
+
+export function SimulateIntentRouting(arg1:string,arg2:string):Promise<Record<string, any>>;
 
 export function StartLocalGateway():Promise<void>;
 
