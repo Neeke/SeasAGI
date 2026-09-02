@@ -139,7 +139,7 @@ func (a *App) startup(ctx context.Context) {
 func (a *App) GetAppInfo() map[string]any {
 	return map[string]any{
 		"name":    "SeasAGI",
-		"version": "0.1.0",
+		"version": "0.1.5",
 	}
 }
 
@@ -727,7 +727,12 @@ func (a *App) FetchFreeChannels() []map[string]any {
 	}
 	seeds, err := a.authSvc.FetchFreeChannels(a.ctx)
 	if err != nil {
-		return []map[string]any{{"error": err.Error()}}
+		// 返回空列表而不是包含 error 字段的对象：前端 Token 市场直接访问 ch.models.length，
+		// 缺少 models 字段的数据会导致页面崩溃白屏。
+		return []map[string]any{}
+	}
+	if seeds == nil {
+		return []map[string]any{}
 	}
 	return seeds
 }

@@ -150,7 +150,7 @@ Version numbers are maintained by a single file, injected during build, and not 
 [`scripts/version.txt`](file:///Users/Neeke/data/www/SeasAGI/SeasAGI/SeasAGI-Client/scripts/version.txt) is the single version definition file:
 
 ```
-0.1.0
+0.1.5
 ```
 
 - Update the version by modifying this single file
@@ -168,7 +168,7 @@ Version numbers are maintained by a single file, injected during build, and not 
 The version badge is shown to the right of the logo in the upper-left corner of the client UI:
 
 ```
-[icon] SeasAGI  v0.1.0
+[icon] SeasAGI  v0.1.5
 ```
 
 Implementation location: [`Layout.tsx`](file:///Users/Neeke/data/www/SeasAGI/SeasAGI/SeasAGI-Client/src-app/frontend/src/components/Layout.tsx) renders it using `import.meta.env.VITE_APP_VERSION`.

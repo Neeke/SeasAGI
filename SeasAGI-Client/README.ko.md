@@ -149,7 +149,7 @@ SeasAGI-Client/
 [`scripts/version.txt`](file:///Users/Neeke/data/www/SeasAGI/SeasAGI/SeasAGI-Client/scripts/version.txt) 가 유일한 버전 번호 정의 파일입니다:
 
 ```
-0.1.0
+0.1.5
 ```
 
 - 버전 번호 업데이트는 이 파일만 수정하면 됩니다.
@@ -167,7 +167,7 @@ SeasAGI-Client/
 클라이언트 인터페이스左上단 Logo 오른쪽에 버전 번호 배지가 표시됩니다:
 
 ```
-[icon] SeasAGI  v0.1.0
+[icon] SeasAGI  v0.1.5
 ```
 
 구현 위치: [`Layout.tsx`](file:///Users/Neeke/data/www/SeasAGI/SeasAGI/SeasAGI-Client/src-app/frontend/src/components/Layout.tsx) 에서 `import.meta.env.VITE_APP_VERSION`을 사용하여 렌더링.

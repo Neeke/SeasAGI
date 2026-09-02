@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAppStore } from "../stores/appStore";
 import { useTranslation } from "../i18n";
-import { getCloudBilling, getRuntimeStatus } from "../utils/commands";
+import { getCloudBilling, getRuntimeStatus, fetchFreeChannels } from "../utils/commands";
 import { useConfigSync } from "../hooks/useConfigSync";
+import { useMarketStore } from "../stores/marketStore";
 import seasagiIcon from "../assets/seasagi-icon.png";
 
 type AppIconName =
@@ -183,6 +184,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
     })();
   }, [auth.is_logged_in, setCloudBilling]);
 
+  // 登录后（含会话恢复）预加载 Token 市场免费通道，进入市场页即可直接展示
+  useEffect(() => {
+    if (!auth.is_logged_in) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await fetchFreeChannels();
+        if (!cancelled && Array.isArray(data) && data.length > 0) {
+          useMarketStore.getState().setFreeChannelsCache(data);
+        }
+      } catch {
+        // silent fail - 打开 Token 市场页面时会重试
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [auth.is_logged_in]);
+
   useConfigSync();
 
   useEffect(() => {
@@ -212,7 +230,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <img src={seasagiIcon} alt="SeasAGI" className="sidebar-logo-img" />
                 <div className="sidebar-logo-info">
                   <span className="logo-text">SeasAGI</span>
-                  <span className="logo-version">v0.1.0</span>
+                  <span className="logo-version">v0.1.5</span>
                 </div>
               </div>
               <AppIcon name="chevron" className="title-chevron" />

@@ -149,7 +149,7 @@ SeasAGI-Client/
 [`scripts/version.txt`](file:///Users/Neeke/data/www/SeasAGI/SeasAGI/SeasAGI-Client/scripts/version.txt) が唯一のバージョン番号定義ファイルです：
 
 ```
-0.1.0
+0.1.5
 ```
 
 - バージョン番号の更新はこのファイルを変更するだけで完了します
@@ -167,7 +167,7 @@ SeasAGI-Client/
 クライアントインターフェース左上の Logo 右側にバージョン番号バッジを表示：
 
 ```
-[icon] SeasAGI  v0.1.0
+[icon] SeasAGI  v0.1.5
 ```
 
 実装箇所：[`Layout.tsx`](file:///Users/Neeke/data/www/SeasAGI/SeasAGI/SeasAGI-Client/src-app/frontend/src/components/Layout.tsx) 内で `import.meta.env.VITE_APP_VERSION` を使用してレンダリング。

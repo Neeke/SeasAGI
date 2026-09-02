@@ -47,7 +47,7 @@ func (s *Server) Start(ctx context.Context) error {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"name":    "SeasAGI Web UI",
-			"version": "0.1.0",
+			"version": "0.1.5",
 			"mode":    "web",
 		})
 	})
