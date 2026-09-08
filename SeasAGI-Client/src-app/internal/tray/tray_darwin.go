@@ -15,6 +15,7 @@ void destroyTray();
 */
 import "C"
 import (
+	"strings"
 	"sync"
 	"unsafe"
 )
@@ -81,6 +82,13 @@ func rebuildPlatformMenu(showFn, quitFn func(), channels []ChannelInfo, onSwitch
 		label := ch.DisplayName
 		if !ch.Enabled {
 			label = label + " (已禁用)"
+		}
+		// ponytail: 本地库里可能存有脏数据——无效 UTF-8 字节会让 ObjC 侧
+		// stringWithUTF8String: 返回 nil（兜底见 tray_darwin.m 的 nil 防护），
+		// 空串则菜单项完全不可辨识，这里统一清洗成可显示的占位内容。
+		label = strings.ToValidUTF8(label, "\uFFFD")
+		if label == "" {
+			label = "(未命名通道)"
 		}
 		menuMu.Lock()
 		active := ch.ID == activeChanID

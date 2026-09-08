@@ -163,6 +163,14 @@ func runDesktop() {
 	go func() {
 		<-desktopSigCh
 		atomic.StoreInt32(&quitting, 1)
+		if app.ctx != nil {
+			// 走 Wails 正常退出路径（OnBeforeClose → OnShutdown → shutdownDeps）。
+			// 直接 shutdownDeps()+os.Exit 会在 ObjC 主循环（cgo）运行中拆掉
+			// 托盘等原生资源并硬退进程，导致退出时 SIGBUS 崩溃。
+			runtime.Quit(app.ctx)
+			return
+		}
+		// 窗口尚未启动的极早期信号：直接退出即可
 		shutdownDeps()
 		os.Exit(0)
 	}()

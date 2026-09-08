@@ -1,5 +1,7 @@
 #import <Cocoa/Cocoa.h>
 #import <dispatch/dispatch.h>
+#import <stdlib.h>
+#import <string.h>
 // goTrayMenuClick 由 cgo 的 //export 从 tray_darwin.go 导出。
 // _cgo_export.h 仅在 cgo 构建的临时目录中生成、源码目录中不存在，
 // 直接 include 会让 IDE/clangd 报 file not found——改为 extern 声明，
@@ -48,13 +50,24 @@ void createTray(void *iconData, int iconLen) {
 // 异步赋值，调用线程同步判断时它几乎必然还是 NULL，会静默丢弃所有菜单项。
 // 主队列 FIFO 保证 createTray 的 block 先于本 block 执行。
 void addTrayItem(const char *title, int tag, int isSeparator, int isChecked) {
+	// title 的生命周期只到本函数返回——Go 侧（C.CString + C.free）在返回后立即
+	// 释放原内存，而 dispatch block 稍后才执行，直接读 title 是 use-after-free：
+	// macOS malloc 会把 free-list 指针写进被释放小块的开头，标题变成垃圾字节，
+	// 令 stringWithUTF8String: 返回 nil，initWithTitle:nil 即抛
+	// NSInternalInconsistencyException 终止进程（启动闪退根因）。
+	// 必须先同步 strdup 一份，block 内转换成 NSString 后立即释放。
+	char *copy = (title != NULL) ? strdup(title) : NULL;
 	dispatch_async(dispatch_get_main_queue(), ^{
+		NSString *label = nil;
+		if (copy != NULL) {
+			label = [NSString stringWithUTF8String:copy];
+			free(copy);
+		}
 		if (statusItem == nil) return;
 		if (isSeparator) {
 			[statusItem.menu addItem:[NSMenuItem separatorItem]];
 		} else {
-			NSString *label = [NSString stringWithUTF8String:title];
-			NSMenuItem *mi = [[NSMenuItem alloc] initWithTitle:label action:@selector(menuItemClicked:) keyEquivalent:@""];
+			NSMenuItem *mi = [[NSMenuItem alloc] initWithTitle:(label != nil ? label : @"") action:@selector(menuItemClicked:) keyEquivalent:@""];
 			[mi setTag:tag];
 			[mi setTarget:delegate];
 			if (isChecked) {
