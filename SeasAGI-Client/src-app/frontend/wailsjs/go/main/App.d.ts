@@ -73,6 +73,8 @@ export function FetchMITMTargetsFromEnterprise():Promise<Record<string, any>>;
 
 export function FetchModelCatalog():Promise<Array<Record<string, any>>>;
 
+export function FetchModelIndex(arg1:string):Promise<Record<string, any>>;
+
 export function FetchModelStats():Promise<Array<Record<string, any>>>;
 
 export function FetchModelsFromURL(arg1:string,arg2:string):Promise<Record<string, any>>;

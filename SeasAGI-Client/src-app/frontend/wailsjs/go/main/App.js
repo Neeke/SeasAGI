@@ -122,6 +122,10 @@ export function FetchModelCatalog() {
   return window['go']['main']['App']['FetchModelCatalog']();
 }
 
+export function FetchModelIndex(arg1) {
+  return window['go']['main']['App']['FetchModelIndex'](arg1);
+}
+
 export function FetchModelStats() {
   return window['go']['main']['App']['FetchModelStats']();
 }

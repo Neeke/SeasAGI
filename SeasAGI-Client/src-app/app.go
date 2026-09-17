@@ -768,6 +768,19 @@ func (a *App) FetchModelCatalog() []map[string]any {
 	return models
 }
 
+// FetchModelIndex 拉取 AI 模型指数榜单（公开资讯，无需登录；企业服务端优先，降级平台 API）。
+// 返回 {category, updated_at, entries:[...]}，异常时返回 {"error": ...}。
+func (a *App) FetchModelIndex(category string) map[string]any {
+	data, err := a.authSvc.FetchModelIndex(a.ctx, category)
+	if err != nil {
+		return map[string]any{"error": err.Error()}
+	}
+	if data == nil {
+		return map[string]any{}
+	}
+	return data
+}
+
 func (a *App) CreateCheckoutSession(planID string, quantity ...int) (map[string]any, error) {
 	if !a.authSvc.IsLoggedIn() {
 		return nil, fmt.Errorf("not logged in")

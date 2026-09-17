@@ -357,6 +357,30 @@ export interface QuickStrategy {
 }
 
 // MITM 代理状态
+export interface ModelIndexEntry {
+  id: number;
+  category: string;
+  rank: number;
+  model_name: string;
+  provider: string;
+  provider_logo: string;
+  release_date: string;
+  eval_count: number;
+  evidence_status: string;
+  input_price: number;
+  output_price: number;
+  consensus_score: number;
+  detail_url: string;
+  source_key: string;
+  updated_at: string;
+}
+
+export interface ModelIndexData {
+  category: string;
+  updated_at: string;
+  entries: ModelIndexEntry[];
+}
+
 export interface MITMStatus {
   state: "stopped" | "starting" | "running" | "stopping" | "error";
   proxy_port: number;

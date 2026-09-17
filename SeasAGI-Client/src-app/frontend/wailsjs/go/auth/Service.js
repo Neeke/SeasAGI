@@ -50,6 +50,10 @@ export function FetchModelCatalog(arg1) {
   return window['go']['auth']['Service']['FetchModelCatalog'](arg1);
 }
 
+export function FetchModelIndex(arg1, arg2) {
+  return window['go']['auth']['Service']['FetchModelIndex'](arg1, arg2);
+}
+
 export function FetchOfficialComboTemplates(arg1) {
   return window['go']['auth']['Service']['FetchOfficialComboTemplates'](arg1);
 }

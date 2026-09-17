@@ -27,6 +27,8 @@ export function FetchFreeChannels(arg1:context.Context):Promise<Array<Record<str
 
 export function FetchModelCatalog(arg1:context.Context):Promise<Array<Record<string, any>>>;
 
+export function FetchModelIndex(arg1:context.Context,arg2:string):Promise<Record<string, any>>;
+
 export function FetchOfficialComboTemplates(arg1:context.Context):Promise<Array<auth.CloudComboTemplate>>;
 
 export function FetchPlans():Promise<Array<auth.CloudPlan>>;

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -72,7 +73,7 @@ func (s *Service) Register(email, password, displayName string) error {
 		if result.Error == "" {
 			result.Error = "platform registration failed"
 		}
-		return fmt.Errorf(result.Error)
+		return errors.New(result.Error)
 	}
 	if result.AccessToken == "" {
 		return fmt.Errorf("platform returned empty access token")
@@ -302,7 +303,7 @@ func (s *Service) FetchPlans() ([]CloudPlan, error) {
 		if result.Error == "" {
 			result.Error = "fetch plans failed"
 		}
-		return nil, fmt.Errorf(result.Error)
+		return nil, errors.New(result.Error)
 	}
 	if result.Data == nil {
 		return []CloudPlan{}, nil
@@ -541,7 +542,7 @@ func (s *Service) FetchOfficialComboTemplates(ctx context.Context) ([]CloudCombo
 		if result.Error == "" {
 			result.Error = "fetch official combo templates failed"
 		}
-		return nil, fmt.Errorf(result.Error)
+		return nil, errors.New(result.Error)
 	}
 	if result.Data == nil {
 		return []CloudComboTemplate{}, nil

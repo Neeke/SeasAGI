@@ -22,6 +22,7 @@ type AppIconName =
   | "lock"
   | "layers"
   | "store"
+  | "trophy"
   | "diagnostics"
   | "plugin"
   | "chevron";
@@ -35,6 +36,7 @@ const navEntries: NavEntry[] = [
   { kind: "item", to: "/channels", label: "nav.channels", icon: "channels" },
   { kind: "item", to: "/combo-workbench", label: "nav.comboWorkbench", icon: "layers" },
   { kind: "item", to: "/playground", label: "nav.playground", icon: "playground" },
+  { kind: "item", to: "/model-index", label: "nav.modelIndex", icon: "trophy" },
   { kind: "group", id: "data-security", label: "nav.dataSecurity", icon: "key", children: [
     { to: "/access-token", label: "nav.accessToken", icon: "key" },
     { to: "/diagnostics", label: "nav.diagnostics", icon: "diagnostics" },
@@ -108,6 +110,8 @@ function AppIcon({ name, className = "" }: { name: AppIconName; className?: stri
       return <svg {...props}><polygon points="12 2 22 7 12 12 2 7 12 2" /><polyline points="2 12 12 17 22 12" /><polyline points="2 17 12 22 22 17" /></svg>;
     case "store":
       return <svg {...props}><path d="M3 9l1.5-5h15L21 9" /><path d="M3 9v11h18V9" /><path d="M9 20v-6h6v6" /></svg>;
+    case "trophy":
+      return <svg {...props}><path d="M8 4h8v5a4 4 0 01-8 0z" /><path d="M8 5H5.5a2.5 2.5 0 000 5H8" /><path d="M16 5h2.5a2.5 2.5 0 010 5H16" /><path d="M12 13v3" /><path d="M9 20h6" /><path d="M10 16h4a1 1 0 011 1v3H9v-3a1 1 0 011-1z" /></svg>;
     case "diagnostics":
       return <svg {...props}><path d="M12 2a10 10 0 100 20 10 10 0 000-20z" /><path d="M12 6v6l4 2" /></svg>;
     case "plugin":

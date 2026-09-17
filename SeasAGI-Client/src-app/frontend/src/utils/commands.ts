@@ -126,6 +126,7 @@ type WailsAppApi = {
   FetchFreeChannels(): Promise<Record<string, any>[]>;
   FetchEnterpriseChannels(): Promise<Record<string, any>[]>;
   FetchModelCatalog(): Promise<Record<string, any>[]>;
+  FetchModelIndex(category: string): Promise<Record<string, any>>;
   FetchMITMTargetsFromEnterprise(): Promise<Record<string, any>>;
   GetRateLimitConfig(): Promise<Record<string, any>>;
   SetRateLimitConfig(config: Record<string, any>): Promise<void>;
@@ -674,6 +675,10 @@ export async function fetchEnterpriseChannels(): Promise<Record<string, any>[]> 
 
 export async function fetchModelCatalog(): Promise<Record<string, any>[]> {
   return getAppApi().FetchModelCatalog();
+}
+
+export async function fetchModelIndex(category: string): Promise<Record<string, any>> {
+  return getAppApi().FetchModelIndex(category);
 }
 
 export async function getRateLimitConfig(): Promise<Record<string, any>> {
