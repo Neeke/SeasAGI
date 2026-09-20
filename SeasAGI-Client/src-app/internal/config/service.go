@@ -398,6 +398,28 @@ func (s *Service) SetRateLimitConfig(cfg RateLimitConfig) error {
 	return s.saveLocked()
 }
 
+// SetRTKConfig 设置并持久化 RTK Token 压缩配置。
+func (s *Service) SetRTKConfig(enabled bool, maxOutputChars int) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.config.RTKEnabled = enabled
+	if maxOutputChars > 0 {
+		s.config.RTKMaxOutputChars = maxOutputChars
+	}
+	return s.saveLocked()
+}
+
+// SetCavemanConfig 设置并持久化 Caveman 输出精简配置。
+func (s *Service) SetCavemanConfig(enabled bool, style string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.config.CavemanEnabled = enabled
+	if style != "" {
+		s.config.CavemanStyle = style
+	}
+	return s.saveLocked()
+}
+
 func (s *Service) SetDefaultModel(modelName, channelID string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

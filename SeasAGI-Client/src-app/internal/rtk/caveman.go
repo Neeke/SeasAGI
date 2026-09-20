@@ -52,8 +52,10 @@ func (ci *CavemanInjector) Inject(messages []map[string]any) []map[string]any {
 		role, _ := msg["role"].(string)
 		if role == "system" {
 			hasSystem = true
-			content, _ := msg["content"].(string)
-			if !strings.Contains(content, "Be concise") &&
+			content, ok := msg["content"].(string)
+			// 非字符串 content（如多模态数组）原样保留，不做覆盖
+			if ok &&
+				!strings.Contains(content, "Be concise") &&
 				!strings.Contains(content, "Be brief") &&
 				!strings.Contains(content, "Minimal output") &&
 				!strings.Contains(content, "Terse") {

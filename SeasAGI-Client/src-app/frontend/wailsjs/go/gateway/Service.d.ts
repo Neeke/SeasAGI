@@ -15,6 +15,8 @@ export function ResetComboRouteMetrics():Promise<void>;
 
 export function SetAccessToken(arg1:string):Promise<void>;
 
+export function SetRTKConfig(arg1:boolean,arg2:number):Promise<void>;
+
 export function Start(arg1:context.Context):Promise<void>;
 
 export function Stop():Promise<void>;

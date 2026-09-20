@@ -25,6 +25,7 @@ var (
 	menuByTag    = make(map[int]func())
 	activeChanID string
 	nextTag      int
+	reopenFn     func()
 )
 
 //export goTrayMenuClick
@@ -35,6 +36,25 @@ func goTrayMenuClick(tag C.int) {
 	if ok && fn != nil {
 		fn()
 	}
+}
+
+// 由 ObjC 的 AppDelegate category（applicationShouldHandleReopen）在主线程调用，
+// 语义与托盘"显示窗口"一致：唤出主窗口。
+//
+//export goTrayReopen
+func goTrayReopen() {
+	menuMu.Lock()
+	fn := reopenFn
+	menuMu.Unlock()
+	if fn != nil {
+		fn()
+	}
+}
+
+func setReopenHandler(fn func()) {
+	menuMu.Lock()
+	reopenFn = fn
+	menuMu.Unlock()
 }
 
 func nextMenuTag(fn func()) int {

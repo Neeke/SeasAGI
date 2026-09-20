@@ -12,6 +12,27 @@ type SSEEvent struct {
 	Data string
 }
 
+// ApplyPipelineToMessages 压缩请求消息中的工具结果（role=tool/function），
+// 在转发给上游模型前截断/去重大段命令输出，降低 token 消耗。
+// 未识别的输出格式原样保留（applyFilter 对 TypeUnknown 不做处理）。
+func ApplyPipelineToMessages(messages []map[string]any, pipeline *Pipeline) []map[string]any {
+	if pipeline == nil || !pipeline.Enabled {
+		return messages
+	}
+	for _, msg := range messages {
+		role, _ := msg["role"].(string)
+		if role != "tool" && role != "function" {
+			continue
+		}
+		content, ok := msg["content"].(string)
+		if !ok {
+			continue
+		}
+		msg["content"] = pipeline.ProcessToolResult(content)
+	}
+	return messages
+}
+
 func ProcessSSEStream(src io.Reader, dst io.Writer, pipeline *Pipeline) error {
 	if pipeline == nil || !pipeline.Enabled {
 		_, err := io.Copy(dst, src)

@@ -111,14 +111,37 @@ export function SettingsPage() {
   const rtkEnabled = appConfig?.rtk_enabled ?? true;
   const cavemanEnabled = appConfig?.caveman_enabled ?? false;
 
-  const toggleRtkEnabled = () => {
+  // 保存 RTK/Caveman 设置到后端（持久化 + 热更新网关），成功后再更新前端状态。
+  const saveRTKSettings = async (next: { rtk_enabled?: boolean; caveman_enabled?: boolean; caveman_style?: string }) => {
     if (!appConfig) return;
-    setAppConfig({ ...appConfig, rtk_enabled: !rtkEnabled });
+    const merged = {
+      rtk_enabled: appConfig.rtk_enabled,
+      caveman_enabled: appConfig.caveman_enabled,
+      caveman_style: appConfig.caveman_style,
+      ...next,
+    };
+    try {
+      await cmd.setRTKSettings(merged.rtk_enabled, appConfig.rtk_max_output_chars, merged.caveman_enabled, merged.caveman_style);
+      setAppConfig({ ...appConfig, ...merged });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const toggleRtkEnabled = () => {
+    void saveRTKSettings({ rtk_enabled: !rtkEnabled });
   };
 
   const toggleCavemanEnabled = () => {
-    if (!appConfig) return;
-    setAppConfig({ ...appConfig, caveman_enabled: !cavemanEnabled });
+    void saveRTKSettings({ caveman_enabled: !cavemanEnabled });
+  };
+
+  const handleQuitApp = async () => {
+    try {
+      await cmd.quitApp();
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleToggleCardKeyDown = (event: React.KeyboardEvent<HTMLDivElement>, toggle: () => void) => {
@@ -331,6 +354,17 @@ export function SettingsPage() {
               </p>
             )}
           </div>
+
+          <div className="tab-content section-card">
+            <div className="section-heading">
+              <h2>{t("settings.quitApp")}</h2>
+              <p className="hint">{t("settings.quitAppHint")}</p>
+            </div>
+            <div className="settings-inline-actions">
+              <span className="hint" style={{ marginBottom: 0 }}>{t("settings.quitAppDescription")}</span>
+              <button onClick={handleQuitApp} className="btn-danger btn-sm">{t("settings.quitAppButton")}</button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -364,7 +398,7 @@ export function SettingsPage() {
                   checked={rtkEnabled}
                   onClick={(event) => event.stopPropagation()}
                   onChange={(e) => {
-                    if (appConfig) setAppConfig({ ...appConfig, rtk_enabled: e.target.checked });
+                    void saveRTKSettings({ rtk_enabled: e.target.checked });
                   }}
                 />
                 <label htmlFor="rtkEnabled" onClick={(event) => event.stopPropagation()}>{t("settings.enable")}</label>
@@ -405,7 +439,7 @@ export function SettingsPage() {
                     checked={cavemanEnabled}
                     onClick={(event) => event.stopPropagation()}
                     onChange={(e) => {
-                      if (appConfig) setAppConfig({ ...appConfig, caveman_enabled: e.target.checked });
+                      void saveRTKSettings({ caveman_enabled: e.target.checked });
                     }}
                   />
                   <label htmlFor="cavemanEnabled" onClick={(event) => event.stopPropagation()}>{t("settings.enable")}</label>
@@ -416,7 +450,7 @@ export function SettingsPage() {
                       value={appConfig?.caveman_style ?? "concise"}
                       onClick={(event) => event.stopPropagation()}
                       onChange={(e) => {
-                        if (appConfig) setAppConfig({ ...appConfig, caveman_style: e.target.value });
+                        void saveRTKSettings({ caveman_style: e.target.value });
                       }}
                     >
                       <option value="concise">{t("settings.cavemanStyleConcise")}</option>

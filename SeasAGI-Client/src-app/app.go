@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"strings"
 	stdsync "sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -688,6 +689,26 @@ func (a *App) SetByokPolicy(policy map[string]any) map[string]any {
 
 func (a *App) GetAppConfig() config.AppConfig {
 	return a.configSvc.GetConfig()
+}
+
+// SetRTKSettings 保存 RTK Token 压缩与 Caveman 输出精简设置，并热更新网关管线。
+func (a *App) SetRTKSettings(rtkEnabled bool, rtkMaxOutputChars int, cavemanEnabled bool, cavemanStyle string) error {
+	if err := a.configSvc.SetRTKConfig(rtkEnabled, rtkMaxOutputChars); err != nil {
+		return err
+	}
+	if err := a.configSvc.SetCavemanConfig(cavemanEnabled, cavemanStyle); err != nil {
+		return err
+	}
+	if a.gatewaySvc != nil {
+		a.gatewaySvc.SetRTKConfig(rtkEnabled, rtkMaxOutputChars)
+	}
+	return nil
+}
+
+// QuitApp 设置页"退出"按钮：置退出标志并真正退出应用（停止网关与驻留）。
+func (a *App) QuitApp() {
+	atomic.StoreInt32(&quitting, 1)
+	runtime.Quit(a.ctx)
 }
 
 func (a *App) GetPlatformAPIBaseURL() string {

@@ -241,6 +241,8 @@ export function PreviewComboOptimization(arg1:string,arg2:string):Promise<Record
 
 export function PushCloudCombo(arg1:string,arg2:string,arg3:string,arg4:string,arg5:number,arg6:string,arg7:Record<string, any>,arg8:string):Promise<Record<string, any>>;
 
+export function QuitApp():Promise<void>;
+
 export function ReadCurrentPrompt(arg1:string):Promise<string>;
 
 export function RecordUsage(arg1:string,arg2:string,arg3:string,arg4:number,arg5:number):Promise<void>;
@@ -298,6 +300,8 @@ export function SetMITMManager(arg1:mitm.Manager):Promise<void>;
 export function SetOptimizationConfig(arg1:Record<string, any>):Promise<void>;
 
 export function SetPlatformAPIBaseURL(arg1:string):Promise<void>;
+
+export function SetRTKSettings(arg1:boolean,arg2:number,arg3:boolean,arg4:string):Promise<void>;
 
 export function SetRateLimitConfig(arg1:Record<string, any>):Promise<void>;
 

@@ -274,6 +274,20 @@ func (s *Service) SetAccessToken(token string) {
 	s.accessToken = token
 }
 
+// SetRTKConfig 热更新 RTK 压缩管线（设置页保存后立即生效，无需重启网关）。
+func (s *Service) SetRTKConfig(enabled bool, maxOutputChars int) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.rtkPipeline = rtk.NewPipeline(enabled, maxOutputChars)
+}
+
+// currentRTKPipeline 返回 RTK 管线快照，避免热更新时的数据竞争。
+func (s *Service) currentRTKPipeline() *rtk.Pipeline {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.rtkPipeline
+}
+
 func (s *Service) handleListModels(w http.ResponseWriter, r *http.Request) {
 	if !s.validateToken(r) {
 		writeJSONError(w, http.StatusUnauthorized, "Invalid access token")
@@ -353,6 +367,12 @@ func (s *Service) handleChatCompletions(w http.ResponseWriter, r *http.Request) 
 
 	if cfg.CavemanEnabled {
 		req.Messages = rtk.CavemanInjectIntoCanonical(req.Messages, true, cfg.CavemanStyle)
+	}
+
+	// RTK：压缩请求中回传的工具结果（role=tool），降低上游 token 消耗
+	rtkPipeline := s.currentRTKPipeline()
+	if rtkPipeline != nil && rtkPipeline.Enabled {
+		req.Messages = rtk.ApplyPipelineToMessages(req.Messages, rtkPipeline)
 	}
 
 	// Extract task_type from request for task-aware routing
@@ -537,18 +557,18 @@ func (s *Service) handleChatCompletions(w http.ResponseWriter, r *http.Request) 
 			_ = protocol.ProcessReasoningSSEStream(resp.Body, w)
 			return
 		}
-		if s.rtkPipeline != nil && s.rtkPipeline.Enabled {
-			_ = rtk.ProcessSSEStream(resp.Body, w, s.rtkPipeline)
+		if rtkPipeline != nil && rtkPipeline.Enabled {
+			_ = rtk.ProcessSSEStream(resp.Body, w, rtkPipeline)
 			return
 		}
 		_, _ = io.Copy(w, resp.Body)
 		return
 	}
 
-	if s.rtkPipeline != nil && s.rtkPipeline.Enabled {
+	if rtkPipeline != nil && rtkPipeline.Enabled {
 		respBytes, readErr := io.ReadAll(resp.Body)
 		if readErr == nil {
-			processed := rtk.ProcessNonStreamResponse(respBytes, s.rtkPipeline)
+			processed := rtk.ProcessNonStreamResponse(respBytes, rtkPipeline)
 			if needsReasoning {
 				var respMap map[string]any
 				if json.Unmarshal(processed, &respMap) == nil {

@@ -17,8 +17,8 @@ func TestDefaultRules(t *testing.T) {
 			t.Errorf("default rule %q should match", d)
 		}
 	}
-	if r.Count() != len(expected) {
-		t.Errorf("count: got %d, want %d", r.Count(), len(expected))
+	if r.Count() != len(defaultRuleDomains) {
+		t.Errorf("count: got %d, want %d", r.Count(), len(defaultRuleDomains))
 	}
 }
 

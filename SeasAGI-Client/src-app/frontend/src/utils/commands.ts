@@ -50,6 +50,8 @@ type WailsAppApi = {
   DeleteComboTemplate(name: string): Promise<void>;
   RenameComboTemplate(oldName: string, newName: string): Promise<void>;
   GetAppConfig(): Promise<AppConfig>;
+  SetRTKSettings(rtkEnabled: boolean, rtkMaxOutputChars: number, cavemanEnabled: boolean, cavemanStyle: string): Promise<void>;
+  QuitApp(): Promise<void>;
   SetLocale(locale: string): Promise<void>;
   GetLocale(): Promise<string>;
   GetOAuthProviders(): Promise<{name: string; displayName: string; authURL: string; iconURL: string}[]>;
@@ -328,6 +330,19 @@ export async function renameComboTemplate(oldName: string, newName: string): Pro
 
 export async function getAppConfig(): Promise<AppConfig> {
   return getAppApi().GetAppConfig();
+}
+
+export async function setRTKSettings(
+  rtkEnabled: boolean,
+  rtkMaxOutputChars: number,
+  cavemanEnabled: boolean,
+  cavemanStyle: string
+): Promise<void> {
+  return getAppApi().SetRTKSettings(rtkEnabled, rtkMaxOutputChars, cavemanEnabled, cavemanStyle);
+}
+
+export async function quitApp(): Promise<void> {
+  return getAppApi().QuitApp();
 }
 
 export async function setLocale(locale: string): Promise<void> {

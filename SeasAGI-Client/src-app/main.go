@@ -220,13 +220,22 @@ func runDesktop() {
 		OnShutdown: func(_ context.Context) {
 			shutdownDeps()
 		},
+		// 关窗仅隐藏窗口：app 连同托盘驻留后台（标准 macOS 托盘应用行为）。
+		// 真正的退出统一走 quitting 标志门控（托盘退出 / 应用菜单 Cmd+Q / 信号）。
 		OnBeforeClose: func(ctx context.Context) bool {
 			if atomic.LoadInt32(&quitting) == 1 {
 				return false
 			}
-			atomic.StoreInt32(&quitting, 1)
-			go runtime.Quit(ctx)
+			runtime.WindowHide(ctx)
 			return true
+		},
+		// 单实例锁：重复启动时唤出常驻实例的窗口
+		SingleInstanceLock: &options.SingleInstanceLock{
+			UniqueId: "com.seasagi.desktop",
+			OnSecondInstanceLaunch: func(_ options.SecondInstanceData) {
+				runtime.WindowUnminimise(app.ctx)
+				runtime.WindowShow(app.ctx)
+			},
 		},
 		Bind: []interface{}{
 			app,
@@ -255,9 +264,6 @@ func runDesktop() {
 		},
 		Windows: &windows.Options{
 			WebviewIsTransparent: false,
-		},
-		SingleInstanceLock: &options.SingleInstanceLock{
-			UniqueId: "com.seasagi.desktop",
 		},
 	})
 

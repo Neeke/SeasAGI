@@ -458,6 +458,10 @@ export function PushCloudCombo(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
   return window['go']['main']['App']['PushCloudCombo'](arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 }
 
+export function QuitApp() {
+  return window['go']['main']['App']['QuitApp']();
+}
+
 export function ReadCurrentPrompt(arg1) {
   return window['go']['main']['App']['ReadCurrentPrompt'](arg1);
 }
@@ -572,6 +576,10 @@ export function SetOptimizationConfig(arg1) {
 
 export function SetPlatformAPIBaseURL(arg1) {
   return window['go']['main']['App']['SetPlatformAPIBaseURL'](arg1);
+}
+
+export function SetRTKSettings(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['SetRTKSettings'](arg1, arg2, arg3, arg4);
 }
 
 export function SetRateLimitConfig(arg1) {

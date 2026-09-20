@@ -1,5 +1,6 @@
 #import <Cocoa/Cocoa.h>
 #import <dispatch/dispatch.h>
+#import <objc/runtime.h>
 #import <stdlib.h>
 #import <string.h>
 // goTrayMenuClick 由 cgo 的 //export 从 tray_darwin.go 导出。
@@ -94,4 +95,30 @@ void destroyTray() {
 		[[NSStatusBar systemStatusBar] removeStatusItem:statusItem];
 		statusItem = nil;
 	});
+}
+
+// ponytail: Wails v2 的 AppDelegate 未实现 applicationShouldHandleReopen——
+// 关窗改为隐藏（orderOut）后，点击 Dock 图标无法唤回窗口。
+// 不能用静态 @implementation AppDelegate (...)：那会对 _OBJC_CLASS_$_AppDelegate
+// 产生硬链接依赖，普通 go build/test（无 wails desktop tags、不链接 Wails 的
+// ObjC 对象）直接报 undefined symbol。
+// 改用运行时 class_addMethod 动态挂载：链接期零依赖；进程里没有 AppDelegate 类
+// （如 go test 场景）时自然 no-op；未来 Wails 若自带实现则不覆盖。
+extern void goTrayReopen(void);
+
+static BOOL seasagiReopen(id self, SEL _cmd, NSApplication *sender, BOOL flag) {
+	// flag = YES 说明已有可见窗口，交回系统默认行为即可
+	if (!flag) {
+		goTrayReopen();
+	}
+	return YES;
+}
+
+__attribute__((constructor))
+static void seasagiInstallReopenHandler(void) {
+	Class cls = objc_getClass("AppDelegate");
+	if (cls == NULL) return;
+	SEL sel = @selector(applicationShouldHandleReopen:hasVisibleWindows:);
+	if (class_getInstanceMethod(cls, sel) != NULL) return;
+	class_addMethod(cls, sel, (IMP)seasagiReopen, "B@:@B");
 }

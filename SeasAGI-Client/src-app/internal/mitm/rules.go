@@ -17,39 +17,42 @@ func NewRules() *Rules {
 	}
 }
 
-// NewDefaultRules 创建预置 AI API 域名的规则集（含国际厂商、国产厂商、IDE 专属域名）。
+// defaultRuleDomains 默认拦截域名列表（含国际厂商、国产厂商、IDE 专属域名）。
+var defaultRuleDomains = []string{
+	// 国际厂商 API
+	"api.openai.com",
+	"api.anthropic.com",
+	"generativelanguage.googleapis.com",
+	"api.deepseek.com",
+	"api.x.ai",
+	"openrouter.ai",
+
+	// 国产厂商 API
+	"open.bigmodel.cn",              // 智谱 GLM
+	"api.moonshot.cn",               // 月之暗面 Kimi
+	"api.minimax.chat",              // MiniMax
+	"api.xiaomimimo.com",            // 小米 MiMo
+	"ark.cn-beijing.volces.com",     // 字节豆包
+	"api.hunyuan.cloud.tencent.com", // 腾讯混元
+	"dashscope.aliyuncs.com",        // 阿里通义/百炼
+	"qianfan.baidubce.com",          // 百度文心
+	"spark-api-open.xf-yun.com",     // 科大讯飞
+	"api.coze.cn",                   // Coze
+	"api.baichuan-ai.com",           // 百川
+	"api.stepfun.com",               // 阶跃星辰
+	"api.sensenova.cn",              // 商汤
+
+	// IDE / 编程工具专属域名
+	"api2.cursor.sh",        // Cursor
+	"api.githubcopilot.com", // GitHub Copilot
+	"api.zed.dev",           // Zed
+	"api.trae.ai",           // Trae
+}
+
+// NewDefaultRules 创建预置 AI API 域名的规则集。
 func NewDefaultRules() *Rules {
 	r := NewRules()
-	for _, d := range []string{
-		// 国际厂商 API
-		"api.openai.com",
-		"api.anthropic.com",
-		"generativelanguage.googleapis.com",
-		"api.deepseek.com",
-		"api.x.ai",
-		"openrouter.ai",
-
-		// 国产厂商 API
-		"open.bigmodel.cn",                    // 智谱 GLM
-		"api.moonshot.cn",                     // 月之暗面 Kimi
-		"api.minimax.chat",                    // MiniMax
-		"api.xiaomimimo.com",                  // 小米 MiMo
-		"ark.cn-beijing.volces.com",          // 字节豆包
-		"api.hunyuan.cloud.tencent.com",       // 腾讯混元
-		"dashscope.aliyuncs.com",             // 阿里通义/百炼
-		"qianfan.baidubce.com",               // 百度文心
-		"spark-api-open.xf-yun.com",           // 科大讯飞
-		"api.coze.cn",                        // Coze
-		"api.baichuan-ai.com",                // 百川
-		"api.stepfun.com",                    // 阶跃星辰
-		"api.sensenova.cn",                   // 商汤
-
-		// IDE / 编程工具专属域名
-		"api2.cursor.sh",                     // Cursor
-		"api.githubcopilot.com",              // GitHub Copilot
-		"api.zed.dev",                        // Zed
-		"api.trae.ai",                        // Trae
-	} {
+	for _, d := range defaultRuleDomains {
 		r.Add(d)
 	}
 	return r

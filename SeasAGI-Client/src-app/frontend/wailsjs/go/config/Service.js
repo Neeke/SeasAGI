@@ -134,6 +134,10 @@ export function SetAutoLaunch(arg1) {
   return window['go']['config']['Service']['SetAutoLaunch'](arg1);
 }
 
+export function SetCavemanConfig(arg1, arg2) {
+  return window['go']['config']['Service']['SetCavemanConfig'](arg1, arg2);
+}
+
 export function SetDefaultComboName(arg1) {
   return window['go']['config']['Service']['SetDefaultComboName'](arg1);
 }
@@ -148,6 +152,10 @@ export function SetOptimizationConfig(arg1) {
 
 export function SetPlatformAPIBaseURL(arg1) {
   return window['go']['config']['Service']['SetPlatformAPIBaseURL'](arg1);
+}
+
+export function SetRTKConfig(arg1, arg2) {
+  return window['go']['config']['Service']['SetRTKConfig'](arg1, arg2);
 }
 
 export function SetRateLimitConfig(arg1) {

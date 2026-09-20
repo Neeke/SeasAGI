@@ -68,6 +68,8 @@ export function SetAnalyticsEnabled(arg1:boolean):Promise<void>;
 
 export function SetAutoLaunch(arg1:boolean):Promise<void>;
 
+export function SetCavemanConfig(arg1:boolean,arg2:string):Promise<void>;
+
 export function SetDefaultComboName(arg1:string):Promise<void>;
 
 export function SetDefaultModel(arg1:string,arg2:string):Promise<void>;
@@ -75,6 +77,8 @@ export function SetDefaultModel(arg1:string,arg2:string):Promise<void>;
 export function SetOptimizationConfig(arg1:config.OptimizationConfig):Promise<void>;
 
 export function SetPlatformAPIBaseURL(arg1:string):Promise<void>;
+
+export function SetRTKConfig(arg1:boolean,arg2:number):Promise<void>;
 
 export function SetRateLimitConfig(arg1:config.RateLimitConfig):Promise<void>;
 

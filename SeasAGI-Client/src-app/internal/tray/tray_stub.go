@@ -13,3 +13,6 @@ func rebuildPlatformMenu(showFn, quitFn func(), channels []ChannelInfo, onSwitch
 
 func setActiveChannel(id string) {
 }
+
+func setReopenHandler(fn func()) {
+}

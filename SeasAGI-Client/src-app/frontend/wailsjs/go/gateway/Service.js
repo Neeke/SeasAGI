@@ -26,6 +26,10 @@ export function SetAccessToken(arg1) {
   return window['go']['gateway']['Service']['SetAccessToken'](arg1);
 }
 
+export function SetRTKConfig(arg1, arg2) {
+  return window['go']['gateway']['Service']['SetRTKConfig'](arg1, arg2);
+}
+
 export function Start(arg1) {
   return window['go']['gateway']['Service']['Start'](arg1);
 }

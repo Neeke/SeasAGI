@@ -156,8 +156,8 @@ func TestGetStatus(t *testing.T) {
 	if status.ProxyPort != 8080 {
 		t.Errorf("proxy_port: got %d, want 8080", status.ProxyPort)
 	}
-	if status.RulesCount != 6 {
-		t.Errorf("rules_count: got %d, want 6", status.RulesCount)
+	if status.RulesCount != len(defaultRuleDomains) {
+		t.Errorf("rules_count: got %d, want %d", status.RulesCount, len(defaultRuleDomains))
 	}
 
 	_ = mgr.Stop()
