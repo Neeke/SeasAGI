@@ -136,6 +136,8 @@
   "tokenMarket.marketActive": "Active listings",
   "tokenMarket.marketFixedPrice": "Fixed price",
   "tokenMarket.marketAvgPrice": "Avg price",
+  "tokenMarket.myBalance": "My balance",
+  "tokenMarket.insufficientBalance": "Insufficient balance. Please top up on the Subscription page first.",
   "tokenMarket.freeChannelsHint": "Free channels you can try immediately before making a purchase.",
   "tokenMarket.listingsTitle": "Market listings",
   "tokenMarket.listingsSubtitle": "{{count}} listings currently available",

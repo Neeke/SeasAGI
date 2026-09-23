@@ -43,6 +43,7 @@ export function TokenMarketPage() {
   const [freeFilterTab, setFreeFilterTab] = useState<FreeFilterTab>("all");
   const [viewMode, setViewMode] = useState<MarketViewMode>("card");
   const setChannels = useAppStore((s) => s.setChannels);
+  const isLoggedIn = useAppStore((s) => s.auth.is_logged_in);
   // 免费通道导入状态
   const [importingId, setImportingId] = useState<string | null>(null);
   const [importMsg, setImportMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -57,6 +58,26 @@ export function TokenMarketPage() {
   const [saleType, setSaleType] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [filterKey, setFilterKey] = useState(0);
+  // 我的市场余额（登录后展示；null 表示不可用/未登录）
+  const [myBalance, setMyBalance] = useState<number | null>(null);
+
+  const fetchAccount = async () => {
+    if (!isLoggedIn) {
+      setMyBalance(null);
+      return;
+    }
+    try {
+      const [baseURL, token] = await Promise.all([getPlatformAPIBaseURL(), getPlatformToken()]);
+      const resp = await fetch(`${baseURL}/token-market/account`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (!resp.ok) return;
+      const data = await resp.json();
+      if (typeof data.data?.balance === "number") setMyBalance(data.data.balance);
+    } catch {
+      // 静默失败：余额展示失败不影响市场浏览
+    }
+  };
 
   const fetchListings = async (pageNum: number, append: boolean) => {
     if (append) {
@@ -98,6 +119,7 @@ export function TokenMarketPage() {
 
   useEffect(() => {
     fetchListings(1, false);
+    fetchAccount();
     // F7: Use cached free channels if within 5 minutes.
     // 空列表不命中缓存：避免未登录时缓存空结果、登录后 5 分钟内仍显示为空。
     const now = Date.now();
@@ -228,6 +250,12 @@ export function TokenMarketPage() {
           <p>{t("tokenMarket.marketDescription")}</p>
         </div>
         <div className="token-market-stats">
+          {myBalance !== null && (
+            <div className="token-market-stat-card token-market-balance-card">
+              <span className="token-market-stat-label">{t("tokenMarket.myBalance")}</span>
+              <strong>${myBalance.toFixed(2)}</strong>
+            </div>
+          )}
           <div className="token-market-stat-card">
             <span className="token-market-stat-label">{t("tokenMarket.marketActive")}</span>
             <strong>{marketStats.activeCount}</strong>

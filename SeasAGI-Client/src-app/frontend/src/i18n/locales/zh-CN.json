@@ -136,6 +136,8 @@
   "tokenMarket.marketActive": "在售资源",
   "tokenMarket.marketFixedPrice": "一口价",
   "tokenMarket.marketAvgPrice": "均价",
+  "tokenMarket.myBalance": "我的余额",
+  "tokenMarket.insufficientBalance": "余额不足，请先在订阅页充值",
   "tokenMarket.freeChannelsHint": "可直接体验的免费通道，适合先试后买。",
   "tokenMarket.listingsTitle": "市场挂牌",
   "tokenMarket.listingsSubtitle": "当前共 {{count}} 条可浏览资源",
