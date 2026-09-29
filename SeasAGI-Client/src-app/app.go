@@ -2853,6 +2853,53 @@ func (a *App) GetOptimizationPlan(mode string, taskType string) map[string]any {
 func (a *App) GetQuickStrategies() []map[string]any {
 	return []map[string]any{
 		{
+			"alias":        "quality_first",
+			"display_name": "质量优先",
+			"description":  "优先分配高智商模型（Claude/GPT-4 系），适合复杂推理与代码任务",
+			"task_profile": map[string]any{
+				"task_type":          optimizer.TaskGeneralChat,
+				"priority_providers": []string{"anthropic", "openai", "google"},
+				"fallback_order":     []string{"anthropic", "openai", "google"},
+				"min_success_rate":   0.95,
+			},
+			"combo_constraints": map[string]any{
+				"min_steps":          2,
+				"max_steps":          3,
+				"allowed_strategies": []string{"fallback"},
+			},
+		},
+		{
+			"alias":        "cost_first",
+			"display_name": "性价比优先",
+			"description":  "优先选择成本更低的模型与提供商组合",
+			"task_profile": map[string]any{
+				"task_type":            optimizer.TaskGeneralChat,
+				"priority_providers":   []string{"openrouter", "google", "openai"},
+				"fallback_order":       []string{"openrouter", "google", "openai"},
+				"max_cost_per_request": 0.02,
+			},
+			"combo_constraints": map[string]any{
+				"min_steps":          1,
+				"max_steps":          3,
+				"allowed_strategies": []string{"fallback", "round_robin"},
+			},
+		},
+		{
+			"alias":        "balanced",
+			"display_name": "均衡推荐",
+			"description":  "质量与成本并重，按意图场景在中高端与轻量模型间动态取舍",
+			"task_profile": map[string]any{
+				"task_type":          optimizer.TaskGeneralChat,
+				"priority_providers": []string{"openai", "anthropic", "google", "openrouter"},
+				"fallback_order":     []string{"openai", "anthropic", "google", "openrouter"},
+			},
+			"combo_constraints": map[string]any{
+				"min_steps":          1,
+				"max_steps":          3,
+				"allowed_strategies": []string{"fallback", "round_robin"},
+			},
+		},
+		{
 			"alias":        "stable_first",
 			"display_name": "稳定优先",
 			"description":  "优先选择稳定性高、回退链清晰的模型组合",
@@ -2866,22 +2913,6 @@ func (a *App) GetQuickStrategies() []map[string]any {
 				"min_steps":          2,
 				"max_steps":          3,
 				"allowed_strategies": []string{"fallback"},
-			},
-		},
-		{
-			"alias":        "cost_first",
-			"display_name": "成本优先",
-			"description":  "优先选择成本更低的模型与提供商组合",
-			"task_profile": map[string]any{
-				"task_type":            optimizer.TaskGeneralChat,
-				"priority_providers":   []string{"openrouter", "google", "openai"},
-				"fallback_order":       []string{"openrouter", "google", "openai"},
-				"max_cost_per_request": 0.02,
-			},
-			"combo_constraints": map[string]any{
-				"min_steps":          1,
-				"max_steps":          3,
-				"allowed_strategies": []string{"fallback", "round_robin"},
 			},
 		},
 		{

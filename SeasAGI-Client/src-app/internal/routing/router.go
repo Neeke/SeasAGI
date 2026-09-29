@@ -747,12 +747,27 @@ func (r *Resolver) sortByTaskType(steps []PlanStep, taskType string) []PlanStep 
 	}
 }
 
+// NormalizeStrategyPref 归一化快速策略别名。UI（GetQuickStrategies/ComboPage）与
+// 云端 Combo 使用下划线拼写（stable_first / cost_first / quality_first / balanced），
+// 而路由打分使用连字符标准形（stability-first / cost-first / speed-first / quality-first）；
+// 不归一化会导致策略-场景映射矩阵（Combo.0830.md §3.3）对真实数据整体失效。
+// 无法识别的值规范化后原样返回（视为均衡，不加分）。
+func NormalizeStrategyPref(pref string) string {
+	p := strings.ToLower(strings.TrimSpace(strings.ReplaceAll(pref, "_", "-")))
+	if p == "stable-first" {
+		p = "stability-first"
+	}
+	return p
+}
+
 // applyIntentRouting 按意图对候选步骤做安全过滤与适配度重排（v0.2.0 M3.1-M3.3）。
-// pref 为快速策略倾向（stability-first / cost-first / speed-first），空串视为均衡。
+// pref 为快速策略倾向（stability-first / cost-first / speed-first / quality-first，
+// 兼容下划线拼写与 balanced），空串视为均衡。
 func (r *Resolver) applyIntentRouting(steps []PlanStep, intent *IntentContext, pref string) ([]PlanStep, error) {
 	if intent == nil || len(steps) == 0 {
 		return steps, nil
 	}
+	pref = NormalizeStrategyPref(pref)
 
 	// M3.3 安全截断：敏感意图强制 local_only；无本地渠道时直接报错，避免敏感数据出云
 	if intent.SecurityLevel == "sensitive" {
@@ -843,7 +858,10 @@ func (r *Resolver) calculateIntentFitScore(step PlanStep, intent *IntentContext,
 	// 策略加权（§3.3 权重矩阵的加成实现）
 	switch pref {
 	case "stability-first", "quality-first":
-		if strings.Contains(model, "sonnet") || strings.Contains(model, "gpt-4") || strings.Contains(model, "opus") {
+		// 大模型加成；注意 gpt-4o-mini 等轻量变体虽含 "gpt-4" 子串，
+		// 但属于小模型，不应获得质量/稳定性加成
+		lightweight := strings.Contains(model, "mini") || strings.Contains(model, "flash") || strings.Contains(model, "haiku")
+		if !lightweight && (strings.Contains(model, "sonnet") || strings.Contains(model, "gpt-4") || strings.Contains(model, "opus")) {
 			score += 15
 		}
 	case "cost-first":

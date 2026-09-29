@@ -5,7 +5,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { useAppStore } from "../stores/appStore";
 import * as cmd from "../utils/commands";
 import { getErrorMessage } from "../utils/errors";
-import type { Channel, ModelCombo, ModelComboStep, ProviderHealthSummary, QuickStrategy } from "../utils/types";
+import type { Channel, ModelCombo, ModelComboStep, ProviderHealthSummary, QuickStrategy, QuickStrategyAlias } from "../utils/types";
 import { useTranslation } from "../i18n";
 import { validateForm, comboFormSchema } from "../utils/validation";
 
@@ -320,16 +320,16 @@ export function ComboPage({ embedded, showTemplatesTab }: { embedded?: boolean; 
     });
   };
 
-  const applyQuickStrategy = (alias: "stable_first" | "cost_first" | "speed_first" | "tools_first") => {
-    const strategies = {
-      stable_first: {
-        name: t("combo.stableFirst"),
-        description: t("combo.stableFirstDesc"),
+  const applyQuickStrategy = (alias: QuickStrategyAlias) => {
+    const strategies: Record<QuickStrategyAlias, { name: string; description: string; strategy: string; steps: { channel_id: string; model: string }[] }> = {
+      quality_first: {
+        name: t("combo.qualityFirst"),
+        description: t("combo.qualityFirstDesc"),
         strategy: "fallback",
         steps: [
+          { channel_id: "anthropic", model: "claude-opus-4-8" },
           { channel_id: "openai", model: "gpt-4o" },
           { channel_id: "anthropic", model: "claude-sonnet-5" },
-          { channel_id: "google", model: "gemini-2.5-flash" },
         ],
       },
       cost_first: {
@@ -340,6 +340,26 @@ export function ComboPage({ embedded, showTemplatesTab }: { embedded?: boolean; 
           { channel_id: "openrouter", model: "minimax/minimax-m3" },
           { channel_id: "google", model: "gemini-2.5-flash" },
           { channel_id: "openai", model: "gpt-4o-mini" },
+        ],
+      },
+      balanced: {
+        name: t("combo.balanced"),
+        description: t("combo.balancedDesc"),
+        strategy: "fallback",
+        steps: [
+          { channel_id: "openai", model: "gpt-4o" },
+          { channel_id: "google", model: "gemini-2.5-flash" },
+          { channel_id: "openai", model: "gpt-4o-mini" },
+        ],
+      },
+      stable_first: {
+        name: t("combo.stableFirst"),
+        description: t("combo.stableFirstDesc"),
+        strategy: "fallback",
+        steps: [
+          { channel_id: "openai", model: "gpt-4o" },
+          { channel_id: "anthropic", model: "claude-sonnet-5" },
+          { channel_id: "google", model: "gemini-2.5-flash" },
         ],
       },
       speed_first: {
@@ -563,11 +583,11 @@ export function ComboPage({ embedded, showTemplatesTab }: { embedded?: boolean; 
           <div className="quick-strategy-label">{t("combo.quickStrategy")}:</div>
           <div className="quick-strategy-buttons">
             <button 
-              className="quick-strategy-btn stable-first" 
-              onClick={() => applyQuickStrategy("stable_first")}
-              title={t("combo.stableFirstDesc")}
+              className="quick-strategy-btn quality-first" 
+              onClick={() => applyQuickStrategy("quality_first")}
+              title={t("combo.qualityFirstDesc")}
             >
-              {t("combo.stableFirst")}
+              {t("combo.qualityFirst")}
             </button>
             <button 
               className="quick-strategy-btn cost-first" 
@@ -575,6 +595,20 @@ export function ComboPage({ embedded, showTemplatesTab }: { embedded?: boolean; 
               title={t("combo.costFirstDesc")}
             >
               {t("combo.costFirst")}
+            </button>
+            <button 
+              className="quick-strategy-btn balanced" 
+              onClick={() => applyQuickStrategy("balanced")}
+              title={t("combo.balancedDesc")}
+            >
+              {t("combo.balanced")}
+            </button>
+            <button 
+              className="quick-strategy-btn stable-first" 
+              onClick={() => applyQuickStrategy("stable_first")}
+              title={t("combo.stableFirstDesc")}
+            >
+              {t("combo.stableFirst")}
             </button>
             <button 
               className="quick-strategy-btn speed-first" 
@@ -835,6 +869,21 @@ export function ComboPage({ embedded, showTemplatesTab }: { embedded?: boolean; 
                 <select value={editing.strategy} onChange={(e) => setEditing({ ...editing, strategy: e.target.value })}>
                   <option value="fallback">fallback</option>
                   <option value="round_robin">round_robin</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>{t("combo.quickStrategy")}</label>
+                <select
+                  value={editing.quick_strategy || ""}
+                  onChange={(e) => setEditing({ ...editing, quick_strategy: (e.target.value || undefined) as QuickStrategyAlias | undefined })}
+                >
+                  <option value="">{t("combo.quickStrategyAuto")}</option>
+                  <option value="quality_first">{t("combo.qualityFirst")}</option>
+                  <option value="cost_first">{t("combo.costFirst")}</option>
+                  <option value="balanced">{t("combo.balanced")}</option>
+                  <option value="stable_first">{t("combo.stableFirst")}</option>
+                  <option value="speed_first">{t("combo.speedFirst")}</option>
+                  <option value="tools_first">{t("combo.toolsFirst")}</option>
                 </select>
               </div>
               <div className="form-group">

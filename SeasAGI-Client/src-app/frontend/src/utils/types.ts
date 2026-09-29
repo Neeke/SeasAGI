@@ -348,8 +348,16 @@ export interface TaskProfile {
   min_success_rate?: number;
 }
 
+export type QuickStrategyAlias =
+  | "quality_first"
+  | "cost_first"
+  | "balanced"
+  | "stable_first"
+  | "speed_first"
+  | "tools_first";
+
 export interface QuickStrategy {
-  alias: "stable_first" | "cost_first" | "speed_first" | "tools_first";
+  alias: QuickStrategyAlias;
   display_name: string;
   description: string;
   task_profile: TaskProfile;

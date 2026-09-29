@@ -176,10 +176,15 @@ type persistedState struct {
 }
 
 func NewService(cfg AppConfig) *Service {
+	return NewServiceWithPath(cfg, defaultConfigPath())
+}
+
+// NewServiceWithPath 与 NewService 相同，但配置持久化到指定路径（测试隔离用）。
+func NewServiceWithPath(cfg AppConfig, path string) *Service {
 	svc := &Service{
 		config:   cfg,
 		channels: []Channel{},
-		path:     defaultConfigPath(),
+		path:     path,
 	}
 	_ = svc.load()
 	svc.ensureOptimizationConfig()
