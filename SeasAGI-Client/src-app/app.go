@@ -30,6 +30,7 @@ import (
 	"github.com/SeasAGI/SeasAGI-Client/internal/integration"
 	"github.com/SeasAGI/SeasAGI-Client/internal/keychain"
 	"github.com/SeasAGI/SeasAGI-Client/internal/localtoken"
+	"github.com/SeasAGI/SeasAGI-Client/internal/logging"
 	"github.com/SeasAGI/SeasAGI-Client/internal/logs"
 	"github.com/SeasAGI/SeasAGI-Client/internal/mcp"
 	"github.com/SeasAGI/SeasAGI-Client/internal/mitm"
@@ -79,6 +80,9 @@ type App struct {
 	configioSvc     *configio.Service
 	localTokenStore *localtoken.Store
 	mitmMgr         *mitm.Manager
+	logRotator      *logging.LogRotator
+	mcpServer       *mcp.GatewayServer
+	perfAuditor     *perf.Auditor
 	oauthFlowMu     stdsync.Mutex
 	oauthFlows      map[string]*pendingOAuthFlow
 }
@@ -126,6 +130,8 @@ func NewApp(
 		sessionsSvc:     sessionsSvc,
 		configioSvc:     configioSvc,
 		localTokenStore: localTokenStore,
+		mcpServer:       mcp.NewGatewayServer(),
+		perfAuditor:     perf.NewAuditor(),
 		oauthFlows:      make(map[string]*pendingOAuthFlow),
 	}
 }
@@ -609,11 +615,9 @@ func (a *App) SearchObsidian(apiKey, baseURL, query string) []map[string]any {
 
 // === UI-Batch 6: 性能审计 + MCP Gateway ===
 
-// GetPerfAuditReport 获取性能审计报告。
+// GetPerfAuditReport 获取性能审计报告（复用 App 生命周期内长期存活的审计器，避免每次调用被重置）。
 func (a *App) GetPerfAuditReport() map[string]any {
-	auditor := perf.NewAuditor()
-	defer auditor.Reset()
-	report := auditor.GenerateReport()
+	report := a.perfAuditor.GenerateReport()
 	return map[string]any{
 		"total_findings":   report.TotalFindings,
 		"slow_queries":     report.SlowQueries,
@@ -625,8 +629,7 @@ func (a *App) GetPerfAuditReport() map[string]any {
 
 // GetMCPGatewayTools 列出 MCP Gateway Server 的所有 tool。
 func (a *App) GetMCPGatewayTools() []map[string]any {
-	server := mcp.NewGatewayServer()
-	tools := server.ListTools()
+	tools := a.mcpServer.ListTools()
 	result := make([]map[string]any, 0, len(tools))
 	for _, tool := range tools {
 		result = append(result, map[string]any{
@@ -637,37 +640,162 @@ func (a *App) GetMCPGatewayTools() []map[string]any {
 	return result
 }
 
-// GetMCPAuditLog 获取 MCP tool 调用审计日志。
+// GetMCPAuditLog 获取 MCP tool 调用审计日志（来自长期存活的 Gateway Server 实例）。
 func (a *App) GetMCPAuditLog() []map[string]any {
-	return []map[string]any{}
+	entries := a.mcpServer.GetAuditLog()
+	result := make([]map[string]any, 0, len(entries))
+	for _, e := range entries {
+		result = append(result, map[string]any{
+			"tool_name": e.ToolName,
+			"args":      e.Args,
+			"success":   e.Success,
+			"error":     e.Error,
+			"timestamp": e.Timestamp,
+		})
+	}
+	return result
 }
 
 // === UI-Batch 7: 设置页增强 ===
 
 // GetLogRotationConfig 获取日志轮转配置。
 func (a *App) GetLogRotationConfig() map[string]any {
+	if a.logRotator == nil {
+		return map[string]any{
+			"max_file_size_mb": 0,
+			"retention_days":   0,
+			"max_files":        0,
+			"current_size_mb":  0,
+		}
+	}
+	cfg := a.logRotator.Config()
+	size, _ := a.logRotator.TotalSize()
 	return map[string]any{
-		"max_file_size_mb": 10,
-		"retention_days":   7,
-		"max_files":        5,
-		"current_size_mb":  0,
+		"max_file_size_mb": cfg.MaxFileSize / (1024 * 1024),
+		"retention_days":   cfg.RetentionDays,
+		"max_files":        cfg.MaxFiles,
+		"current_size_mb":  size / (1024 * 1024),
 	}
 }
 
-// SetLogRotationConfig 设置日志轮转配置。
+// SetLogRotationConfig 设置日志轮转配置（单位与 GetLogRotationConfig 一致）。
 func (a *App) SetLogRotationConfig(cfg map[string]any) error {
+	if a.logRotator == nil {
+		return fmt.Errorf("log rotator not initialized")
+	}
+	cur := a.logRotator.Config()
+	next := cur
+	if v, ok := numberToInt(cfg["max_file_size_mb"]); ok && v > 0 {
+		next.MaxFileSize = int64(v) * 1024 * 1024
+	}
+	if v, ok := numberToInt(cfg["retention_days"]); ok && v > 0 {
+		next.RetentionDays = v
+	}
+	if v, ok := numberToInt(cfg["max_files"]); ok && v > 0 {
+		next.MaxFiles = v
+	}
+	a.logRotator.UpdateConfig(next)
 	return nil
 }
 
-// GetCloudSyncStatus 获取云同步状态。
-func (a *App) GetCloudSyncStatus() map[string]any {
-	return map[string]any{
-		"hmac_enabled":   true,
-		"version_hash":   "",
-		"last_sync":      "",
-		"conflicts":      []map[string]any{},
-		"conflict_count": 0,
+// SetLogRotator 注入日志轮转器。
+func (a *App) SetLogRotator(r *logging.LogRotator) {
+	a.logRotator = r
+}
+
+// numberToInt 将 JSON 反序列化后的数值（float64/int/json.Number）安全转为 int。
+func numberToInt(v any) (int, bool) {
+	switch n := v.(type) {
+	case float64:
+		return int(n), true
+	case int:
+		return n, true
+	case int64:
+		return int(n), true
+	case json.Number:
+		i, err := n.Int64()
+		if err != nil {
+			return 0, false
+		}
+		return int(i), true
 	}
+	return 0, false
+}
+
+// GetCloudSyncStatus 获取云同步状态（版本哈希与冲突均基于真实本地配置计算）。
+func (a *App) GetCloudSyncStatus() map[string]any {
+	homeDir, _ := os.UserHomeDir()
+	localDir := filepath.Join(homeDir, ".seasagi")
+
+	conflicts := a.detectSyncConflicts()
+	conflictItems := make([]map[string]any, 0, len(conflicts))
+	for _, c := range conflicts {
+		conflictItems = append(conflictItems, map[string]any{
+			"type":   c.Type,
+			"detail": strings.Join(c.Conflicts, ", "),
+		})
+	}
+
+	st := a.syncMgr.GetStatus()
+	return map[string]any{
+		// sync.Manager 的 Push/Pull 目前未对同步负载做 HMAC 签名，如实上报 false。
+		"hmac_enabled":   false,
+		"version_hash":   syncPayloadVersionHash(localDir),
+		"last_sync":      st.LastSyncTime,
+		"status":         st.Status,
+		"error":          st.Error,
+		"conflicts":      conflictItems,
+		"conflict_count": len(conflictItems),
+	}
+}
+
+// syncPayloadVersionHash 对同步负载（sync.Manager 管理的本地配置文件）计算确定性版本哈希；无文件时返回空串。
+func syncPayloadVersionHash(localDir string) string {
+	files := []string{"mcp_servers.json", "prompt_presets.json", "skills.json", "usage_records.json"}
+	var buf []byte
+	for _, name := range files {
+		data, err := os.ReadFile(filepath.Join(localDir, name))
+		if err != nil {
+			continue
+		}
+		buf = append(buf, []byte(name)...)
+		buf = append(buf, data...)
+	}
+	if len(buf) == 0 {
+		return ""
+	}
+	return sync.ComputeVersionHash(buf)
+}
+
+// detectSyncConflicts 基于当前 channel / combo 配置做引用完整性冲突检测。
+func (a *App) detectSyncConflicts() []sync.ConflictResult {
+	channels, _ := a.configSvc.ListChannels()
+	providerConns := make([]map[string]interface{}, 0, len(channels))
+	for _, ch := range channels {
+		models := make([]interface{}, 0, len(ch.Models))
+		for _, m := range ch.Models {
+			models = append(models, m)
+		}
+		providerConns = append(providerConns, map[string]interface{}{
+			"channel_id": ch.ChannelID,
+			"models":     models,
+		})
+	}
+
+	combos := a.configSvc.ListModelCombos()
+	comboItems := make([]map[string]interface{}, 0, len(combos))
+	for _, c := range combos {
+		steps := make([]interface{}, 0, len(c.Steps))
+		for _, s := range c.Steps {
+			steps = append(steps, map[string]interface{}{"channel_id": s.ChannelID})
+		}
+		comboItems = append(comboItems, map[string]interface{}{"steps": steps})
+	}
+
+	return sync.DetectConflicts(&sync.ConfigBundle{
+		ProviderConns: providerConns,
+		Combos:        comboItems,
+	})
 }
 
 func (a *App) GetProviderHealthMetrics(providerId string) []map[string]any {
@@ -1920,7 +2048,8 @@ func (a *App) RunDiagnostics() map[string]any {
 				systemProxyActive = active
 			}
 		}
-		result["mitm_ca_trust"] = status.CAInstalled
+		result["mitm_ca_trust"] = status.CATrusted
+		result["mitm_ca_installed"] = status.CAInstalled
 		result["system_proxy"] = map[string]any{
 			"active":       systemProxyActive,
 			"residual":     systemProxyActive && status.State != mitm.StateRunning,
@@ -2055,6 +2184,53 @@ func (a *App) GetCloudBilling() (map[string]any, error) {
 		"renewal_date":   billingData.RenewalDate,
 		"relay_enabled":  billingData.RelayEnabled,
 		"relay_gateways": billingData.RelayGateways,
+	}, nil
+}
+
+// GetOverageUsage 获取当前用户超额用量（由 Go 后端代理平台请求，避免前端直接持有并外发平台 Token）。
+func (a *App) GetOverageUsage() (map[string]any, error) {
+	rec, err := a.authSvc.FetchOverageUsage()
+	if err != nil {
+		return nil, err
+	}
+	if rec == nil {
+		return nil, nil
+	}
+	return map[string]any{
+		"overage_id":       rec.OverageID,
+		"user_id":          rec.UserID,
+		"plan_id":          rec.PlanID,
+		"billing_period":   rec.BillingPeriod,
+		"overage_requests": rec.OverageRequests,
+		"overage_cost":     rec.OverageCost,
+		"currency":         rec.Currency,
+		"billed":           rec.Billed,
+		"invoice_id":       rec.InvoiceID,
+		"created_at":       rec.CreatedAt,
+	}, nil
+}
+
+// PlatformRequest 是平台 API 的统一代理入口：由 Go 后端附加访问令牌后转发，
+// 前端无需持有平台 Token，也不再直连平台地址（避免绕过 Wails 层）。
+// 返回 { status, body }，status 为平台 HTTP 状态码，body 为解析后的响应体（非 JSON 时退回字符串）。
+func (a *App) PlatformRequest(method, path, body string) (map[string]any, error) {
+	var payload []byte
+	if strings.TrimSpace(body) != "" {
+		payload = []byte(body)
+	}
+	status, respBody, err := a.authSvc.DoPlatformRequest(method, path, payload)
+	if err != nil {
+		return nil, err
+	}
+	var parsed any
+	if len(respBody) > 0 {
+		if json.Unmarshal(respBody, &parsed) != nil {
+			parsed = string(respBody)
+		}
+	}
+	return map[string]any{
+		"status": status,
+		"body":   parsed,
 	}, nil
 }
 
@@ -2852,13 +3028,14 @@ func (a *App) SetOptimizationConfig(cfg map[string]any) error {
 func (a *App) GetRateLimitConfig() map[string]any {
 	cfg := a.configSvc.GetRateLimitConfig()
 	return map[string]any{
-		"enabled":           cfg.Enabled,
-		"default_rpm":       cfg.DefaultRPM,
-		"default_tpm":       cfg.DefaultTPM,
-		"min_interval_ms":   cfg.MinIntervalMs,
-		"max_concurrent":    cfg.MaxConcurrent,
-		"max_wait_ms":       cfg.MaxWaitMs,
-		"channel_overrides": cfg.ChannelOverrides,
+		"enabled":                cfg.Enabled,
+		"default_rpm":            cfg.DefaultRPM,
+		"default_tpm":            cfg.DefaultTPM,
+		"min_interval_ms":        cfg.MinIntervalMs,
+		"max_concurrent":         cfg.MaxConcurrent,
+		"max_wait_ms":            cfg.MaxWaitMs,
+		"monthly_cost_limit_usd": cfg.MonthlyCostLimitUSD,
+		"channel_overrides":      cfg.ChannelOverrides,
 	}
 }
 
@@ -2869,19 +3046,22 @@ func (a *App) SetRateLimitConfig(cfg map[string]any) error {
 		parsed.Enabled, _ = v.(bool)
 	}
 	if v, ok := cfg["default_rpm"]; ok {
-		parsed.DefaultRPM, _ = v.(int)
+		parsed.DefaultRPM, _ = toInt(v)
 	}
 	if v, ok := cfg["default_tpm"]; ok {
-		parsed.DefaultTPM, _ = v.(int)
+		parsed.DefaultTPM, _ = toInt(v)
 	}
 	if v, ok := cfg["min_interval_ms"]; ok {
-		parsed.MinIntervalMs, _ = v.(int)
+		parsed.MinIntervalMs, _ = toInt(v)
 	}
 	if v, ok := cfg["max_concurrent"]; ok {
-		parsed.MaxConcurrent, _ = v.(int)
+		parsed.MaxConcurrent, _ = toInt(v)
 	}
 	if v, ok := cfg["max_wait_ms"]; ok {
-		parsed.MaxWaitMs, _ = v.(int)
+		parsed.MaxWaitMs, _ = toInt(v)
+	}
+	if v, ok := cfg["monthly_cost_limit_usd"]; ok {
+		parsed.MonthlyCostLimitUSD, _ = v.(float64)
 	}
 	if v, ok := cfg["channel_overrides"]; ok {
 		if overrides, ok := v.(map[string]any); ok {
@@ -2890,16 +3070,16 @@ func (a *App) SetRateLimitConfig(cfg map[string]any) error {
 				if m, ok := raw.(map[string]any); ok {
 					ov := &config.ChannelRateLimit{}
 					if rv, ok := m["rpm"]; ok {
-						ov.RPM, _ = rv.(int)
+						ov.RPM, _ = toInt(rv)
 					}
 					if rv, ok := m["tpm"]; ok {
-						ov.TPM, _ = rv.(int)
+						ov.TPM, _ = toInt(rv)
 					}
 					if rv, ok := m["min_interval_ms"]; ok {
-						ov.MinIntervalMs, _ = rv.(int)
+						ov.MinIntervalMs, _ = toInt(rv)
 					}
 					if rv, ok := m["max_concurrent"]; ok {
-						ov.MaxConcurrent, _ = rv.(int)
+						ov.MaxConcurrent, _ = toInt(rv)
 					}
 					parsed.ChannelOverrides[chID] = ov
 				}
@@ -2960,8 +3140,10 @@ func (a *App) GetMITMStatus() map[string]any {
 		"state":                 string(s.State),
 		"proxy_port":            s.ProxyPort,
 		"ca_installed":          s.CAInstalled,
+		"ca_trusted":            s.CATrusted,
 		"rules_count":           s.RulesCount,
 		"system_proxy":          s.SystemProxy,
+		"system_proxy_owned":    s.SystemProxyOwned,
 		"system_proxy_active":   systemProxyActive,
 		"residual_system_proxy": systemProxyActive && s.State != mitm.StateRunning,
 		"last_error":            s.LastError,

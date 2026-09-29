@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getPlatformAPIBaseURL, getPlatformToken, fetchFreeChannels, listChannels, saveCustomChannel } from "../utils/commands";
+import { platformRequest, fetchFreeChannels, listChannels, saveCustomChannel } from "../utils/commands";
 import type { Channel } from "../utils/types";
 import { useTranslation } from "../i18n";
 import { useMarketStore } from "../stores/marketStore";
@@ -67,12 +67,9 @@ export function TokenMarketPage() {
       return;
     }
     try {
-      const [baseURL, token] = await Promise.all([getPlatformAPIBaseURL(), getPlatformToken()]);
-      const resp = await fetch(`${baseURL}/token-market/account`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
-      if (!resp.ok) return;
-      const data = await resp.json();
+      const resp = await platformRequest("GET", "/token-market/account");
+      if (resp.status >= 400) return;
+      const data = resp.body;
       if (typeof data.data?.balance === "number") setMyBalance(data.data.balance);
     } catch {
       // 静默失败：余额展示失败不影响市场浏览
@@ -87,7 +84,6 @@ export function TokenMarketPage() {
     }
     setError(null);
     try {
-      const [baseURL, token] = await Promise.all([getPlatformAPIBaseURL(), getPlatformToken()]);
       const params = new URLSearchParams();
       params.set("page", String(pageNum));
       params.set("page_size", "20");
@@ -96,11 +92,9 @@ export function TokenMarketPage() {
       if (maxPrice) params.set("max_price", maxPrice);
       if (saleType) params.set("sale_type", saleType);
       params.set("sort", sortBy);
-      const resp = await fetch(`${baseURL}/token-market/listings?${params}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const data = await resp.json();
+      const resp = await platformRequest("GET", `/token-market/listings?${params}`);
+      if (resp.status >= 400) throw new Error(`HTTP ${resp.status}`);
+      const data = resp.body;
       const newItems = data.data || [];
       setTotal(data.total || 0);
       setTotalPages(data.total_pages || 1);

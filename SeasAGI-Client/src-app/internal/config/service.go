@@ -36,19 +36,21 @@ type AppConfig struct {
 	PlatformAPIBaseURL    string                `json:"platform_api_base_url,omitempty"`
 	DefaultComboName      string                `json:"default_combo_name,omitempty"`
 	RateLimit             *RateLimitConfig      `json:"rate_limit,omitempty"`
+	Security              *SecurityConfig       `json:"security,omitempty"`
 	SelectedGrantID       string                `json:"selected_grant_id,omitempty"`
 	SelectedGrantRelayURL string                `json:"selected_grant_relay_url,omitempty"`
 }
 
 // RateLimitConfig 全局速率限制配置，借鉴 OmniRoute per-connection rateLimitOverrides。
 type RateLimitConfig struct {
-	Enabled          bool                         `json:"enabled"`
-	DefaultRPM       int                          `json:"default_rpm"`                 // 每分钟请求数，0=不限
-	DefaultTPM       int                          `json:"default_tpm"`                 // 每分钟 token 数，0=不限
-	MinIntervalMs    int                          `json:"min_interval_ms"`             // 请求间最小间隔（毫秒），0=不限
-	MaxConcurrent    int                          `json:"max_concurrent"`              // 最大并发数，0=不限
-	MaxWaitMs        int                          `json:"max_wait_ms"`                 // 队列最大等待（毫秒），默认 15000
-	ChannelOverrides map[string]*ChannelRateLimit `json:"channel_overrides,omitempty"` // per-channel 覆盖
+	Enabled             bool                         `json:"enabled"`
+	DefaultRPM          int                          `json:"default_rpm"`                 // 每分钟请求数，0=不限
+	DefaultTPM          int                          `json:"default_tpm"`                 // 每分钟 token 数，0=不限
+	MinIntervalMs       int                          `json:"min_interval_ms"`             // 请求间最小间隔（毫秒），0=不限
+	MaxConcurrent       int                          `json:"max_concurrent"`              // 最大并发数，0=不限
+	MaxWaitMs           int                          `json:"max_wait_ms"`                 // 队列最大等待（毫秒），默认 15000
+	MonthlyCostLimitUSD float64                      `json:"monthly_cost_limit_usd"`      // 月度成本硬上限（USD），0=不限
+	ChannelOverrides    map[string]*ChannelRateLimit `json:"channel_overrides,omitempty"` // per-channel 覆盖
 }
 
 // ChannelRateLimit 单个 Channel 的速率限制覆盖。
@@ -57,6 +59,20 @@ type ChannelRateLimit struct {
 	TPM           int `json:"tpm"`             // 0=使用全局默认
 	MinIntervalMs int `json:"min_interval_ms"` // 0=使用全局默认
 	MaxConcurrent int `json:"max_concurrent"`  // 0=使用全局默认
+}
+
+// 提示注入处置策略。
+const (
+	PromptInjectionOff   = "off"   // 不检测
+	PromptInjectionLog   = "log"   // 命中告警但不拦截（默认）
+	PromptInjectionBlock = "block" // 命中直接拦截
+)
+
+// SecurityConfig 网关内容治理策略（默认非破坏式：仅告警 + 错误脱敏）。
+type SecurityConfig struct {
+	PIIMaskingEnabled     bool   `json:"pii_masking_enabled"`     // 对请求 messages 做 PII/DLP 脱敏（默认关闭）
+	PromptInjectionAction string `json:"prompt_injection_action"` // off | log | block（默认 log）
+	ErrorSanitizeEnabled  bool   `json:"error_sanitize_enabled"`  // 对外错误信息脱敏（默认开启）
 }
 
 type OptimizationConfig struct {
@@ -167,6 +183,7 @@ func NewService(cfg AppConfig) *Service {
 	}
 	_ = svc.load()
 	svc.ensureOptimizationConfig()
+	svc.ensureSecurityConfig()
 	svc.ensureBuiltinTemplates()
 	svc.migrateModelCombos()
 	return svc
@@ -193,6 +210,27 @@ func (s *Service) ensureOptimizationConfig() {
 	if s.config.Optimizations == nil {
 		def := defaultOptimizationConfig()
 		s.config.Optimizations = &def
+		_ = s.saveLocked()
+	}
+}
+
+func defaultSecurityConfig() SecurityConfig {
+	return SecurityConfig{
+		PIIMaskingEnabled:     false,
+		PromptInjectionAction: PromptInjectionLog,
+		ErrorSanitizeEnabled:  true,
+	}
+}
+
+func (s *Service) ensureSecurityConfig() {
+	if s.config.Security == nil {
+		def := defaultSecurityConfig()
+		s.config.Security = &def
+		_ = s.saveLocked()
+		return
+	}
+	if s.config.Security.PromptInjectionAction == "" {
+		s.config.Security.PromptInjectionAction = PromptInjectionLog
 		_ = s.saveLocked()
 	}
 }
@@ -395,6 +433,25 @@ func (s *Service) SetRateLimitConfig(cfg RateLimitConfig) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.config.RateLimit = &cfg
+	return s.saveLocked()
+}
+
+func (s *Service) GetSecurityConfig() SecurityConfig {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if s.config.Security == nil {
+		return defaultSecurityConfig()
+	}
+	return *s.config.Security
+}
+
+func (s *Service) SetSecurityConfig(cfg SecurityConfig) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if cfg.PromptInjectionAction == "" {
+		cfg.PromptInjectionAction = PromptInjectionLog
+	}
+	s.config.Security = &cfg
 	return s.saveLocked()
 }
 

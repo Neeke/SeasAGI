@@ -20,6 +20,10 @@ type RequestLog struct {
 	RouteSteps         []RouteStep `json:"route_steps,omitempty"`
 	Status             string      `json:"status"`
 	DurationMs         float64     `json:"duration_ms"`
+	HTTPStatus         int         `json:"http_status"`   // 回写客户端的 HTTP 状态码
+	TTFTMs             int64       `json:"ttft_ms"`       // 首字节延迟（毫秒），0 表示未收到
+	InputTokens        int64       `json:"input_tokens"`  // 上游返回的输入 token 数
+	OutputTokens       int64       `json:"output_tokens"` // 上游返回的输出 token 数
 	ErrorCode          *string     `json:"error_code"`
 	ErrorMessage       *string     `json:"error_message"`
 	AppliedConstraints string      `json:"applied_constraints,omitempty"` // JSON of constraint conditions applied

@@ -363,12 +363,13 @@ export namespace config {
 	    min_interval_ms: number;
 	    max_concurrent: number;
 	    max_wait_ms: number;
+	    monthly_cost_limit_usd: number;
 	    channel_overrides?: Record<string, ChannelRateLimit>;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new RateLimitConfig(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.enabled = source["enabled"];
@@ -377,6 +378,7 @@ export namespace config {
 	        this.min_interval_ms = source["min_interval_ms"];
 	        this.max_concurrent = source["max_concurrent"];
 	        this.max_wait_ms = source["max_wait_ms"];
+	        this.monthly_cost_limit_usd = source["monthly_cost_limit_usd"];
 	        this.channel_overrides = this.convertValues(source["channel_overrides"], ChannelRateLimit, true);
 	    }
 	

@@ -720,6 +720,22 @@ export function SettingsPage() {
             </div>
             <MITMEnvHint running={mitmStatus?.state === "running"} />
           </div>
+
+          {/* 已知局限（不接管） */}
+          <div className="tab-content section-card">
+            <div className="section-heading">
+              <h2>已知局限（不接管）</h2>
+              <p className="hint">一键接管基于系统代理（HTTP/HTTPS over TCP）与本地 CA 实现，以下流量无法被监控或治理，属于客观盲区：</p>
+            </div>
+            <ul className="hint" style={{ margin: 0, paddingLeft: 20, lineHeight: 1.9 }}>
+              <li><strong>HTTP/3（QUIC / UDP 443）</strong>：系统代理仅接管 TCP，基于 UDP 的流量不会被拦截。</li>
+              <li><strong>h2 / gRPC 长连接</strong>：仅对标准 HTTP/HTTPS 请求做解析与治理，gRPC 等二进制长连接不被改写。</li>
+              <li><strong>证书固定（Certificate Pinning）客户端</strong>：内置证书校验的应用会拒绝本地 CA，从而绕过 MITM。</li>
+              <li><strong>不读取系统代理的进程</strong>：自行实现网络栈或显式指定代理的 CLI/工具需手动设置环境变量（见上）。</li>
+              <li><strong>未纳入接管域名清单的流量</strong>：仅清单内的域名会被转发到本地网关。</li>
+            </ul>
+            <p className="hint" style={{ marginTop: 8 }}>WebSocket（ws/wss）流量已复用同一网关主链路，可正常接管与记账。</p>
+          </div>
         </div>
       )}
 
@@ -871,6 +887,18 @@ function RateLimitPanel() {
             placeholder="15000"
           />
           <p className="hint">{t("rateLimit.maxWaitHint")}</p>
+        </div>
+        <div className="form-group" style={{ gridColumn: "span 2" }}>
+          <label className="form-label">{t("rateLimit.monthlyCostLimit")}</label>
+          <input
+            type="number"
+            step="0.01"
+            className="form-input"
+            value={config?.monthly_cost_limit_usd ?? 0}
+            onChange={(e) => update("monthly_cost_limit_usd", parseFloat(e.target.value) || 0)}
+            placeholder="0 = unlimited"
+          />
+          <p className="hint">{t("rateLimit.monthlyCostLimitHint")}</p>
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getPlatformAPIBaseURL, getPlatformToken } from "../utils/commands";
+import { platformRequest } from "../utils/commands";
 import { useTranslation } from "../i18n";
 import type { MarketListing } from "../stores/marketStore";
 
@@ -39,18 +39,13 @@ export function TokenListingDetailPage() {
       setLoading(true);
       setError(null);
       try {
-        const [baseURL, token] = await Promise.all([getPlatformAPIBaseURL(), getPlatformToken()]);
-        const resp = await fetch(`${baseURL}/token-market/listings/${id}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        });
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const data = await resp.json();
+        const resp = await platformRequest("GET", `/token-market/listings/${id}`);
+        if (resp.status >= 400) throw new Error(`HTTP ${resp.status}`);
+        const data = resp.body;
         setListing(data.data);
         // 拉取我的市场余额（下单前置提示）
-        fetch(`${baseURL}/token-market/account`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        })
-          .then((r) => (r.ok ? r.json() : null))
+        platformRequest("GET", "/token-market/account")
+          .then((r) => (r.status < 400 ? r.body : null))
           .then((d) => {
             if (typeof d?.data?.balance === "number") setMyBalance(d.data.balance);
           })
@@ -72,12 +67,9 @@ export function TokenListingDetailPage() {
   const fetchSellerReviews = async (sellerID: string) => {
     setReviewLoading(true);
     try {
-      const [baseURL, token] = await Promise.all([getPlatformAPIBaseURL(), getPlatformToken()]);
-      const resp = await fetch(`${baseURL}/token-market/sellers/${sellerID}/reviews`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const data = await resp.json();
+      const resp = await platformRequest("GET", `/token-market/sellers/${sellerID}/reviews`);
+      if (resp.status >= 400) throw new Error(`HTTP ${resp.status}`);
+      const data = resp.body;
       setSellerReviews(data.data);
     } catch {
       setSellerReviews(null);
@@ -91,20 +83,12 @@ export function TokenListingDetailPage() {
     setPurchasing(true);
     setPurchaseError(null);
     try {
-      const [baseURL, token] = await Promise.all([getPlatformAPIBaseURL(), getPlatformToken()]);
-      const resp = await fetch(`${baseURL}/token-market/orders`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ listing_id: listing.listing_id }),
-      });
-      if (!resp.ok) {
-        const errData = await resp.json().catch(() => ({}));
+      const resp = await platformRequest("POST", "/token-market/orders", { listing_id: listing.listing_id });
+      if (resp.status >= 400) {
+        const errData = resp.body || {};
         throw new Error(errData.error || `HTTP ${resp.status}`);
       }
-      const data = await resp.json();
+      const data = resp.body;
       // 跳转到扫码交易页
       navigate(`/token-market/scan-trade?order=${data.data.order_id}`);
     } catch (err) {

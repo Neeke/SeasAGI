@@ -56,6 +56,10 @@ export interface RequestLog {
   route_steps: RouteStep[];
   status: "success" | "failure";
   duration_ms: number;
+  http_status: number;
+  ttft_ms: number;
+  input_tokens: number;
+  output_tokens: number;
   error_code: string | null;
   error_message: string | null;
 }

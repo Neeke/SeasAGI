@@ -112,16 +112,25 @@ func runDesktop() {
 		logging.Warningf("MITM CA init failed: %v", mitmCAErr)
 	}
 	mitmRules := mitm.NewDefaultRules()
+	// 用户对拦截域名的增删持久化到本地，重启后仍然生效。
+	mitmRules.SetStorePath(filepath.Join(mustHomeDir(), ".seasagi", "mitm_rules.json"))
 	mitmGatewayURL := fmt.Sprintf("http://127.0.0.1:%d", cfg.ListenPort)
 	mitmMgr := mitm.NewManager(mitmCA, mitmRules, mitmGatewayURL)
 	if mitmCA != nil {
 		mitmMgr.SetTrustInstaller(mitm.NewTrustInstaller())
 		mitmMgr.SetSystemProxySetter(network.NewSystemProxySetter())
 	}
+	// 日志保留策略：SeasLog 按日滚动文件，这里负责按大小/天数/文件数清理。
+	logRotator := logging.NewLogRotator(logging.LogDir(), logging.DefaultRotationConfig())
+	if logRotator.LogPath() != "" {
+		logRotator.Start()
+	}
 	mcpSvc := mcp.NewService()
 	promptsSvc := prompts.NewService()
 	skillsSvc := skills.NewService()
 	usageSvc := usage.NewService()
+	// 网关主链路的每次模型调用都写入用量记账（token/成本/TTFT/限流快照）。
+	gatewaySvc.SetUsageService(usageSvc)
 	deeplinkMgr := deeplink.NewManager()
 	presetsSvc := presets.NewService()
 	syncMgr := sync.NewManager(sync.SyncConfig{})
@@ -130,6 +139,7 @@ func runDesktop() {
 	optimizerSvc := optimizer.NewService(configSvc, usageSvc)
 	app := NewApp(authSvc, configSvc, gatewaySvc, logSvc, discoverySvc, mcpSvc, promptsSvc, skillsSvc, usageSvc, optimizerSvc, deeplinkMgr, presetsSvc, syncMgr, sessionsSvc, configioSvc, localTokenStore)
 	app.SetMITMManager(mitmMgr)
+	app.SetLogRotator(logRotator)
 
 	trayMgr := tray.NewManager(
 		func(channelID string) {
@@ -152,6 +162,7 @@ func runDesktop() {
 			_ = app.StopMITM()
 			app.oauthRefresh.Stop()
 			gatewaySvc.Stop()
+			logRotator.Stop()
 		})
 	}
 	defer shutdownDeps()

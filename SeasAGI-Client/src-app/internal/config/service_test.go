@@ -1126,3 +1126,68 @@ func TestFindComboByModel_NotFound(t *testing.T) {
 		t.Error("expected nil for nonexistent model")
 	}
 }
+
+// ---------------------------------------------------------------------------
+// SecurityConfig tests
+// ---------------------------------------------------------------------------
+
+func TestEnsureSecurityConfigDefaults(t *testing.T) {
+	svc := &Service{
+		config:   AppConfig{},
+		channels: []Channel{},
+		path:     filepath.Join(t.TempDir(), "config.json"),
+	}
+	svc.ensureSecurityConfig()
+
+	if svc.config.Security == nil {
+		t.Fatal("security config not initialized")
+	}
+	got := svc.GetSecurityConfig()
+	if got.PromptInjectionAction != PromptInjectionLog {
+		t.Errorf("PromptInjectionAction = %q, want %q", got.PromptInjectionAction, PromptInjectionLog)
+	}
+	if !got.ErrorSanitizeEnabled {
+		t.Error("ErrorSanitizeEnabled should default to true")
+	}
+	if got.PIIMaskingEnabled {
+		t.Error("PIIMaskingEnabled should default to false")
+	}
+}
+
+func TestEnsureSecurityConfigFillsMissingAction(t *testing.T) {
+	svc := &Service{
+		config:   AppConfig{Security: &SecurityConfig{PIIMaskingEnabled: true}},
+		channels: []Channel{},
+		path:     filepath.Join(t.TempDir(), "config.json"),
+	}
+	svc.ensureSecurityConfig()
+
+	if got := svc.GetSecurityConfig(); got.PromptInjectionAction != PromptInjectionLog {
+		t.Errorf("PromptInjectionAction = %q, want %q", got.PromptInjectionAction, PromptInjectionLog)
+	}
+}
+
+func TestGetSecurityConfigNilReturnsDefault(t *testing.T) {
+	svc := &Service{config: AppConfig{}}
+	if got := svc.GetSecurityConfig(); got != defaultSecurityConfig() {
+		t.Errorf("nil security config should return defaults, got %+v", got)
+	}
+}
+
+func TestSetSecurityConfigPersists(t *testing.T) {
+	svc := &Service{
+		config:   AppConfig{},
+		channels: []Channel{},
+		path:     filepath.Join(t.TempDir(), "config.json"),
+	}
+	if err := svc.SetSecurityConfig(SecurityConfig{PIIMaskingEnabled: true}); err != nil {
+		t.Fatalf("SetSecurityConfig: %v", err)
+	}
+	got := svc.GetSecurityConfig()
+	if !got.PIIMaskingEnabled {
+		t.Error("PIIMaskingEnabled not persisted")
+	}
+	if got.PromptInjectionAction != PromptInjectionLog {
+		t.Errorf("PromptInjectionAction = %q, want default %q", got.PromptInjectionAction, PromptInjectionLog)
+	}
+}

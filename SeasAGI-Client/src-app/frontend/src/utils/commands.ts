@@ -1,4 +1,4 @@
-import type { Channel, DiscoveredModel, RequestLog, RuntimeStatus, AuthState, AppConfig, ModelCombo, CloudUsage, CloudBilling, CloudCombo, OptimizationPlan, OptimizationConfig, ModelStatsEntry, UsageSummary, OAuthProvider, OAuthConnection, ProviderHealthMetric, ProviderHealthSummary, BYOKPolicy, QuickStrategy, TaskProfile, MITMStatus } from "../utils/types";
+import type { Channel, DiscoveredModel, RequestLog, RuntimeStatus, AuthState, AppConfig, ModelCombo, CloudUsage, CloudBilling, CloudCombo, OptimizationPlan, OptimizationConfig, ModelStatsEntry, UsageSummary, OAuthProvider, OAuthConnection, ProviderHealthMetric, ProviderHealthSummary, BYOKPolicy, QuickStrategy, TaskProfile, MITMStatus, OverageRecord } from "../utils/types";
 
 type WailsAppApi = {
   StartLocalGateway(): Promise<void>;
@@ -9,6 +9,8 @@ type WailsAppApi = {
   Register(email: string, password: string, displayName: string): Promise<void>;
   GetCloudUsage(): Promise<CloudUsage>;
   GetCloudBilling(): Promise<CloudBilling>;
+  GetOverageUsage(): Promise<OverageRecord | null>;
+  PlatformRequest(method: string, path: string, body: string): Promise<{ status: number; body: any }>;
   GetRecommendedCombos(): Promise<CloudCombo[]>;
   GetOptimizationPlan(mode: string, taskType: string): Promise<OptimizationPlan>;
   GetUsageSummary(): Promise<UsageSummary>;
@@ -247,6 +249,18 @@ export async function createCheckoutSession(planId: string, quantity?: number): 
   return getAppApi().CreateCheckoutSession(planId);
 }
 
+export interface PlatformResponse {
+  status: number;
+  body: any;
+}
+
+// platformRequest 统一经 Go 后端代理平台 API：前端不再持有并外发平台 Token。
+// method: HTTP 方法；path: 平台相对路径（须以 / 开头）；body: 可选请求体（会自动 JSON 序列化）。
+export async function platformRequest(method: string, path: string, body?: unknown): Promise<PlatformResponse> {
+  const payload = body === undefined || body === null ? "" : JSON.stringify(body);
+  return getAppApi().PlatformRequest(method, path, payload);
+}
+
 export async function getPlatformAPIBaseURL(): Promise<string> {
   return getAppApi().GetPlatformAPIBaseURL();
 }
@@ -454,6 +468,10 @@ export async function getCloudUsage(): Promise<CloudUsage> {
 
 export async function getCloudBilling(): Promise<CloudBilling> {
   return getAppApi().GetCloudBilling();
+}
+
+export async function getOverageUsage(): Promise<OverageRecord | null> {
+  return getAppApi().GetOverageUsage();
 }
 
 export async function fetchActiveGrants(): Promise<Record<string, any>[]> {

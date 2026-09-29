@@ -131,6 +131,18 @@ The left navigation has been consolidated into a single "Combo Optimization" ent
 - **Crash recovery**: Residual system proxy auto-cleanup on restart, health probe goroutine auto-stops on proxy failure
 - **Passthrough safety**: Non-matching domains are transparently tunneled with 60s timeout, zero interference with normal browsing
 
+#### Known limitations (not intercepted)
+
+One-click interception is built on the system proxy (HTTP/HTTPS over TCP) and a local CA. The following traffic falls outside its scope and cannot be monitored or governed:
+
+- **HTTP/3 (QUIC / UDP 443)**: the system proxy only handles TCP, so UDP-based traffic is not intercepted
+- **h2 / gRPC long-lived connections**: only standard HTTP/HTTPS requests are parsed and governed; binary gRPC streams are not rewritten
+- **Certificate-pinned clients**: apps that validate certificates internally reject the local CA and bypass MITM
+- **Processes that ignore the system proxy**: CLIs/tools with their own network stack or an explicit proxy must set environment variables manually (see "CLI compatibility hints")
+- **Traffic outside the interception allowlist**: only allowlisted domains are forwarded to the local gateway
+
+> WebSocket (ws/wss) traffic reuses the same gateway main path and is fully intercepted and metered.
+
 ### Experience
 
 - Playground instant test page
