@@ -62,6 +62,10 @@ export function GetRateLimitConfig() {
   return window['go']['config']['Service']['GetRateLimitConfig']();
 }
 
+export function GetSecurityConfig() {
+  return window['go']['config']['Service']['GetSecurityConfig']();
+}
+
 export function GetSelectedGrantID() {
   return window['go']['config']['Service']['GetSelectedGrantID']();
 }
@@ -160,6 +164,10 @@ export function SetRTKConfig(arg1, arg2) {
 
 export function SetRateLimitConfig(arg1) {
   return window['go']['config']['Service']['SetRateLimitConfig'](arg1);
+}
+
+export function SetSecurityConfig(arg1) {
+  return window['go']['config']['Service']['SetSecurityConfig'](arg1);
 }
 
 export function SetSelectedGrant(arg1, arg2) {

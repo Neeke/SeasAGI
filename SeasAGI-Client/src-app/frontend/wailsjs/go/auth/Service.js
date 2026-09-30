@@ -10,6 +10,10 @@ export function DeleteCloudCombo(arg1) {
   return window['go']['auth']['Service']['DeleteCloudCombo'](arg1);
 }
 
+export function DoPlatformRequest(arg1, arg2, arg3) {
+  return window['go']['auth']['Service']['DoPlatformRequest'](arg1, arg2, arg3);
+}
+
 export function FetchActiveGrants() {
   return window['go']['auth']['Service']['FetchActiveGrants']();
 }
@@ -56,6 +60,10 @@ export function FetchModelIndex(arg1, arg2) {
 
 export function FetchOfficialComboTemplates(arg1) {
   return window['go']['auth']['Service']['FetchOfficialComboTemplates'](arg1);
+}
+
+export function FetchOverageUsage() {
+  return window['go']['auth']['Service']['FetchOverageUsage']();
 }
 
 export function FetchPlans() {

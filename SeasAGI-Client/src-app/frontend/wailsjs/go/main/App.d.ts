@@ -11,6 +11,7 @@ import {logs} from '../models';
 import {mcp} from '../models';
 import {prompts} from '../models';
 import {skills} from '../models';
+import {logging} from '../models';
 import {mitm} from '../models';
 
 export function AddMITMRule(arg1:string):Promise<void>;
@@ -137,6 +138,8 @@ export function GetOptimizationConfig():Promise<Record<string, any>>;
 
 export function GetOptimizationPlan(arg1:string,arg2:string):Promise<Record<string, any>>;
 
+export function GetOverageUsage():Promise<Record<string, any>>;
+
 export function GetPerfAuditReport():Promise<Record<string, any>>;
 
 export function GetPlans():Promise<Array<Record<string, any>>>;
@@ -237,6 +240,8 @@ export function OpenInBrowser(arg1:string):Promise<void>;
 
 export function PerformUpdate():Promise<void>;
 
+export function PlatformRequest(arg1:string,arg2:string,arg3:string):Promise<Record<string, any>>;
+
 export function PreviewComboOptimization(arg1:string,arg2:string):Promise<Record<string, any>>;
 
 export function PushCloudCombo(arg1:string,arg2:string,arg3:string,arg4:string,arg5:number,arg6:string,arg7:Record<string, any>,arg8:string):Promise<Record<string, any>>;
@@ -294,6 +299,8 @@ export function SetDefaultComboName(arg1:string):Promise<void>;
 export function SetLocale(arg1:string):Promise<void>;
 
 export function SetLogRotationConfig(arg1:Record<string, any>):Promise<void>;
+
+export function SetLogRotator(arg1:logging.LogRotator):Promise<void>;
 
 export function SetMITMManager(arg1:mitm.Manager):Promise<void>;
 

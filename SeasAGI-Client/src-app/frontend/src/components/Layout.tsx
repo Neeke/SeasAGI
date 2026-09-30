@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAppStore } from "../stores/appStore";
 import { useTranslation } from "../i18n";
-import { getCloudBilling, getRuntimeStatus, fetchFreeChannels } from "../utils/commands";
+import { getAppConfig, getCloudBilling, getRuntimeStatus, fetchFreeChannels } from "../utils/commands";
 import { useConfigSync } from "../hooks/useConfigSync";
 import { useMarketStore } from "../stores/marketStore";
 import seasagiIcon from "../assets/seasagi-icon.png";
@@ -128,6 +128,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const auth = useAppStore((s) => s.auth);
   const cloudBilling = useAppStore((s) => s.cloudBilling);
   const setRuntime = useAppStore((s) => s.setRuntime);
+  const setAppConfig = useAppStore((s) => s.setAppConfig);
   const setCloudBilling = useAppStore((s) => s.setCloudBilling);
   const location = useLocation();
   const [theme, setTheme] = useState<ThemeMode>(getInitialTheme);
@@ -172,6 +173,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
       } catch {}
     })();
   }, []);
+
+  // 启动时加载本地应用配置到全局 store。此前 appConfig 恒为 null，
+  // 设置页 RTK/Caveman 开关的保存守卫 `if (!appConfig) return` 会静默
+  // 吞掉点击，导致两个启用按钮无法打开也无法关闭。
+  useEffect(() => {
+    (async () => {
+      try {
+        const config = await getAppConfig();
+        setAppConfig(config);
+      } catch {}
+    })();
+  }, [setAppConfig]);
 
   useEffect(() => {
     if (!auth.is_logged_in) {

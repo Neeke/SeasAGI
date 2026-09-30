@@ -250,6 +250,10 @@ export function GetOptimizationPlan(arg1, arg2) {
   return window['go']['main']['App']['GetOptimizationPlan'](arg1, arg2);
 }
 
+export function GetOverageUsage() {
+  return window['go']['main']['App']['GetOverageUsage']();
+}
+
 export function GetPerfAuditReport() {
   return window['go']['main']['App']['GetPerfAuditReport']();
 }
@@ -450,6 +454,10 @@ export function PerformUpdate() {
   return window['go']['main']['App']['PerformUpdate']();
 }
 
+export function PlatformRequest(arg1, arg2, arg3) {
+  return window['go']['main']['App']['PlatformRequest'](arg1, arg2, arg3);
+}
+
 export function PreviewComboOptimization(arg1, arg2) {
   return window['go']['main']['App']['PreviewComboOptimization'](arg1, arg2);
 }
@@ -564,6 +572,10 @@ export function SetLocale(arg1) {
 
 export function SetLogRotationConfig(arg1) {
   return window['go']['main']['App']['SetLogRotationConfig'](arg1);
+}
+
+export function SetLogRotator(arg1) {
+  return window['go']['main']['App']['SetLogRotator'](arg1);
 }
 
 export function SetMITMManager(arg1) {

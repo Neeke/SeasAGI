@@ -321,6 +321,12 @@ func LoadOrDefault() (AppConfig, error) {
 		LogRetentionDays:   30,
 		AnalyticsEnabled:   false,
 		PlatformAPIBaseURL: "https://seasagi.seasx.ai/api/v1",
+		// RTK/Caveman 默认值须与前端兜底一致（SettingsPage：rtk_enabled ?? true、
+		// caveman_style ?? "concise"），否则新鲜安装时后端关闭而 UI 显示开启，
+		// 启用开关第一次点击不生效。已有配置文件由 load() 覆盖，不受影响。
+		RTKEnabled:        true,
+		RTKMaxOutputChars: 8000,
+		CavemanStyle:      "concise",
 	})
 	if err := svc.load(); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return svc.config, err

@@ -32,6 +32,8 @@ export function GetPlatformAPIBaseURL():Promise<string>;
 
 export function GetRateLimitConfig():Promise<config.RateLimitConfig>;
 
+export function GetSecurityConfig():Promise<config.SecurityConfig>;
+
 export function GetSelectedGrantID():Promise<string>;
 
 export function GetSelectedGrantRelayURL():Promise<string>;
@@ -81,6 +83,8 @@ export function SetPlatformAPIBaseURL(arg1:string):Promise<void>;
 export function SetRTKConfig(arg1:boolean,arg2:number):Promise<void>;
 
 export function SetRateLimitConfig(arg1:config.RateLimitConfig):Promise<void>;
+
+export function SetSecurityConfig(arg1:config.SecurityConfig):Promise<void>;
 
 export function SetSelectedGrant(arg1:string,arg2:string):Promise<void>;
 
