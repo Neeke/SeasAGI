@@ -70,3 +70,35 @@ func TestListCavemanStyles(t *testing.T) {
 		t.Errorf("expected %d styles, got %d", len(cavemanPrompts), len(styles))
 	}
 }
+
+func TestIsValidCavemanStyle(t *testing.T) {
+	for _, s := range []string{"concise", "brief", "minimal", "terse"} {
+		if !IsValidCavemanStyle(s) {
+			t.Errorf("%q should be valid", s)
+		}
+	}
+	for _, s := range []string{"", "verbose", "CONCISE", "caveman"} {
+		if IsValidCavemanStyle(s) {
+			t.Errorf("%q should be invalid", s)
+		}
+	}
+}
+
+func TestCavemanAllStylesInject(t *testing.T) {
+	for style, wantPrompt := range cavemanPrompts {
+		msgs := []map[string]any{{"role": "system", "content": "base"}}
+		got := CavemanInjectIntoCanonical(msgs, true, string(style))
+		want := "base\n\n" + wantPrompt
+		if got[0]["content"] != want {
+			t.Errorf("style %s: content = %q, want %q", style, got[0]["content"], want)
+		}
+	}
+}
+
+func TestCavemanSetStyleInvalidIgnored(t *testing.T) {
+	ci := NewCavemanInjector(true, "brief")
+	ci.SetStyle("bogus")
+	if ci.Style != CavemanStyleBrief {
+		t.Errorf("SetStyle with invalid value must keep current style, got %s", ci.Style)
+	}
+}

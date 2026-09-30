@@ -42,6 +42,7 @@ import (
 	"github.com/SeasAGI/SeasAGI-Client/internal/presets"
 	"github.com/SeasAGI/SeasAGI-Client/internal/prompts"
 	"github.com/SeasAGI/SeasAGI-Client/internal/routing"
+	"github.com/SeasAGI/SeasAGI-Client/internal/rtk"
 	"github.com/SeasAGI/SeasAGI-Client/internal/sessions"
 	"github.com/SeasAGI/SeasAGI-Client/internal/skills"
 	"github.com/SeasAGI/SeasAGI-Client/internal/sync"
@@ -821,6 +822,10 @@ func (a *App) GetAppConfig() config.AppConfig {
 
 // SetRTKSettings 保存 RTK Token 压缩与 Caveman 输出精简设置，并热更新网关管线。
 func (a *App) SetRTKSettings(rtkEnabled bool, rtkMaxOutputChars int, cavemanEnabled bool, cavemanStyle string) error {
+	// 空串允许（保持既有值/默认）；非空必须是四风格之一，避免注入时静默降级
+	if cavemanStyle != "" && !rtk.IsValidCavemanStyle(cavemanStyle) {
+		return fmt.Errorf("invalid caveman style: %q (supported: concise, brief, minimal, terse)", cavemanStyle)
+	}
 	if err := a.configSvc.SetRTKConfig(rtkEnabled, rtkMaxOutputChars); err != nil {
 		return err
 	}

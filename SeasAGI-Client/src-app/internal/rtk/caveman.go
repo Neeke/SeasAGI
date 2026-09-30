@@ -102,6 +102,13 @@ func ListCavemanStyles() []map[string]string {
 	return result
 }
 
+// IsValidCavemanStyle 判断风格 ID 是否为受支持的四风格之一。
+// 供设置层校验持久化值，避免非法风格在注入时静默降级为 concise。
+func IsValidCavemanStyle(style string) bool {
+	_, ok := cavemanPrompts[CavemanStyle(style)]
+	return ok
+}
+
 func CavemanInjectIntoCanonical(messages []map[string]any, enabled bool, style string) []map[string]any {
 	injector := NewCavemanInjector(enabled, style)
 	return injector.Inject(messages)

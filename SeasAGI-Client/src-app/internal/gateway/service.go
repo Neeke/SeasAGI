@@ -420,6 +420,17 @@ func (s *Service) handleChatCompletions(w http.ResponseWriter, r *http.Request) 
 		req.Messages = rtk.ApplyPipelineToMessages(req.Messages, rtkPipeline)
 	}
 
+	// Caveman/RTK 只改 canonical messages；这里把修改后的 messages 回写 rawBody 并重新
+	// 序列化 bodyBytes，使 Grant 中继（直接转发 bodyBytes）与 Passthrough（转发 rawBody）
+	// 两条路径同样拿到注入/压缩后的内容，模式与上方 DLP 一致。仅限 openai-chat 源格式：
+	// gemini/anthropic 等源的 wire 键不同，回写会引入非法字段。
+	if rawBody != nil && req.SourceFormat == protocol.FormatOpenAIChat {
+		rawBody["messages"] = req.Messages
+		if remarshaled, mErr := json.Marshal(rawBody); mErr == nil {
+			bodyBytes = remarshaled
+		}
+	}
+
 	// Extract task_type from request for task-aware routing
 	taskType := ""
 	if rawBody != nil {
@@ -645,34 +656,9 @@ func (s *Service) handleChatCompletions(w http.ResponseWriter, r *http.Request) 
 			_ = protocol.ProcessReasoningSSEStream(resp.Body, w)
 			return
 		}
-		if rtkPipeline != nil && rtkPipeline.Enabled {
-			_ = rtk.ProcessSSEStream(resp.Body, w, rtkPipeline)
-			return
-		}
+		// 响应方向原样透传：模型输出（最终回答/工具入参）不做 RTK 改写
 		_, _ = io.Copy(w, resp.Body)
 		return
-	}
-
-	if rtkPipeline != nil && rtkPipeline.Enabled {
-		respBytes, readErr := io.ReadAll(resp.Body)
-		if readErr == nil {
-			processed := rtk.ProcessNonStreamResponse(respBytes, rtkPipeline)
-			if needsReasoning {
-				var respMap map[string]any
-				if json.Unmarshal(processed, &respMap) == nil {
-					reasoning, cleanBody := protocol.ExtractReasoningFromResponse(respMap)
-					if reasoning != "" {
-						merged := protocol.MergeReasoningIntoContent(cleanBody, reasoning)
-						if mergedBytes, marshalErr := json.Marshal(merged); marshalErr == nil {
-							w.Write(mergedBytes)
-							return
-						}
-					}
-				}
-			}
-			w.Write(processed)
-			return
-		}
 	}
 
 	if needsReasoning {
@@ -695,7 +681,7 @@ func (s *Service) handleChatCompletions(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if injectDebug {
-		// ponytail: 仅覆盖普通非流式路径；rtk/reasoning 分支提前 return，不含调试字段
+		// ponytail: 仅覆盖普通非流式路径；reasoning 分支提前 return，不含调试字段
 		respBytes, readErr := io.ReadAll(resp.Body)
 		if readErr == nil {
 			_, _ = w.Write(injectDebugKeys(respBytes, routeSteps, intent))
