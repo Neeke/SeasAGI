@@ -1534,7 +1534,6 @@ body[data-theme="light"] .token-market-stat-card {
   padding-top: 8px;
 }
 
-.oauth-provider-card,
 .byok-status-card,
 .settings-toggle-card,
 .upgrade-card,
@@ -1546,7 +1545,6 @@ body[data-theme="light"] .token-market-stat-card {
   background: var(--bg-elevated);
 }
 
-.oauth-provider-card,
 .byok-status-card,
 .settings-toggle-card,
 .upgrade-card,
@@ -1563,7 +1561,6 @@ body[data-theme="light"] .token-market-stat-card {
   box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.18);
 }
 
-.oauth-provider-list,
 .home-status-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));

@@ -480,22 +480,6 @@ export namespace config {
 	        this.default_preset = source["default_preset"];
 	    }
 	}
-	export class OAuthProviderConfig {
-	    provider_name: string;
-	    client_id: string;
-	    client_secret?: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new OAuthProviderConfig(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.provider_name = source["provider_name"];
-	        this.client_id = source["client_id"];
-	        this.client_secret = source["client_secret"];
-	    }
-	}
 	export class CandidateProvider {
 	    channel_id: string;
 	    model: string;
@@ -633,7 +617,6 @@ export namespace config {
 	    caveman_style: string;
 	    model_combos?: ModelCombo[];
 	    combo_templates?: ModelCombo[];
-	    oauth_providers?: OAuthProviderConfig[];
 	    optimizations?: OptimizationConfig;
 	    platform_api_base_url?: string;
 	    default_combo_name?: string;
@@ -664,7 +647,6 @@ export namespace config {
 	        this.caveman_style = source["caveman_style"];
 	        this.model_combos = this.convertValues(source["model_combos"], ModelCombo);
 	        this.combo_templates = this.convertValues(source["combo_templates"], ModelCombo);
-	        this.oauth_providers = this.convertValues(source["oauth_providers"], OAuthProviderConfig);
 	        this.optimizations = this.convertValues(source["optimizations"], OptimizationConfig);
 	        this.platform_api_base_url = source["platform_api_base_url"];
 	        this.default_combo_name = source["default_combo_name"];
@@ -781,7 +763,6 @@ export namespace config {
 		    return a;
 		}
 	}
-	
 	
 	
 	

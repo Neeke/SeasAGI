@@ -215,25 +215,6 @@ export interface CloudCombo {
   strategy: string;
 }
 
-export interface OAuthProvider {
-  name: string;
-  displayName: string;
-  authURL: string;
-  iconURL: string;
-}
-
-export interface OAuthConnection {
-  name: string;
-  displayName: string;
-  iconURL: string;
-  connected: boolean;
-  connecting: boolean;
-  configured: boolean;
-  clientIDMask: string;
-  expiresAt: string | null;
-  error: string;
-}
-
 export interface OptimizationRecommendation {
   from_model: string;
   to_model: string;

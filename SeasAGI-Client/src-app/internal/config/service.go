@@ -15,30 +15,29 @@ import (
 )
 
 type AppConfig struct {
-	ListenPort            int                   `json:"listen_port"`
-	DefaultModel          string                `json:"default_model"`
-	DefaultChannelID      string                `json:"default_channel_id"`
-	RoutingStrategy       string                `json:"routing_strategy"`
-	StickyChannelUse      int                   `json:"sticky_channel_use"`
-	AutoLaunch            bool                  `json:"auto_launch"`
-	AutoUpdate            bool                  `json:"auto_update"`
-	LogRetentionDays      int                   `json:"log_retention_days"`
-	AnalyticsEnabled      bool                  `json:"analytics_enabled"`
-	Locale                string                `json:"locale"`
-	RTKEnabled            bool                  `json:"rtk_enabled"`
-	RTKMaxOutputChars     int                   `json:"rtk_max_output_chars"`
-	CavemanEnabled        bool                  `json:"caveman_enabled"`
-	CavemanStyle          string                `json:"caveman_style"`
-	ModelCombos           []ModelCombo          `json:"model_combos,omitempty"`
-	ComboTemplates        []ModelCombo          `json:"combo_templates,omitempty"`
-	OAuthProviders        []OAuthProviderConfig `json:"oauth_providers,omitempty"`
-	Optimizations         *OptimizationConfig   `json:"optimizations,omitempty"`
-	PlatformAPIBaseURL    string                `json:"platform_api_base_url,omitempty"`
-	DefaultComboName      string                `json:"default_combo_name,omitempty"`
-	RateLimit             *RateLimitConfig      `json:"rate_limit,omitempty"`
-	Security              *SecurityConfig       `json:"security,omitempty"`
-	SelectedGrantID       string                `json:"selected_grant_id,omitempty"`
-	SelectedGrantRelayURL string                `json:"selected_grant_relay_url,omitempty"`
+	ListenPort            int                 `json:"listen_port"`
+	DefaultModel          string              `json:"default_model"`
+	DefaultChannelID      string              `json:"default_channel_id"`
+	RoutingStrategy       string              `json:"routing_strategy"`
+	StickyChannelUse      int                 `json:"sticky_channel_use"`
+	AutoLaunch            bool                `json:"auto_launch"`
+	AutoUpdate            bool                `json:"auto_update"`
+	LogRetentionDays      int                 `json:"log_retention_days"`
+	AnalyticsEnabled      bool                `json:"analytics_enabled"`
+	Locale                string              `json:"locale"`
+	RTKEnabled            bool                `json:"rtk_enabled"`
+	RTKMaxOutputChars     int                 `json:"rtk_max_output_chars"`
+	CavemanEnabled        bool                `json:"caveman_enabled"`
+	CavemanStyle          string              `json:"caveman_style"`
+	ModelCombos           []ModelCombo        `json:"model_combos,omitempty"`
+	ComboTemplates        []ModelCombo        `json:"combo_templates,omitempty"`
+	Optimizations         *OptimizationConfig `json:"optimizations,omitempty"`
+	PlatformAPIBaseURL    string              `json:"platform_api_base_url,omitempty"`
+	DefaultComboName      string              `json:"default_combo_name,omitempty"`
+	RateLimit             *RateLimitConfig    `json:"rate_limit,omitempty"`
+	Security              *SecurityConfig     `json:"security,omitempty"`
+	SelectedGrantID       string              `json:"selected_grant_id,omitempty"`
+	SelectedGrantRelayURL string              `json:"selected_grant_relay_url,omitempty"`
 }
 
 // RateLimitConfig 全局速率限制配置，借鉴 OmniRoute per-connection rateLimitOverrides。
@@ -124,12 +123,6 @@ type ModelCombo struct {
 	Status        string           `json:"status,omitempty"`
 	Source        string           `json:"source,omitempty"`
 	Version       int              `json:"version,omitempty"`
-}
-
-type OAuthProviderConfig struct {
-	ProviderName string `json:"provider_name"`
-	ClientID     string `json:"client_id"`
-	ClientSecret string `json:"client_secret,omitempty"`
 }
 
 type RetryConfig struct {
@@ -1066,53 +1059,6 @@ func (s *Service) ListComboTemplates() []ModelCombo {
 	result := make([]ModelCombo, 0, len(s.config.ComboTemplates))
 	for _, template := range s.config.ComboTemplates {
 		result = append(result, normalizeComboForRead(template))
-	}
-	return result
-}
-
-func (s *Service) SaveOAuthProviderConfig(cfg OAuthProviderConfig) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	cfg.ProviderName = strings.TrimSpace(cfg.ProviderName)
-	cfg.ClientID = strings.TrimSpace(cfg.ClientID)
-	cfg.ClientSecret = strings.TrimSpace(cfg.ClientSecret)
-	if cfg.ProviderName == "" {
-		return errors.New("provider name is required")
-	}
-	if cfg.ClientID == "" {
-		return errors.New("client id is required")
-	}
-
-	for i := range s.config.OAuthProviders {
-		if s.config.OAuthProviders[i].ProviderName == cfg.ProviderName {
-			s.config.OAuthProviders[i] = cfg
-			return s.saveLocked()
-		}
-	}
-	s.config.OAuthProviders = append(s.config.OAuthProviders, cfg)
-	return s.saveLocked()
-}
-
-func (s *Service) GetOAuthProviderConfig(providerName string) (OAuthProviderConfig, bool) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	for _, cfg := range s.config.OAuthProviders {
-		if cfg.ProviderName == providerName {
-			return cfg, true
-		}
-	}
-	return OAuthProviderConfig{}, false
-}
-
-func (s *Service) ListOAuthProviderConfigs() []OAuthProviderConfig {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	result := make([]OAuthProviderConfig, 0, len(s.config.OAuthProviders))
-	for _, cfg := range s.config.OAuthProviders {
-		result = append(result, cfg)
 	}
 	return result
 }

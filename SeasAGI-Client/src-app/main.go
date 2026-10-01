@@ -160,7 +160,6 @@ func runDesktop() {
 			trayMgr.Stop()
 			_ = app.StopTunnel()
 			_ = app.StopMITM()
-			app.oauthRefresh.Stop()
 			gatewaySvc.Stop()
 			logRotator.Stop()
 		})

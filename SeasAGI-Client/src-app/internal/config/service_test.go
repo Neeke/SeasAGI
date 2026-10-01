@@ -885,52 +885,6 @@ func TestSetOptimizationConfig_EmptyModeDefaults(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// OAuth provider tests
-// ---------------------------------------------------------------------------
-
-func TestSaveAndGetOAuthProviderConfig(t *testing.T) {
-	svc := newTestService(t)
-	cfg := OAuthProviderConfig{
-		ProviderName: "github",
-		ClientID:     "gh-client-id",
-		ClientSecret: "gh-secret",
-	}
-	if err := svc.SaveOAuthProviderConfig(cfg); err != nil {
-		t.Fatalf("SaveOAuthProviderConfig: %v", err)
-	}
-
-	got, ok := svc.GetOAuthProviderConfig("github")
-	if !ok {
-		t.Fatal("OAuth provider not found")
-	}
-	if got.ClientID != "gh-client-id" {
-		t.Errorf("ClientID = %q, want %q", got.ClientID, "gh-client-id")
-	}
-}
-
-func TestSaveOAuthProviderConfig_EmptyName(t *testing.T) {
-	svc := newTestService(t)
-	err := svc.SaveOAuthProviderConfig(OAuthProviderConfig{
-		ProviderName: "",
-		ClientID:     "id",
-	})
-	if err == nil {
-		t.Error("expected error for empty provider name")
-	}
-}
-
-func TestSaveOAuthProviderConfig_EmptyClientID(t *testing.T) {
-	svc := newTestService(t)
-	err := svc.SaveOAuthProviderConfig(OAuthProviderConfig{
-		ProviderName: "test",
-		ClientID:     "",
-	})
-	if err == nil {
-		t.Error("expected error for empty client ID")
-	}
-}
-
-// ---------------------------------------------------------------------------
 // Platform channel tests
 // ---------------------------------------------------------------------------
 

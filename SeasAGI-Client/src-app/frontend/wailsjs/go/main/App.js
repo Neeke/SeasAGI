@@ -90,10 +90,6 @@ export function DiscoverModels(arg1) {
   return window['go']['main']['App']['DiscoverModels'](arg1);
 }
 
-export function ExchangeOAuthCode(arg1, arg2, arg3, arg4, arg5, arg6) {
-  return window['go']['main']['App']['ExchangeOAuthCode'](arg1, arg2, arg3, arg4, arg5, arg6);
-}
-
 export function ExportConfig() {
   return window['go']['main']['App']['ExportConfig']();
 }
@@ -224,18 +220,6 @@ export function GetMITMStatus() {
 
 export function GetMITMTargets() {
   return window['go']['main']['App']['GetMITMTargets']();
-}
-
-export function GetOAuthConnections() {
-  return window['go']['main']['App']['GetOAuthConnections']();
-}
-
-export function GetOAuthProviders() {
-  return window['go']['main']['App']['GetOAuthProviders']();
-}
-
-export function GetOAuthToken(arg1) {
-  return window['go']['main']['App']['GetOAuthToken'](arg1);
 }
 
 export function GetOfficialComboTemplates() {
@@ -498,10 +482,6 @@ export function ResetLocalAccessToken() {
   return window['go']['main']['App']['ResetLocalAccessToken']();
 }
 
-export function RevokeOAuthToken(arg1) {
-  return window['go']['main']['App']['RevokeOAuthToken'](arg1);
-}
-
 export function RunDiagnostics() {
   return window['go']['main']['App']['RunDiagnostics']();
 }
@@ -616,10 +596,6 @@ export function StartLocalGateway() {
 
 export function StartMITM() {
   return window['go']['main']['App']['StartMITM']();
-}
-
-export function StartOAuthFlow(arg1, arg2, arg3, arg4) {
-  return window['go']['main']['App']['StartOAuthFlow'](arg1, arg2, arg3, arg4);
 }
 
 export function StartTunnel(arg1) {

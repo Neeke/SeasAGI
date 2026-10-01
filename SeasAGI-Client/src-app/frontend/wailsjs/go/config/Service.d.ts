@@ -24,8 +24,6 @@ export function GetDefaultComboName():Promise<string>;
 
 export function GetModelCombo(arg1:string):Promise<config.ModelCombo|boolean>;
 
-export function GetOAuthProviderConfig(arg1:string):Promise<config.OAuthProviderConfig|boolean>;
-
 export function GetOptimizationConfig():Promise<config.OptimizationConfig>;
 
 export function GetPlatformAPIBaseURL():Promise<string>;
@@ -46,8 +44,6 @@ export function ListComboTemplates():Promise<Array<config.ModelCombo>>;
 
 export function ListModelCombos():Promise<Array<config.ModelCombo>>;
 
-export function ListOAuthProviderConfigs():Promise<Array<config.OAuthProviderConfig>>;
-
 export function NormalizeChannelWeights():Promise<Array<string>>;
 
 export function RenameComboTemplate(arg1:string,arg2:string):Promise<void>;
@@ -63,8 +59,6 @@ export function SaveComboTemplate(arg1:config.ModelCombo):Promise<void>;
 export function SaveCustomChannel(arg1:config.Channel):Promise<string>;
 
 export function SaveModelCombo(arg1:config.ModelCombo):Promise<void>;
-
-export function SaveOAuthProviderConfig(arg1:config.OAuthProviderConfig):Promise<void>;
 
 export function SetAnalyticsEnabled(arg1:boolean):Promise<void>;
 

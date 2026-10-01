@@ -46,10 +46,6 @@ export function GetModelCombo(arg1) {
   return window['go']['config']['Service']['GetModelCombo'](arg1);
 }
 
-export function GetOAuthProviderConfig(arg1) {
-  return window['go']['config']['Service']['GetOAuthProviderConfig'](arg1);
-}
-
 export function GetOptimizationConfig() {
   return window['go']['config']['Service']['GetOptimizationConfig']();
 }
@@ -90,10 +86,6 @@ export function ListModelCombos() {
   return window['go']['config']['Service']['ListModelCombos']();
 }
 
-export function ListOAuthProviderConfigs() {
-  return window['go']['config']['Service']['ListOAuthProviderConfigs']();
-}
-
 export function NormalizeChannelWeights() {
   return window['go']['config']['Service']['NormalizeChannelWeights']();
 }
@@ -124,10 +116,6 @@ export function SaveCustomChannel(arg1) {
 
 export function SaveModelCombo(arg1) {
   return window['go']['config']['Service']['SaveModelCombo'](arg1);
-}
-
-export function SaveOAuthProviderConfig(arg1) {
-  return window['go']['config']['Service']['SaveOAuthProviderConfig'](arg1);
 }
 
 export function SetAnalyticsEnabled(arg1) {

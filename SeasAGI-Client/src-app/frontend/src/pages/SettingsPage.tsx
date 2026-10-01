@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useAppStore } from "../stores/appStore";
 import * as cmd from "../utils/commands";
 import { useTranslation } from "../i18n";
 import { SUPPORTED_LOCALES, type Locale } from "../i18n/index";
 import { getErrorMessage } from "../utils/errors";
-import type { OAuthConnection, OAuthProvider, MITMStatus } from "../utils/types";
+import type { MITMStatus } from "../utils/types";
 
 export function SettingsPage() {
   const auth = useAppStore((s) => s.auth);
@@ -19,10 +19,6 @@ export function SettingsPage() {
   const [stickyUses, setStickyUses] = useState(appConfig?.sticky_channel_use || 3);
   const [platformApiURL, setPlatformApiURL] = useState("");
   const [platformApiError, setPlatformApiError] = useState("");
-  const [oauthProviders, setOAuthProviders] = useState<OAuthProvider[]>([]);
-  const [oauthConnections, setOAuthConnections] = useState<OAuthConnection[]>([]);
-  const [oauthDrafts, setOAuthDrafts] = useState<Record<string, { clientId: string; clientSecret: string }>>({});
-  const [oauthError, setOAuthError] = useState("");
   const [mitmStatus, setMitmStatus] = useState<MITMStatus | null>(null);
   const [mitmRules, setMitmRules] = useState<string[]>([]);
   const [mitmNewRule, setMitmNewRule] = useState("");
@@ -34,19 +30,6 @@ export function SettingsPage() {
     try {
       await cmd.logout();
       setAuth({ is_logged_in: false, user_id: null, email: null });
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const loadOAuthState = async () => {
-    try {
-      const [providers, connections] = await Promise.all([
-        cmd.getOAuthProviders(),
-        cmd.getOAuthConnections(),
-      ]);
-      setOAuthProviders(providers);
-      setOAuthConnections(connections);
     } catch (e) {
       console.error(e);
     }
@@ -66,7 +49,6 @@ export function SettingsPage() {
   };
 
   useEffect(() => {
-    void loadOAuthState();
     void loadMITMState();
   }, []);
 
@@ -88,14 +70,6 @@ export function SettingsPage() {
       }
     })();
   }, []);
-
-  useEffect(() => {
-    if (!oauthConnections.some((item) => item.connecting)) return undefined;
-    const timer = window.setInterval(() => {
-      void loadOAuthState();
-    }, 2000);
-    return () => window.clearInterval(timer);
-  }, [oauthConnections]);
 
   const handleSaveRouting = async () => {
     try {
@@ -150,12 +124,6 @@ export function SettingsPage() {
     toggle();
   };
 
-  const connectionMap = useMemo(() => {
-    const result = new Map<string, OAuthConnection>();
-    oauthConnections.forEach((item) => result.set(item.name, item));
-    return result;
-  }, [oauthConnections]);
-
   return (
     <div className="page settings-page">
       <div className="page-header page-hero">
@@ -167,10 +135,6 @@ export function SettingsPage() {
           <div className="hero-metric-card">
             <span className="hero-metric-label">{t("settings.metricLoginStatus")}</span>
             <strong className="hero-metric-value">{auth.is_logged_in ? t("settings.loggedIn") : t("settings.notLoggedIn")}</strong>
-          </div>
-          <div className="hero-metric-card">
-            <span className="hero-metric-label">{t("settings.metricOauthProviders")}</span>
-            <strong className="hero-metric-value">{oauthProviders.length}</strong>
           </div>
         </div>
       </div>
@@ -237,105 +201,6 @@ export function SettingsPage() {
               </button>
             </div>
             {platformApiError && <p className="error-msg" style={{ marginTop: 8 }}>{platformApiError}</p>}
-          </div>
-
-          <div className="tab-content section-card">
-            <div className="section-heading">
-              <h2>{t("settings.oauthConnect")}</h2>
-              <p className="hint">{t("settings.oauthHint")}</p>
-              <p className="hint">{t("settings.oauthCallbackHint", { url: "http://127.0.0.1:43819/oauth/callback" })}</p>
-            </div>
-            {oauthError && <div className="error-msg" style={{ marginTop: 12 }}>{oauthError}</div>}
-            <div className="oauth-provider-list">
-              {oauthProviders.map((provider) => {
-                const connection = connectionMap.get(provider.name);
-                const draft = oauthDrafts[provider.name] || { clientId: "", clientSecret: "" };
-                return (
-                  <div key={provider.name} className="oauth-provider-card">
-                    <div className="oauth-provider-head">
-                      <div>
-                        <div className="oauth-provider-name">{provider.displayName}</div>
-                        <div className="oauth-provider-meta">
-                          {connection?.connected
-                            ? t("settings.oauthConnected")
-                            : connection?.connecting
-                              ? t("settings.oauthConnecting")
-                              : t("settings.oauthNotConnected")}
-                          {connection?.clientIDMask ? ` · ${connection.clientIDMask}` : ""}
-                        </div>
-                      </div>
-                      <span className={`badge ${connection?.connected ? "badge-green" : connection?.connecting ? "badge-yellow" : "badge-blue"}`}>
-                        {connection?.connected
-                          ? t("settings.oauthConnected")
-                          : connection?.connecting
-                            ? t("settings.oauthConnecting")
-                            : t("settings.oauthReady")}
-                      </span>
-                    </div>
-
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>{t("settings.oauthClientId")}</label>
-                        <input
-                          value={draft.clientId}
-                          onChange={(e) => setOAuthDrafts((current) => ({
-                            ...current,
-                            [provider.name]: { ...draft, clientId: e.target.value },
-                          }))}
-                          placeholder={t("settings.oauthClientIdPlaceholder")}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>{t("settings.oauthClientSecret")}</label>
-                        <input
-                          type="password"
-                          value={draft.clientSecret}
-                          onChange={(e) => setOAuthDrafts((current) => ({
-                            ...current,
-                            [provider.name]: { ...draft, clientSecret: e.target.value },
-                          }))}
-                          placeholder={t("settings.oauthClientSecretPlaceholder")}
-                        />
-                      </div>
-                    </div>
-
-                    {connection?.expiresAt && (
-                      <p className="hint">{t("settings.oauthExpiresAt", { value: new Date(connection.expiresAt).toLocaleString() })}</p>
-                    )}
-                    {connection?.error && <p className="error-msg" style={{ marginTop: 12 }}>{connection.error}</p>}
-
-                    <div className="oauth-provider-actions">
-                      <button
-                        onClick={async () => {
-                          try {
-                            setOAuthError("");
-                            const url = await cmd.startOAuthFlow(provider.name, draft.clientId, draft.clientSecret, "");
-                            await loadOAuthState();
-                            window.open(url, "_blank", "width=720,height=860");
-                          } catch (e) {
-                            setOAuthError(getErrorMessage(e, t("settings.oauthConnectFailed")));
-                          }
-                        }}
-                        className="btn-primary btn-sm"
-                      >
-                        {t("settings.oauthConnect")}
-                      </button>
-                      {connection?.connected && (
-                        <button
-                          onClick={async () => {
-                            await cmd.revokeOAuthToken(provider.name);
-                            await loadOAuthState();
-                          }}
-                          className="btn-danger btn-sm"
-                        >
-                          {t("settings.oauthRevoke")}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
           </div>
 
           <div className="tab-content section-card">

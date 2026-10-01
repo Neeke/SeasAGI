@@ -1,4 +1,4 @@
-import type { Channel, DiscoveredModel, RequestLog, RuntimeStatus, AuthState, AppConfig, ModelCombo, CloudUsage, CloudBilling, CloudCombo, OptimizationPlan, OptimizationConfig, ModelStatsEntry, UsageSummary, OAuthProvider, OAuthConnection, ProviderHealthMetric, ProviderHealthSummary, BYOKPolicy, QuickStrategy, TaskProfile, MITMStatus, OverageRecord } from "../utils/types";
+import type { Channel, DiscoveredModel, RequestLog, RuntimeStatus, AuthState, AppConfig, ModelCombo, CloudUsage, CloudBilling, CloudCombo, OptimizationPlan, OptimizationConfig, ModelStatsEntry, UsageSummary, ProviderHealthMetric, ProviderHealthSummary, BYOKPolicy, QuickStrategy, TaskProfile, MITMStatus, OverageRecord } from "../utils/types";
 
 type WailsAppApi = {
   StartLocalGateway(): Promise<void>;
@@ -56,12 +56,6 @@ type WailsAppApi = {
   QuitApp(): Promise<void>;
   SetLocale(locale: string): Promise<void>;
   GetLocale(): Promise<string>;
-  GetOAuthProviders(): Promise<{name: string; displayName: string; authURL: string; iconURL: string}[]>;
-  GetOAuthConnections(): Promise<OAuthConnection[]>;
-  StartOAuthFlow(providerName: string, clientID: string, clientSecret: string, redirectURI: string): Promise<string>;
-  ExchangeOAuthCode(providerName: string, code: string, clientID: string, clientSecret: string, redirectURI: string, codeVerifier: string): Promise<void>;
-  GetOAuthToken(providerName: string): Promise<string>;
-  RevokeOAuthToken(providerName: string): Promise<void>;
   GetPlans(): Promise<Record<string, any>[]>;
   FetchActiveGrants(): Promise<Record<string, any>[]>;
   SetSelectedGrant(grantID: string, relayURL: string): Promise<void>;
@@ -385,30 +379,6 @@ export async function getTunnelStatus(): Promise<Record<string, unknown>> {
 
 export async function getTunnelURL(): Promise<string> {
   return getAppApi().GetTunnelURL();
-}
-
-export async function getOAuthProviders(): Promise<OAuthProvider[]> {
-  return getAppApi().GetOAuthProviders();
-}
-
-export async function getOAuthConnections(): Promise<OAuthConnection[]> {
-  return getAppApi().GetOAuthConnections();
-}
-
-export async function startOAuthFlow(providerName: string, clientID: string, clientSecret: string, redirectURI: string): Promise<string> {
-  return getAppApi().StartOAuthFlow(providerName, clientID, clientSecret, redirectURI);
-}
-
-export async function exchangeOAuthCode(providerName: string, code: string, clientID: string, clientSecret: string, redirectURI: string, codeVerifier: string): Promise<void> {
-  return getAppApi().ExchangeOAuthCode(providerName, code, clientID, clientSecret, redirectURI, codeVerifier);
-}
-
-export async function getOAuthToken(providerName: string): Promise<string> {
-  return getAppApi().GetOAuthToken(providerName);
-}
-
-export async function revokeOAuthToken(providerName: string): Promise<void> {
-  return getAppApi().RevokeOAuthToken(providerName);
 }
 
 export async function getOfficialComboTemplates(): Promise<ModelCombo[]> {

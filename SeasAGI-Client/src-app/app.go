@@ -14,7 +14,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	stdsync "sync"
 	"sync/atomic"
 	"time"
 
@@ -35,7 +34,6 @@ import (
 	"github.com/SeasAGI/SeasAGI-Client/internal/mcp"
 	"github.com/SeasAGI/SeasAGI-Client/internal/mitm"
 	"github.com/SeasAGI/SeasAGI-Client/internal/network"
-	"github.com/SeasAGI/SeasAGI-Client/internal/oauth"
 	"github.com/SeasAGI/SeasAGI-Client/internal/optimizer"
 	"github.com/SeasAGI/SeasAGI-Client/internal/perf"
 	"github.com/SeasAGI/SeasAGI-Client/internal/plugin"
@@ -67,8 +65,6 @@ type App struct {
 	logSvc          *logs.Service
 	discoverySvc    *discovery.Service
 	tunnelMgr       *tunnel.Manager
-	oauthStore      *oauth.TokenStore
-	oauthRefresh    *oauth.AutoRefresher
 	mcpSvc          *mcp.Service
 	promptsSvc      *prompts.Service
 	skillsSvc       *skills.Service
@@ -84,8 +80,6 @@ type App struct {
 	logRotator      *logging.LogRotator
 	mcpServer       *mcp.GatewayServer
 	perfAuditor     *perf.Auditor
-	oauthFlowMu     stdsync.Mutex
-	oauthFlows      map[string]*pendingOAuthFlow
 }
 
 func NewApp(
@@ -106,11 +100,6 @@ func NewApp(
 	configioSvc *configio.Service,
 	localTokenStore *localtoken.Store,
 ) *App {
-	oauthDir := filepath.Join(mustHomeDir(), ".seasagi", "oauth")
-	tokenStore := oauth.NewTokenStore(oauthDir)
-	tokenStore.Load()
-	autoRefresh := oauth.NewAutoRefresher(tokenStore)
-
 	return &App{
 		authSvc:         authSvc,
 		configSvc:       configSvc,
@@ -118,8 +107,6 @@ func NewApp(
 		logSvc:          logSvc,
 		discoverySvc:    discoverySvc,
 		tunnelMgr:       tunnel.NewManager(4318),
-		oauthStore:      tokenStore,
-		oauthRefresh:    autoRefresh,
 		mcpSvc:          mcpSvc,
 		promptsSvc:      promptsSvc,
 		skillsSvc:       skillsSvc,
@@ -133,14 +120,11 @@ func NewApp(
 		localTokenStore: localTokenStore,
 		mcpServer:       mcp.NewGatewayServer(),
 		perfAuditor:     perf.NewAuditor(),
-		oauthFlows:      make(map[string]*pendingOAuthFlow),
 	}
 }
 
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
-	a.restoreOAuthProviderConfigs()
-	a.oauthRefresh.Start()
 	auth.SetPlatformAPIBaseURL(a.configSvc.GetPlatformAPIBaseURL())
 }
 
@@ -1729,122 +1713,6 @@ func (a *App) GetTunnelStatus() map[string]any {
 
 func (a *App) GetTunnelURL() string {
 	return a.tunnelMgr.GetURL()
-}
-
-func (a *App) GetOAuthProviders() []map[string]any {
-	providers := oauth.ListOAuthProviders()
-	result := make([]map[string]any, 0, len(providers))
-	for _, p := range providers {
-		result = append(result, map[string]any{
-			"name":        p.Name,
-			"displayName": p.DisplayName,
-			"authURL":     p.AuthURL,
-			"iconURL":     p.IconURL,
-		})
-	}
-	return result
-}
-
-func (a *App) GetOAuthConnections() []map[string]any {
-	providers := oauth.ListOAuthProviders()
-	result := make([]map[string]any, 0, len(providers))
-
-	a.oauthFlowMu.Lock()
-	defer a.oauthFlowMu.Unlock()
-
-	for _, p := range providers {
-		item := map[string]any{
-			"name":         p.Name,
-			"displayName":  p.DisplayName,
-			"iconURL":      p.IconURL,
-			"connected":    false,
-			"connecting":   false,
-			"configured":   false,
-			"clientIDMask": "",
-			"expiresAt":    nil,
-			"error":        "",
-		}
-		if saved, ok := a.configSvc.GetOAuthProviderConfig(p.Name); ok {
-			item["configured"] = true
-			item["clientIDMask"] = maskClientID(saved.ClientID)
-		}
-		if info, err := a.oauthStore.Get(p.Name); err == nil && info != nil {
-			item["connected"] = true
-			item["expiresAt"] = info.ExpiresAt.Format(time.RFC3339)
-		}
-		if flow, ok := a.oauthFlows[p.Name]; ok {
-			item["connecting"] = flow.Status == "pending"
-			if flow.Error != "" {
-				item["error"] = flow.Error
-			}
-		}
-		result = append(result, item)
-	}
-	return result
-}
-
-func (a *App) StartOAuthFlow(providerName, clientID, clientSecret, redirectURI string) (string, error) {
-	cfg, err := a.resolveOAuthProviderConfig(providerName, clientID, clientSecret, redirectURI)
-	if err != nil {
-		return "", err
-	}
-	pkce, err := oauth.GeneratePKCE()
-	if err != nil {
-		return "", err
-	}
-	state := fmt.Sprintf("%s-%d", providerName, time.Now().UnixNano())
-	flow := &pendingOAuthFlow{
-		ProviderName: providerName,
-		State:        state,
-		PKCE:         pkce,
-		Config:       cfg,
-		Status:       "pending",
-		StartedAt:    time.Now(),
-	}
-
-	a.oauthFlowMu.Lock()
-	if previous, ok := a.oauthFlows[providerName]; ok && previous.Server != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-		_ = previous.Server.Shutdown(ctx)
-		cancel()
-	}
-	a.oauthFlowMu.Unlock()
-
-	if strings.TrimSpace(redirectURI) == "" {
-		if err := a.createOAuthCallbackServer(flow); err != nil {
-			return "", err
-		}
-	}
-
-	a.oauthFlowMu.Lock()
-	a.oauthFlows[providerName] = flow
-	a.oauthFlowMu.Unlock()
-
-	return oauth.BuildAuthURL(cfg, state, pkce), nil
-}
-
-func (a *App) ExchangeOAuthCode(providerName, code, clientID, clientSecret, redirectURI, codeVerifier string) error {
-	cfg, err := a.resolveOAuthProviderConfig(providerName, clientID, clientSecret, redirectURI)
-	if err != nil {
-		return err
-	}
-	pkce := &oauth.PKCEFlow{Verifier: strings.TrimSpace(codeVerifier)}
-	resp, err := oauth.ExchangeCode(cfg, code, pkce)
-	if err != nil {
-		return err
-	}
-
-	info := oauth.TokenResponseToInfo(resp)
-	a.oauthRefresh.RegisterProvider(providerName, cfg)
-	return a.oauthStore.Save(providerName, info)
-}
-
-func (a *App) GetOAuthToken(providerName string) (string, error) {
-	return a.oauthRefresh.GetValidToken(providerName)
-}
-
-func (a *App) RevokeOAuthToken(providerName string) error {
-	return a.oauthStore.Delete(providerName)
 }
 
 func convertPlatformChannels(items []map[string]interface{}) []config.Channel {

@@ -58,8 +58,6 @@ export function DeleteSession(arg1:string,arg2:string):Promise<void>;
 
 export function DiscoverModels(arg1:string):Promise<Array<discovery.DiscoveredModel>>;
 
-export function ExchangeOAuthCode(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string):Promise<void>;
-
 export function ExportConfig():Promise<string>;
 
 export function FetchActiveGrants():Promise<Array<Record<string, any>>>;
@@ -125,12 +123,6 @@ export function GetMITMRules():Promise<Array<string>>;
 export function GetMITMStatus():Promise<Record<string, any>>;
 
 export function GetMITMTargets():Promise<Array<Record<string, any>>>;
-
-export function GetOAuthConnections():Promise<Array<Record<string, any>>>;
-
-export function GetOAuthProviders():Promise<Array<Record<string, any>>>;
-
-export function GetOAuthToken(arg1:string):Promise<string>;
 
 export function GetOfficialComboTemplates():Promise<Array<Record<string, any>>>;
 
@@ -262,8 +254,6 @@ export function ReorderChannels(arg1:Array<string>):Promise<void>;
 
 export function ResetLocalAccessToken():Promise<string>;
 
-export function RevokeOAuthToken(arg1:string):Promise<void>;
-
 export function RunDiagnostics():Promise<Record<string, any>>;
 
 export function RunEvalSuite(arg1:string):Promise<Record<string, any>>;
@@ -321,8 +311,6 @@ export function SimulateIntentRouting(arg1:string,arg2:string):Promise<Record<st
 export function StartLocalGateway():Promise<void>;
 
 export function StartMITM():Promise<void>;
-
-export function StartOAuthFlow(arg1:string,arg2:string,arg3:string,arg4:string):Promise<string>;
 
 export function StartTunnel(arg1:string):Promise<void>;
 
