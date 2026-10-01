@@ -74,6 +74,8 @@ func Execute() error {
 			authGroup.POST("/login", auth.Login)
 			authGroup.POST("/register", auth.Register)
 			authGroup.POST("/refresh", auth.RefreshToken)
+			authGroup.GET("/oauth/providers", auth.GetOAuthProviders)
+			authGroup.POST("/oauth/:provider/token", auth.ExchangeOAuthToken)
 		}
 
 		api.GET("/version/check", version.Check)

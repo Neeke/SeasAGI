@@ -1,11 +1,20 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../stores/appStore";
 import * as cmd from "../utils/commands";
 import { useTranslation } from "../i18n";
 import { validateForm, loginFormSchema, registerFormSchema } from "../utils/validation";
+import type { OAuthProvider } from "../utils/types";
 
 type AuthMode = "login" | "register";
+
+function extractErrorMessage(err: unknown, fallback: string): string {
+  return err instanceof Error ? err.message :
+    typeof err === "string" ? err :
+    err && typeof err === "object" && "message" in err ? String((err as {message: string}).message) :
+    err && typeof err === "object" && "error" in err ? String((err as {error: string}).error) :
+    fallback;
+}
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -17,6 +26,22 @@ export function RegisterPage() {
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [oauthProviders, setOauthProviders] = useState<OAuthProvider[]>([]);
+  const [oauthLoading, setOauthLoading] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    cmd.getOAuthProviders()
+      .then((providers) => {
+        if (!cancelled) setOauthProviders(providers);
+      })
+      .catch(() => {
+        // 服务端未配置 OAuth 时静默隐藏第三方登录入口
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const planBenefits = [
     {
@@ -94,15 +119,24 @@ export function RegisterPage() {
       setAuth(authState);
       navigate("/");
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message :
-        typeof err === "string" ? err :
-        err && typeof err === "object" && "message" in err ? String((err as {message: string}).message) :
-        err && typeof err === "object" && "error" in err ? String((err as {error: string}).error) :
-        t("auth.operationFailed");
-      setError(message);
+      setError(extractErrorMessage(err, t("auth.operationFailed")));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOAuthLogin = async (provider: string) => {
+    setError("");
+    setOauthLoading(provider);
+    try {
+      await cmd.startOAuthLogin(provider);
+      const authState = await cmd.getAuthState();
+      setAuth(authState);
+      navigate("/");
+    } catch (err: unknown) {
+      setError(extractErrorMessage(err, t("auth.operationFailed")));
+    } finally {
+      setOauthLoading(null);
     }
   };
 
@@ -183,6 +217,30 @@ export function RegisterPage() {
                   : (mode === "register" ? t("auth.register") : t("auth.login"))}
               </button>
             </form>
+
+            {oauthProviders.length > 0 && (
+              <>
+                <div className="auth-divider"><span>{t("auth.oauthDivider")}</span></div>
+                <div className="auth-oauth-buttons">
+                  {oauthProviders.map((provider) => {
+                    const label = provider.name.charAt(0).toUpperCase() + provider.name.slice(1);
+                    return (
+                      <button
+                        key={provider.name}
+                        type="button"
+                        className="auth-oauth-btn"
+                        disabled={loading || oauthLoading !== null}
+                        onClick={() => handleOAuthLogin(provider.name)}
+                      >
+                        {oauthLoading === provider.name
+                          ? t("auth.oauthInProgress")
+                          : t("auth.oauthContinueWith", { provider: label })}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
 
             <div className="auth-switch">
               {mode === "register" ? (

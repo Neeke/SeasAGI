@@ -137,6 +137,11 @@ export interface AuthState {
   email: string | null;
 }
 
+export interface OAuthProvider {
+  name: string;
+  client_id: string;
+}
+
 export interface LoginStatus {
   IsLoggedIn: boolean;
   UserID?: string;

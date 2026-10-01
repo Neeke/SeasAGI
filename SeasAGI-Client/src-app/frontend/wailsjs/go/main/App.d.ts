@@ -124,6 +124,8 @@ export function GetMITMStatus():Promise<Record<string, any>>;
 
 export function GetMITMTargets():Promise<Array<Record<string, any>>>;
 
+export function GetOAuthProviders():Promise<Array<auth.OAuthProvider>>;
+
 export function GetOfficialComboTemplates():Promise<Array<Record<string, any>>>;
 
 export function GetOptimizationConfig():Promise<Record<string, any>>;
@@ -311,6 +313,8 @@ export function SimulateIntentRouting(arg1:string,arg2:string):Promise<Record<st
 export function StartLocalGateway():Promise<void>;
 
 export function StartMITM():Promise<void>;
+
+export function StartOAuthLogin(arg1:string):Promise<void>;
 
 export function StartTunnel(arg1:string):Promise<void>;
 

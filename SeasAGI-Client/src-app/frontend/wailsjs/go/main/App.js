@@ -222,6 +222,10 @@ export function GetMITMTargets() {
   return window['go']['main']['App']['GetMITMTargets']();
 }
 
+export function GetOAuthProviders() {
+  return window['go']['main']['App']['GetOAuthProviders']();
+}
+
 export function GetOfficialComboTemplates() {
   return window['go']['main']['App']['GetOfficialComboTemplates']();
 }
@@ -596,6 +600,10 @@ export function StartLocalGateway() {
 
 export function StartMITM() {
   return window['go']['main']['App']['StartMITM']();
+}
+
+export function StartOAuthLogin(arg1) {
+  return window['go']['main']['App']['StartOAuthLogin'](arg1);
 }
 
 export function StartTunnel(arg1) {

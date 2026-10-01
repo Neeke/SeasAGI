@@ -1896,6 +1896,33 @@ body[data-theme="light"] .token-market-stat-card {
   color: var(--text-secondary);
 }
 
+.auth-oauth-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.auth-oauth-btn {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.auth-oauth-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: var(--bg-elevated);
+}
+
+.auth-oauth-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .auth-skip {
   margin-top: 18px;
 }

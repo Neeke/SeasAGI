@@ -31,6 +31,8 @@ export function FetchModelCatalog(arg1:context.Context):Promise<Array<Record<str
 
 export function FetchModelIndex(arg1:context.Context,arg2:string):Promise<Record<string, any>>;
 
+export function FetchOAuthProviders():Promise<Array<auth.OAuthProvider>>;
+
 export function FetchOfficialComboTemplates(arg1:context.Context):Promise<Array<auth.CloudComboTemplate>>;
 
 export function FetchOverageUsage():Promise<auth.OverageUsage>;
@@ -62,6 +64,8 @@ export function PushCloudCombo(arg1:string,arg2:string,arg3:string,arg4:string,a
 export function PushCloudOptimizationConfig(arg1:string):Promise<void>;
 
 export function Register(arg1:string,arg2:string,arg3:string):Promise<void>;
+
+export function StartOAuthLogin(arg1:string):Promise<void>;
 
 export function SyncCloudCombosToLocal():Promise<Array<auth.CloudUserCombo>>;
 

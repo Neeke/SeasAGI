@@ -333,6 +333,20 @@ export namespace auth {
 		    return a;
 		}
 	}
+	export class OAuthProvider {
+	    name: string;
+	    client_id: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new OAuthProvider(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.client_id = source["client_id"];
+	    }
+	}
 	export class OverageUsage {
 	    overage_id: string;
 	    user_id: string;

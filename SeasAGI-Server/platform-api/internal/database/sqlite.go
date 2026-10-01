@@ -949,6 +949,23 @@ func migrate() error {
 				`CREATE INDEX IF NOT EXISTS idx_seasagi_backups_created ON seasagi_backups(created_at)`,
 			},
 		},
+		{
+			version: "2026-07-26-025-oauth-identity",
+			sqls: []string{
+				`CREATE TABLE IF NOT EXISTS oauth_identities (
+					id INTEGER PRIMARY KEY AUTOINCREMENT,
+					user_id TEXT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+					provider TEXT NOT NULL,
+					provider_user_id TEXT NOT NULL,
+					email TEXT NOT NULL DEFAULT '',
+					created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+					UNIQUE(provider, provider_user_id)
+				)`,
+				`CREATE INDEX IF NOT EXISTS idx_oauth_identities_user ON oauth_identities(user_id)`,
+				`CREATE INDEX IF NOT EXISTS idx_oauth_identities_provider_email ON oauth_identities(provider, email)`,
+			},
+		},
 	}
 
 	if _, err := DB.Exec(`CREATE TABLE IF NOT EXISTS schema_migrations (version TEXT PRIMARY KEY, applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)`); err != nil {

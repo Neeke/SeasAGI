@@ -1,4 +1,4 @@
-import type { Channel, DiscoveredModel, RequestLog, RuntimeStatus, AuthState, AppConfig, ModelCombo, CloudUsage, CloudBilling, CloudCombo, OptimizationPlan, OptimizationConfig, ModelStatsEntry, UsageSummary, ProviderHealthMetric, ProviderHealthSummary, BYOKPolicy, QuickStrategy, TaskProfile, MITMStatus, OverageRecord } from "../utils/types";
+import type { Channel, DiscoveredModel, RequestLog, RuntimeStatus, AuthState, AppConfig, ModelCombo, CloudUsage, CloudBilling, CloudCombo, OptimizationPlan, OptimizationConfig, ModelStatsEntry, UsageSummary, ProviderHealthMetric, ProviderHealthSummary, BYOKPolicy, QuickStrategy, TaskProfile, MITMStatus, OverageRecord, OAuthProvider } from "../utils/types";
 
 type WailsAppApi = {
   StartLocalGateway(): Promise<void>;
@@ -7,6 +7,8 @@ type WailsAppApi = {
   Login(email: string, password: string): Promise<void>;
   Logout(): Promise<void>;
   Register(email: string, password: string, displayName: string): Promise<void>;
+  GetOAuthProviders(): Promise<OAuthProvider[]>;
+  StartOAuthLogin(provider: string): Promise<void>;
   GetCloudUsage(): Promise<CloudUsage>;
   GetCloudBilling(): Promise<CloudBilling>;
   GetOverageUsage(): Promise<OverageRecord | null>;
@@ -430,6 +432,14 @@ export async function deleteSession(app: string, sessionID: string): Promise<voi
 
 export async function register(email: string, password: string, displayName: string): Promise<void> {
   return getAppApi().Register(email, password, displayName);
+}
+
+export async function getOAuthProviders(): Promise<OAuthProvider[]> {
+  return getAppApi().GetOAuthProviders();
+}
+
+export async function startOAuthLogin(provider: string): Promise<void> {
+  return getAppApi().StartOAuthLogin(provider);
 }
 
 export async function getCloudUsage(): Promise<CloudUsage> {

@@ -21,9 +21,10 @@ type AuthInfo struct {
 }
 
 type Service struct {
-	mu    sync.RWMutex
-	info  AuthInfo
-	token string
+	mu           sync.RWMutex
+	info         AuthInfo
+	token        string
+	oauthRunning bool
 }
 
 func NewService() *Service {

@@ -968,7 +968,11 @@ func (a *App) Login(email, password string) error {
 	if err := a.authSvc.Login(email, password); err != nil {
 		return err
 	}
+	return a.afterPlatformLogin()
+}
 
+// afterPlatformLogin 登录成功后的公共处理：拉平台通道、云同步、启动网关。
+func (a *App) afterPlatformLogin() error {
 	platformChannels, err := a.authSvc.FetchPlatformChannels(a.ctx)
 	if err != nil {
 		return err
@@ -985,6 +989,19 @@ func (a *App) Login(email, password string) error {
 		go a.gatewaySvc.Start(a.ctx)
 	}
 	return nil
+}
+
+// GetOAuthProviders 获取服务端已配置的第三方登录方式。
+func (a *App) GetOAuthProviders() ([]auth.OAuthProvider, error) {
+	return a.authSvc.FetchOAuthProviders()
+}
+
+// StartOAuthLogin 发起第三方 OAuth 登录（浏览器授权 + 本地回调 + 服务端换 JWT）。
+func (a *App) StartOAuthLogin(provider string) error {
+	if err := a.authSvc.StartOAuthLogin(provider); err != nil {
+		return err
+	}
+	return a.afterPlatformLogin()
 }
 
 func (a *App) Logout() error {

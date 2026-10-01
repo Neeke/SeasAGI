@@ -58,6 +58,10 @@ export function FetchModelIndex(arg1, arg2) {
   return window['go']['auth']['Service']['FetchModelIndex'](arg1, arg2);
 }
 
+export function FetchOAuthProviders() {
+  return window['go']['auth']['Service']['FetchOAuthProviders']();
+}
+
 export function FetchOfficialComboTemplates(arg1) {
   return window['go']['auth']['Service']['FetchOfficialComboTemplates'](arg1);
 }
@@ -120,6 +124,10 @@ export function PushCloudOptimizationConfig(arg1) {
 
 export function Register(arg1, arg2, arg3) {
   return window['go']['auth']['Service']['Register'](arg1, arg2, arg3);
+}
+
+export function StartOAuthLogin(arg1) {
+  return window['go']['auth']['Service']['StartOAuthLogin'](arg1);
 }
 
 export function SyncCloudCombosToLocal() {
