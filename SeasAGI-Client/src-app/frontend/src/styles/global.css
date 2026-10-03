@@ -1903,6 +1903,10 @@ body[data-theme="light"] .token-market-stat-card {
 
 .auth-oauth-btn {
   flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   padding: 10px 14px;
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -1911,6 +1915,10 @@ body[data-theme="light"] .token-market-stat-card {
   font-size: 13px;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.auth-oauth-btn svg {
+  flex-shrink: 0;
 }
 
 .auth-oauth-btn:hover:not(:disabled) {

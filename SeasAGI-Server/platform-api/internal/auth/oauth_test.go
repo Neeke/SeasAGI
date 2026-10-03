@@ -3,12 +3,65 @@ package auth
 import (
 	"database/sql"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"os"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/SeasAGI/SeasAGI-Server/platform-api/internal/database"
+	"github.com/gin-gonic/gin"
 )
+
+// TestMain 将 locales 目录固定到一个空目录：测试环境下 i18n.T 确定性地回退到键名，
+// 断言不依赖开发者机器上的 SEASAGI_LOCALES_DIR 或工作目录。
+func TestMain(m *testing.M) {
+	dir, err := os.MkdirTemp("", "seasagi-locales-empty")
+	if err == nil {
+		_ = os.Setenv("SEASAGI_LOCALES_DIR", dir)
+		code := m.Run()
+		_ = os.RemoveAll(dir)
+		os.Exit(code)
+	}
+	os.Exit(m.Run())
+}
+
+// performOAuthRequest 构造 gin 测试请求并调用 handler，返回响应记录器。
+func performOAuthRequest(handler gin.HandlerFunc, method, target string, body io.Reader) *httptest.ResponseRecorder {
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(method, target, body)
+	if body != nil {
+		c.Request.Header.Set("Content-Type", "application/json")
+	}
+	handler(c)
+	return w
+}
+
+// authorizeViaHandler 走 AuthorizeOAuth 创建一个会话并返回 session_id。
+func authorizeViaHandler(t *testing.T, provider string) (sessionID, authorizeURL string) {
+	t.Helper()
+	w := performOAuthRequest(AuthorizeOAuth, http.MethodPost, "/api/v1/auth/oauth/authorize",
+		strings.NewReader(`{"provider":"`+provider+`"}`))
+	if w.Code != http.StatusOK {
+		t.Fatalf("authorize failed: %d %s", w.Code, w.Body.String())
+	}
+	var resp struct {
+		SessionID    string `json:"session_id"`
+		AuthorizeURL string `json:"authorize_url"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal authorize response failed: %v", err)
+	}
+	if resp.SessionID == "" || resp.AuthorizeURL == "" {
+		t.Fatalf("unexpected authorize response: %s", w.Body.String())
+	}
+	return resp.SessionID, resp.AuthorizeURL
+}
 
 func TestOAuthProviderInfoJSON(t *testing.T) {
 	info := OAuthProviderInfo{Name: "google", ClientID: "cid-123"}
@@ -25,21 +78,6 @@ func TestOAuthProviderInfoJSON(t *testing.T) {
 	}
 	if string(data) != `{"name":"google","client_id":"cid-123"}` {
 		t.Fatalf("unexpected JSON: %s", data)
-	}
-}
-
-func TestOAuthExchangeRequestJSON(t *testing.T) {
-	req := OAuthExchangeRequest{Code: "abc", RedirectURI: "http://127.0.0.1:55331/callback", CodeVerifier: "v"}
-	data, err := json.Marshal(req)
-	if err != nil {
-		t.Fatalf("marshal failed: %v", err)
-	}
-	var got OAuthExchangeRequest
-	if err := json.Unmarshal(data, &got); err != nil {
-		t.Fatalf("unmarshal failed: %v", err)
-	}
-	if got.Code != "abc" || got.RedirectURI != "http://127.0.0.1:55331/callback" || got.CodeVerifier != "v" {
-		t.Fatalf("unexpected round-trip result: %+v", got)
 	}
 }
 
@@ -65,6 +103,239 @@ func TestListConfiguredProviders(t *testing.T) {
 	providers = listConfiguredProviders()
 	if len(providers) != 1 || providers[0].Name != "google" {
 		t.Fatalf("expected only google, got %+v", providers)
+	}
+}
+
+func TestAuthorizeOAuthCreatesSession(t *testing.T) {
+	t.Setenv("GOOGLE_CLIENT_ID", "g-id")
+	t.Setenv("GOOGLE_CLIENT_SECRET", "g-secret")
+	t.Setenv("PUBLIC_BASE_URL", "http://127.0.0.1:9318")
+
+	sessionID, authorizeURL := authorizeViaHandler(t, "google")
+	if !strings.HasPrefix(authorizeURL, "http://127.0.0.1:9318/api/v1/auth/oauth/start?session_id=") {
+		t.Fatalf("unexpected authorize_url: %q", authorizeURL)
+	}
+
+	sess, ok := getOAuthSession(sessionID)
+	if !ok {
+		t.Fatal("session not saved")
+	}
+	if sess.Provider != "google" || sess.Status != "pending" {
+		t.Fatalf("unexpected session: %+v", sess)
+	}
+	if sess.State == "" || sess.CodeVerifier == "" {
+		t.Fatalf("expected state and google PKCE verifier: %+v", sess)
+	}
+}
+
+func TestAuthorizeOAuthGitHubHasNoVerifier(t *testing.T) {
+	t.Setenv("GITHUB_CLIENT_ID", "h-id")
+	t.Setenv("GITHUB_CLIENT_SECRET", "h-secret")
+
+	sessionID, _ := authorizeViaHandler(t, "github")
+	sess, ok := getOAuthSession(sessionID)
+	if !ok {
+		t.Fatal("session not saved")
+	}
+	if sess.Provider != "github" || sess.CodeVerifier != "" {
+		t.Fatalf("github OAuth App should not use PKCE: %+v", sess)
+	}
+}
+
+func TestAuthorizeOAuthUnsupportedProvider(t *testing.T) {
+	w := performOAuthRequest(AuthorizeOAuth, http.MethodPost, "/api/v1/auth/oauth/authorize",
+		strings.NewReader(`{"provider":"microsoft"}`))
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
+	}
+	// 测试环境 locales 为空，i18n 回退返回键名。
+	if !strings.Contains(w.Body.String(), "auth.oauthUnsupportedProvider") {
+		t.Fatalf("unexpected body: %s", w.Body.String())
+	}
+}
+
+func TestAuthorizeOAuthProviderNotConfigured(t *testing.T) {
+	t.Setenv("GOOGLE_CLIENT_ID", "")
+	t.Setenv("GOOGLE_CLIENT_SECRET", "")
+
+	w := performOAuthRequest(AuthorizeOAuth, http.MethodPost, "/api/v1/auth/oauth/authorize",
+		strings.NewReader(`{"provider":"google"}`))
+	if w.Code != http.StatusServiceUnavailable {
+		t.Fatalf("expected 503, got %d: %s", w.Code, w.Body.String())
+	}
+	if !strings.Contains(w.Body.String(), "auth.oauthUnavailable") {
+		t.Fatalf("unexpected body: %s", w.Body.String())
+	}
+}
+
+func TestStartOAuthRedirectsToProvider(t *testing.T) {
+	t.Setenv("GOOGLE_CLIENT_ID", "g-id")
+	t.Setenv("GOOGLE_CLIENT_SECRET", "g-secret")
+	t.Setenv("PUBLIC_BASE_URL", "http://127.0.0.1:9318")
+
+	sessionID, _ := authorizeViaHandler(t, "google")
+	sess, _ := getOAuthSession(sessionID)
+
+	w := performOAuthRequest(StartOAuth, http.MethodGet, "/api/v1/auth/oauth/start?session_id="+sessionID, nil)
+	if w.Code != http.StatusFound {
+		t.Fatalf("expected 302, got %d: %s", w.Code, w.Body.String())
+	}
+	loc := w.Header().Get("Location")
+	if !strings.HasPrefix(loc, "https://accounts.google.com/o/oauth2/v2/auth?") {
+		t.Fatalf("unexpected redirect location: %q", loc)
+	}
+	for _, want := range []string{
+		"client_id=g-id",
+		"response_type=code",
+		"scope=openid+email+profile",
+		"code_challenge_method=S256",
+		"code_challenge=" + oauthS256CodeChallenge(sess.CodeVerifier),
+		"state=" + sess.State,
+		"redirect_uri=" + url.QueryEscape("http://127.0.0.1:9318/api/v1/auth/oauth/callback"),
+	} {
+		if !strings.Contains(loc, want) {
+			t.Fatalf("redirect missing %q: %q", want, loc)
+		}
+	}
+}
+
+func TestStartOAuthInvalidSession(t *testing.T) {
+	w := performOAuthRequest(StartOAuth, http.MethodGet, "/api/v1/auth/oauth/start?session_id=nope", nil)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", w.Code)
+	}
+	if !strings.Contains(w.Body.String(), "auth.oauthPageInvalidSession") {
+		t.Fatalf("unexpected body: %s", w.Body.String())
+	}
+}
+
+func TestOAuthCallbackInvalidState(t *testing.T) {
+	w := performOAuthRequest(OAuthCallback, http.MethodGet, "/api/v1/auth/oauth/callback?code=x&state=bogus", nil)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", w.Code)
+	}
+	if !strings.Contains(w.Body.String(), "auth.oauthPageInvalidSession") {
+		t.Fatalf("unexpected body: %s", w.Body.String())
+	}
+}
+
+func TestOAuthCallbackUserDenied(t *testing.T) {
+	t.Setenv("GOOGLE_CLIENT_ID", "g-id")
+	t.Setenv("GOOGLE_CLIENT_SECRET", "g-secret")
+
+	sessionID, _ := authorizeViaHandler(t, "google")
+	sess, _ := getOAuthSession(sessionID)
+
+	w := performOAuthRequest(OAuthCallback, http.MethodGet,
+		"/api/v1/auth/oauth/callback?error=access_denied&state="+sess.State, nil)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200 html, got %d", w.Code)
+	}
+	if !strings.Contains(w.Body.String(), "auth.oauthPageFailed") {
+		t.Fatalf("expected failure page, got: %s", w.Body.String())
+	}
+
+	// 会话标记失败，客户端轮询应得到 failed 与原因。
+	w = performOAuthRequest(PollOAuth, http.MethodPost, "/api/v1/auth/oauth/poll",
+		strings.NewReader(`{"session_id":"`+sessionID+`"}`))
+	if w.Code != http.StatusOK {
+		t.Fatalf("poll failed: %d %s", w.Code, w.Body.String())
+	}
+	var poll struct {
+		Status string `json:"status"`
+		Error  string `json:"error"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &poll); err != nil {
+		t.Fatalf("unmarshal poll response failed: %v", err)
+	}
+	if poll.Status != "failed" || poll.Error != "auth.oauthDenied" {
+		t.Fatalf("unexpected poll result: %+v", poll)
+	}
+}
+
+func TestPollOAuthPending(t *testing.T) {
+	t.Setenv("GOOGLE_CLIENT_ID", "g-id")
+	t.Setenv("GOOGLE_CLIENT_SECRET", "g-secret")
+
+	sessionID, _ := authorizeViaHandler(t, "google")
+	w := performOAuthRequest(PollOAuth, http.MethodPost, "/api/v1/auth/oauth/poll",
+		strings.NewReader(`{"session_id":"`+sessionID+`"}`))
+	if w.Code != http.StatusOK {
+		t.Fatalf("poll failed: %d %s", w.Code, w.Body.String())
+	}
+	if !strings.Contains(w.Body.String(), `"status":"pending"`) {
+		t.Fatalf("expected pending, got: %s", w.Body.String())
+	}
+}
+
+func TestPollOAuthCompleted(t *testing.T) {
+	saveOAuthSession(&oauthSession{
+		SessionID: "sess-complete", Provider: "google", State: "st-complete",
+		Status: "pending", CreatedAt: time.Now(),
+	})
+	completeOAuthSession("sess-complete", "access-1", "refresh-1")
+
+	w := performOAuthRequest(PollOAuth, http.MethodPost, "/api/v1/auth/oauth/poll",
+		strings.NewReader(`{"session_id":"sess-complete"}`))
+	if w.Code != http.StatusOK {
+		t.Fatalf("poll failed: %d %s", w.Code, w.Body.String())
+	}
+	var poll struct {
+		Status       string `json:"status"`
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+		ExpiresIn    int64  `json:"expires_in"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &poll); err != nil {
+		t.Fatalf("unmarshal poll response failed: %v", err)
+	}
+	if poll.Status != "completed" || poll.AccessToken != "access-1" || poll.RefreshToken != "refresh-1" || poll.ExpiresIn != 86400 {
+		t.Fatalf("unexpected poll result: %+v", poll)
+	}
+}
+
+func TestPollOAuthUnknownSession(t *testing.T) {
+	w := performOAuthRequest(PollOAuth, http.MethodPost, "/api/v1/auth/oauth/poll",
+		strings.NewReader(`{"session_id":"missing"}`))
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d: %s", w.Code, w.Body.String())
+	}
+	if !strings.Contains(w.Body.String(), "auth.oauthSessionNotFound") {
+		t.Fatalf("unexpected body: %s", w.Body.String())
+	}
+}
+
+// TestPublicBaseURLFallback 验证社区版 publicBaseURL 的三级回退：
+// PUBLIC_BASE_URL -> API_BASE_URL -> 默认本地地址。
+func TestPublicBaseURLFallback(t *testing.T) {
+	t.Setenv("PUBLIC_BASE_URL", "http://public.example.com")
+	t.Setenv("API_BASE_URL", "http://api.example.com")
+	if got := publicBaseURL(); got != "http://public.example.com" {
+		t.Fatalf("expected PUBLIC_BASE_URL, got %q", got)
+	}
+
+	t.Setenv("PUBLIC_BASE_URL", "")
+	if got := publicBaseURL(); got != "http://api.example.com" {
+		t.Fatalf("expected API_BASE_URL fallback, got %q", got)
+	}
+
+	t.Setenv("API_BASE_URL", "")
+	if got := publicBaseURL(); got != "http://localhost:9318" {
+		t.Fatalf("expected default fallback, got %q", got)
+	}
+
+	t.Setenv("PUBLIC_BASE_URL", "http://trailingslash.example.com/")
+	if got := publicBaseURL(); got != "http://trailingslash.example.com" {
+		t.Fatalf("expected trailing slash trimmed, got %q", got)
+	}
+}
+
+// RFC 7636 Appendix B 的官方 PKCE S256 测试向量。
+func TestOAuthS256CodeChallenge(t *testing.T) {
+	verifier := "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+	want := "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"
+	if got := oauthS256CodeChallenge(verifier); got != want {
+		t.Fatalf("unexpected challenge: got %q want %q", got, want)
 	}
 }
 
@@ -177,7 +448,7 @@ func TestFetchUserInfoMissingEmail(t *testing.T) {
 	}
 }
 
-// openTestDB 打开内存 SQLite 并建立 OAuth 相关最小表结构。
+// openTestDB 打开内存 SQLite 并建立 OAuth 相关最小表结构（与社区版 users 表对齐，无 tenant_id）。
 func openTestDB(t *testing.T) *sql.DB {
 	t.Helper()
 	for _, driverName := range []string{"sqlite", "sqlite3"} {

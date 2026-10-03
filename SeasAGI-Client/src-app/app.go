@@ -996,7 +996,9 @@ func (a *App) GetOAuthProviders() ([]auth.OAuthProvider, error) {
 	return a.authSvc.FetchOAuthProviders()
 }
 
-// StartOAuthLogin 发起第三方 OAuth 登录（浏览器授权 + 本地回调 + 服务端换 JWT）。
+// StartOAuthLogin 发起第三方 OAuth 登录：
+// 请求服务端创建授权会话 -> 打开浏览器访问服务端授权跳转页（服务端 302 到 Google/GitHub）
+// -> 轮询服务端取回登录态。
 func (a *App) StartOAuthLogin(provider string) error {
 	if err := a.authSvc.StartOAuthLogin(provider); err != nil {
 		return err
